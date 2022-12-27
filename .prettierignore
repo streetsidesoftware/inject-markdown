@@ -1,0 +1,12 @@
+[sS]amples/
+[tT]emp/
+**/dist/**
+**/node_modules/**
+**/*-lock.json
+**/*-lock.yaml
+**/_auto_generated_/**
+**/.docusaurus/**
+CHANGELOG.md
+coverage
+cspell.json
+**/*.schema.json
