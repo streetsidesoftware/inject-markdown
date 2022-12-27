@@ -6,9 +6,10 @@ import { VFile } from 'vfile';
 import { reporter } from 'vfile-reporter';
 import type { Root, Content, HTML } from 'mdast';
 import {} from 'remark';
-// import { remove } from 'unist-util-remove';
+import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
 import { is } from 'unist-util-is';
+import assert from 'assert';
 
 type Node = Root | Content;
 
@@ -24,6 +25,8 @@ const injectDirectiveRegExp = /^[ \t]*<!---?\s*@@inject(?<type>|-start|-end):\s*
 
 const directiveRegExp = /^[ \t]*<!---?\s*@@inject\b/;
 
+const directivePrefix = '@@inject';
+
 export class FileInjector {
     constructor(readonly fs: FileSystemAdapter) {}
 
@@ -35,24 +38,22 @@ export class FileInjector {
      */
     async processFile(filePath: PathLike, encoding: BufferEncoding = 'utf8'): Promise<boolean> {
         const file = await readFile(this.fs, filePath, encoding);
+        const fileValue = file.value;
         const content = extractContent(file, encoding);
         const lineEnding = detectLineEnding(content);
         const result = await processFileContent(this.fs, file);
-        if (result === file) return false;
+        if (result.value === fileValue) return false;
+        console.log(reporter(result));
         const resultAsString = extractContent(result, encoding);
         const resultContent = fixContentLineEndings(resultAsString, lineEnding, hasEofNewLine(content));
         if (content === resultContent) return false;
-        console.log(reporter(result));
-        // console.log('%o', result);
+        console.log('%o', result);
         return true;
     }
 }
 
 async function processFileContent(fs: FileSystemAdapter, file: VFile): Promise<VFile> {
-    if (typeof file.value !== 'string') {
-        return file;
-    }
-    if (!directiveRegExp.test(file.value)) {
+    if (!extractContent(file).includes(directivePrefix)) {
         return file;
     }
     const result = await unified().use(remarkParse).use(process, fs).use(remarkStringify).process(file);
@@ -61,14 +62,60 @@ async function processFileContent(fs: FileSystemAdapter, file: VFile): Promise<V
 
 function process(_fs: FileSystemAdapter) {
     return (root: Root, file: VFile): Root => {
-        const directiveNodes = collectInjectionNodes(root);
-
-        const x = findInjectionPairs(directiveNodes, file);
-        console.log('Directives:');
-        console.log(x);
-
+        root = deleteInjectedContent(root, file);
         return root;
     };
+}
+
+function deleteInjectedContent(root: Root, file: VFile): Root {
+    const directiveNodes = collectInjectionNodes(root);
+    const pairs = findInjectionPairs(directiveNodes, file);
+
+    interface BaseNode {
+        type: string;
+    }
+
+    const starts = new Set<BaseNode>(
+        pairs
+            .map((p) => p.end && p.start)
+            .filter(isDefined)
+            .map((d) => d.node)
+    );
+    const ends = new Set<BaseNode>(
+        pairs
+            .map((p) => p.start && p.end)
+            .filter(isDefined)
+            .map((d) => d.node)
+    );
+    const toDelete = new Set<BaseNode>(
+        pairs
+            .map((p) => p.end)
+            .filter(isDefined)
+            .map((d) => d.node)
+    );
+
+    let deleteDepth = 0;
+
+    visit(
+        root,
+        () => true,
+        (node: BaseNode) => {
+            if (starts.has(node)) {
+                ++deleteDepth;
+            }
+            if (deleteDepth) {
+                toDelete.add(node);
+            }
+            if (ends.has(node)) {
+                --deleteDepth;
+                assert(deleteDepth >= 0);
+            }
+        }
+    );
+
+    remove(root, (node: BaseNode) => toDelete.has(node));
+
+    return root;
 }
 
 interface DirectiveNode {
@@ -111,11 +158,9 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFile): DirectivePair
 
     let last: NodeAndDirective | undefined = undefined;
     for (const n of dnp.reverse()) {
-        console.log(n, n.node.node.position);
-        console.log();
         if (n.directive?.type === 'start') {
             if (last?.directive?.file && last?.directive?.file !== n.directive.file) {
-                vfile.message('Unmatched @@inject-end', last.node.node.position);
+                vfile.message(`Unmatched @@inject-end "${last.directive?.file || ''}"`, last.node.node.position);
                 pairs.push({ end: last.node });
                 last = undefined;
             }
@@ -124,7 +169,7 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFile): DirectivePair
             continue;
         }
         if (last) {
-            vfile.message('Unmatched @@inject-end', last.node.node.position);
+            vfile.message(`Unmatched @@inject-end "${last.directive?.file || ''}"`, last.node.node.position);
             pairs.push({ end: last.node });
         }
         last = n;
@@ -198,4 +243,8 @@ function fixContentLineEndings(content: string, lineEnding: string, fixEofNewLin
 
 function hasEofNewLine(content: string): boolean {
     return content[content.length - 1] === '\n';
+}
+
+function isDefined<T>(v: T | undefined | null): v is T {
+    return v !== undefined && v !== null;
 }
