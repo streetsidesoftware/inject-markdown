@@ -6,9 +6,10 @@
 
 *   Destinations
 
-<!---->
+<!--- @@inject: parts/destinations.md -->
 
 *   Prices
+    <!--- @@inject: parts/prices.md -->
 
 <!--- @@inject: parts/code.md -->
 

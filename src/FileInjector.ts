@@ -133,11 +133,11 @@ function deleteInjectedContent(root: Root, file: VFile): Root {
         root,
         () => true,
         (node: BaseNode) => {
-            if (starts.has(node)) {
-                ++deleteDepth;
-            }
             if (deleteDepth) {
                 toDelete.add(node);
+            }
+            if (starts.has(node)) {
+                ++deleteDepth;
             }
             if (ends.has(node)) {
                 --deleteDepth;
