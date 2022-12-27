@@ -1,0 +1,201 @@
+import { FileSystemAdapter, PathLike, BufferEncoding } from './FileSystemAdapter.js';
+import { unified } from 'unified';
+import remarkParse from 'remark-parse';
+import remarkStringify from 'remark-stringify';
+import { VFile } from 'vfile';
+import { reporter } from 'vfile-reporter';
+import type { Root, Content, HTML } from 'mdast';
+import {} from 'remark';
+// import { remove } from 'unist-util-remove';
+import { visit } from 'unist-util-visit';
+import { is } from 'unist-util-is';
+
+type Node = Root | Content;
+
+// const injectStartRegExp = /^[ \t]*<!---?\s*@@inject(?:-start)?:/gm;
+// const injectEndRegExp = /^[ \t]*<!---?\s*@@inject-end:/gm;
+// const injectDisable = /@@inject-disable\b/g;
+// const injectEnable = /@@inject-enable\b/g;
+
+const injectDirectiveRegExp = /^[ \t]*<!---?\s*@@inject(?<type>|-start|-end):\s*(?<file>.*?)-?-->$/;
+
+// const commentStart = '<!---';
+// const commentEnd = '-->';
+
+const directiveRegExp = /^[ \t]*<!---?\s*@@inject\b/;
+
+export class FileInjector {
+    constructor(readonly fs: FileSystemAdapter) {}
+
+    /**
+     * Process all injections for a file.
+     * @param filePath - path to file to process
+     * @param encoding - file encoding
+     * @returns true if changed, otherwise false.
+     */
+    async processFile(filePath: PathLike, encoding: BufferEncoding = 'utf8'): Promise<boolean> {
+        const file = await readFile(this.fs, filePath, encoding);
+        const content = extractContent(file, encoding);
+        const lineEnding = detectLineEnding(content);
+        const result = await processFileContent(this.fs, file);
+        if (result === file) return false;
+        const resultAsString = extractContent(result, encoding);
+        const resultContent = fixContentLineEndings(resultAsString, lineEnding, hasEofNewLine(content));
+        if (content === resultContent) return false;
+        console.log(reporter(result));
+        // console.log('%o', result);
+        return true;
+    }
+}
+
+async function processFileContent(fs: FileSystemAdapter, file: VFile): Promise<VFile> {
+    if (typeof file.value !== 'string') {
+        return file;
+    }
+    if (!directiveRegExp.test(file.value)) {
+        return file;
+    }
+    const result = await unified().use(remarkParse).use(process, fs).use(remarkStringify).process(file);
+    return result;
+}
+
+function process(_fs: FileSystemAdapter) {
+    return (root: Root, file: VFile): Root => {
+        const directiveNodes = collectInjectionNodes(root);
+
+        const x = findInjectionPairs(directiveNodes, file);
+        console.log('Directives:');
+        console.log(x);
+
+        return root;
+    };
+}
+
+interface DirectiveNode {
+    node: HTML;
+    index: number | null;
+    parent: Node | null;
+}
+
+interface DirectivePair {
+    start?: DirectiveNode | undefined;
+    end?: DirectiveNode | undefined;
+}
+
+interface Directive {
+    type: 'start' | 'end';
+    file: string;
+}
+
+interface NodeAndDirective {
+    directive: Directive | undefined;
+    node: DirectiveNode;
+}
+
+function findInjectionPairs(nodes: DirectiveNode[], vfile: VFile): DirectivePair[] {
+    function validate(n: NodeAndDirective): n is Required<NodeAndDirective> {
+        if (!n.directive) {
+            vfile.message('Unable to parse @@inject directive.', n.node?.node.position);
+            return false;
+        }
+        if (n.directive.type === 'start' && !n.directive.file) {
+            vfile.message('Missing injection filename.', n.node?.node.position);
+            return false;
+        }
+        return true;
+    }
+
+    const dnp = nodes.map((node) => ({ node, directive: parseDirective(node.node.value) })).filter(validate);
+
+    const pairs: DirectivePair[] = [];
+
+    let last: NodeAndDirective | undefined = undefined;
+    for (const n of dnp.reverse()) {
+        console.log(n, n.node.node.position);
+        console.log();
+        if (n.directive?.type === 'start') {
+            if (last?.directive?.file && last?.directive?.file !== n.directive.file) {
+                vfile.message('Unmatched @@inject-end', last.node.node.position);
+                pairs.push({ end: last.node });
+                last = undefined;
+            }
+            pairs.push({ start: n.node, end: last?.node });
+            last = undefined;
+            continue;
+        }
+        if (last) {
+            vfile.message('Unmatched @@inject-end', last.node.node.position);
+            pairs.push({ end: last.node });
+        }
+        last = n;
+    }
+
+    return pairs.reverse();
+}
+
+function parseDirective(html: string): Directive | undefined {
+    const m = html.match(injectDirectiveRegExp);
+    if (!m || !m.groups) return undefined;
+
+    const d: Directive = {
+        type: m.groups['type'] === '-end' ? 'end' : 'start',
+        file: m.groups['file'].trim(),
+    };
+    return d;
+}
+
+function collectInjectionNodes(root: Root): DirectiveNode[] {
+    const nodes: DirectiveNode[] = [];
+    visit(root, isInjectNode, (node, index, parent) => {
+        nodes.push({ node, index, parent });
+    });
+
+    return nodes;
+}
+
+interface VFileData {
+    encoding?: BufferEncoding;
+}
+
+async function readFile(fs: FileSystemAdapter, path: PathLike, encoding: BufferEncoding): Promise<VFile> {
+    const value = await fs.readFile(path, encoding);
+    return new VFile({ path, value, data: { encoding } });
+}
+
+function detectLineEnding(content: string): string {
+    const pos = content.indexOf('\n');
+    return content[pos - 1] === '\r' ? '\r\n' : '\n';
+}
+
+function isHtmlNode(n: Node | unknown): n is HTML {
+    return is(n, 'html');
+}
+
+function isInjectNode(n: Node | unknown): n is HTML {
+    if (!isHtmlNode(n)) {
+        return false;
+    }
+    return directiveRegExp.test(n.value);
+}
+
+function extractContent(file: VFile, defaultEncoding?: BufferEncoding): string {
+    return toString(file.value, getEncoding(file, defaultEncoding));
+}
+
+function getEncoding(file: VFile, defaultEncoding: BufferEncoding = 'utf8'): BufferEncoding {
+    const data: VFileData = file.data;
+    return data.encoding || defaultEncoding;
+}
+
+function toString(content: string | Buffer, encoding: BufferEncoding): string {
+    return typeof content === 'string' ? content : content.toString(encoding);
+}
+
+function fixContentLineEndings(content: string, lineEnding: string, fixEofNewLine: boolean): string {
+    const fixed = content.replace(/\r?\n/g, lineEnding);
+    return fixEofNewLine && !hasEofNewLine(fixed) ? fixed + lineEnding : fixed;
+}
+
+function hasEofNewLine(content: string): boolean {
+    return content[content.length - 1] === '\n';
+}
