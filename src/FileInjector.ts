@@ -9,6 +9,7 @@ import {} from 'remark';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
 import { is } from 'unist-util-is';
+import * as path from 'node:path';
 import assert from 'assert';
 
 type Node = Root | Content;
@@ -27,8 +28,15 @@ const directiveRegExp = /^[ \t]*<!---?\s*@@inject\b/;
 
 const directivePrefix = '@@inject';
 
+export interface FileInjectorOptions {
+    /** optional output directory */
+    outputDir?: string;
+    /** Current working directory */
+    cwd?: string;
+}
+
 export class FileInjector {
-    constructor(readonly fs: FileSystemAdapter) {}
+    constructor(readonly fs: FileSystemAdapter, readonly options: FileInjectorOptions) {}
 
     /**
      * Process all injections for a file.
@@ -42,13 +50,38 @@ export class FileInjector {
         const content = extractContent(file, encoding);
         const lineEnding = detectLineEnding(content);
         const result = await processFileContent(this.fs, file);
-        if (result.value === fileValue) return false;
+        if (result.value === fileValue) {
+            this.options.outputDir && (await this.writeResult(result));
+            return false;
+        }
         console.log(reporter(result));
         const resultAsString = extractContent(result, encoding);
         const resultContent = fixContentLineEndings(resultAsString, lineEnding, hasEofNewLine(content));
-        if (content === resultContent) return false;
-        console.log('%o', result);
+        if (content === resultContent) {
+            this.options.outputDir && (await this.writeResult(result));
+            return false;
+        }
+        await this.writeResult(result);
         return true;
+    }
+
+    private async writeResult(file: VFile): Promise<void> {
+        const content = extractContent(file);
+        const filePath = this.determineTargetPath(file);
+        const dir = path.dirname(filePath);
+        await this.fs.mkdir(dir, { recursive: true });
+        return this.fs.writeFile(filePath, content, getEncoding(file));
+    }
+
+    private determineTargetPath(file: VFile): string {
+        const outDir = this.options.outputDir;
+        if (!outDir) return file.path;
+
+        const cwd = path.resolve(this.options.cwd || file.cwd);
+        const srcPath = path.resolve(cwd, file.path);
+        const relPath = path.relative(cwd, srcPath);
+
+        return path.join(path.resolve(outDir), relPath);
     }
 }
 
@@ -56,11 +89,11 @@ async function processFileContent(fs: FileSystemAdapter, file: VFile): Promise<V
     if (!extractContent(file).includes(directivePrefix)) {
         return file;
     }
-    const result = await unified().use(remarkParse).use(process, fs).use(remarkStringify).process(file);
+    const result = await unified().use(remarkParse).use(processInjections, fs).use(remarkStringify).process(file);
     return result;
 }
 
-function process(_fs: FileSystemAdapter) {
+function processInjections(_fs: FileSystemAdapter) {
     return (root: Root, file: VFile): Root => {
         root = deleteInjectedContent(root, file);
         return root;

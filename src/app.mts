@@ -4,7 +4,7 @@ import * as fs from 'fs/promises';
 import { globby } from 'globby';
 import { fileURLToPath } from 'node:url';
 import * as path from 'path';
-import { FileInjector } from './FileInjector.js';
+import { FileInjector, FileInjectorOptions } from './FileInjector.js';
 
 const excludes = ['node_modules'];
 const allowedFileExtensions: Record<string, boolean | undefined> = {
@@ -19,7 +19,7 @@ async function version(): Promise<string> {
     return (typeof packageJson === 'object' && packageJson?.version) || '0.0.0';
 }
 
-interface Options {
+interface Options extends FileInjectorOptions {
     mustFindFiles: boolean;
 }
 
@@ -45,7 +45,7 @@ async function processGlobs(globs: string[], options: Options): Promise<boolean>
 
     console.log('%o', files);
 
-    const injector = new FileInjector(fs);
+    const injector = new FileInjector(fs, options);
 
     for (const file of files) {
         const r = await injector.processFile(file);
@@ -61,6 +61,8 @@ async function app(program = defaultCommand, argv?: string[]) {
         .description('Inject file content into markdown files.')
         .argument('<files...>', 'Files to scan for injected content.')
         .option('--no-must-find-files', 'No error if files are not found.')
+        .option('--output-dir <dir>', 'Output Directory')
+        .option('--cwd <dir>', 'Current Directory')
         .version(await version())
         .action(async (files: string[], options: Options, _command: Command) => {
             const result = await processGlobs(files, options);
