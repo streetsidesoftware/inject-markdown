@@ -1,16 +1,16 @@
-import { FileSystemAdapter, PathLike, BufferEncoding } from './FileSystemAdapter.js';
-import { unified } from 'unified';
+import assert from 'assert';
+import type { Content, HTML, Root } from 'mdast';
+import * as path from 'node:path';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
-import { VFile } from 'vfile';
-import { reporter } from 'vfile-reporter';
-import type { Root, Content, HTML } from 'mdast';
-import {} from 'remark';
+import { unified } from 'unified';
+import { is } from 'unist-util-is';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
-import { is } from 'unist-util-is';
-import * as path from 'node:path';
-import assert from 'assert';
+import { VFile } from 'vfile';
+import { reporter } from 'vfile-reporter';
+
+import { BufferEncoding, FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
 
 type Node = Root | Content;
 
@@ -103,25 +103,48 @@ function processFileInjections(file: VFile, fs: FileSystemAdapter, options: File
     }
 
     function processInjections() {
-        return (root: Root, file: VFile): Root => {
+        return async (root: Root, file: VFile): Promise<Root> => {
             root = deleteInjectedContent(root, file);
             if (options.cleanOnly) return root;
-            root = injectFiles(root);
+            root = await injectFiles(root);
             return root;
         };
     }
-}
 
-function injectFiles(root: Root): Root {
-    const directiveNodes = collectInjectionNodes(root);
+    async function injectFiles(root: Root): Promise<Root> {
+        const directiveNodes = collectInjectionNodes(root);
 
-    for (const node of directiveNodes) {
-        const d = parseDirectiveNode(node);
-        if (!d) continue;
-        console.log(d.file);
+        for (const node of directiveNodes) {
+            const d = parseDirectiveNode(node);
+            if (!d) continue;
+            await injectFile(d);
+        }
+
+        return root;
     }
 
-    return root;
+    async function injectFile(directive: Directive): Promise<void> {
+        console.log(directive.file);
+    }
+
+    async function _readAndParseMarkdownFile(fileName: string): Promise<Root> {
+        const dir = file.dirname || process.cwd();
+        const resolvedFile = path.resolve(dir, fileName);
+        try {
+            const vFile = await readFile(fs, resolvedFile);
+            return parseMarkdownFile(vFile);
+        } catch (e) {
+            file.message(e as Error);
+            return unified().use(remarkParse).parse(`\
+<!---
+  Failed to read "${fileName}"
+--->`);
+        }
+    }
+
+    function parseMarkdownFile(file: VFile): Root {
+        return unified().use(remarkParse).parse(file);
+    }
 }
 
 function deleteInjectedContent(root: Root, file: VFile): Root {
@@ -177,7 +200,6 @@ function deleteInjectedContent(root: Root, file: VFile): Root {
 
 interface DirectiveNode {
     node: HTML;
-    index: number | null;
     parent: Node | null;
 }
 
@@ -191,43 +213,40 @@ interface Directive {
     file: string;
 }
 
-interface NodeAndDirective {
-    directive: Directive | undefined;
-    node: DirectiveNode;
-}
+interface NodeAndDirective extends Partial<Directive>, DirectiveNode {}
 
 function findInjectionPairs(nodes: DirectiveNode[], vfile: VFile): DirectivePair[] {
     function validate(n: NodeAndDirective): n is Required<NodeAndDirective> {
-        if (!n.directive) {
-            vfile.message('Unable to parse @@inject directive.', n.node?.node.position);
+        if (!n.type) {
+            vfile.message('Unable to parse @@inject directive.', n.node.position);
             return false;
         }
-        if (n.directive.type === 'start' && !n.directive.file) {
-            vfile.message('Missing injection filename.', n.node?.node.position);
+        if (n.type === 'start' && !n.file) {
+            vfile.message('Missing injection filename.', n.node.position);
             return false;
         }
         return true;
     }
 
-    const dnp = nodes.map((node) => ({ node, directive: parseDirectiveNode(node) })).filter(validate);
+    const dnp = nodes.map((node) => ({ ...node, ...(parseDirectiveNode(node) || {}) })).filter(validate);
 
     const pairs: DirectivePair[] = [];
 
     let last: NodeAndDirective | undefined = undefined;
     for (const n of dnp.reverse()) {
-        if (n.directive?.type === 'start') {
-            if (last?.directive?.file && last?.directive?.file !== n.directive.file) {
-                vfile.message(`Unmatched @@inject-end "${last.directive?.file || ''}"`, last.node.node.position);
-                pairs.push({ end: last.node });
+        if (n.type === 'start') {
+            if (last?.file && last?.file !== n.file) {
+                vfile.message(`Unmatched @@inject-end "${last.file || ''}"`, last.node.position);
+                pairs.push({ end: last });
                 last = undefined;
             }
-            pairs.push({ start: n.node, end: last?.node });
+            pairs.push({ start: n, end: last });
             last = undefined;
             continue;
         }
         if (last) {
-            vfile.message(`Unmatched @@inject-end "${last.directive?.file || ''}"`, last.node.node.position);
-            pairs.push({ end: last.node });
+            vfile.message(`Unmatched @@inject-end "${last.file || ''}"`, last.node.position);
+            pairs.push({ end: last });
         }
         last = n;
     }
@@ -252,8 +271,8 @@ function parseDirective(html: string): Directive | undefined {
 
 function collectInjectionNodes(root: Root): DirectiveNode[] {
     const nodes: DirectiveNode[] = [];
-    visit(root, isInjectNode, (node, index, parent) => {
-        nodes.push({ node, index, parent });
+    visit(root, isInjectNode, (node, _index, parent) => {
+        nodes.push({ node, parent });
     });
 
     return nodes;
@@ -263,7 +282,7 @@ interface VFileData {
     encoding?: BufferEncoding;
 }
 
-async function readFile(fs: FileSystemAdapter, path: PathLike, encoding: BufferEncoding): Promise<VFile> {
+async function readFile(fs: FileSystemAdapter, path: PathLike, encoding: BufferEncoding = 'utf8'): Promise<VFile> {
     const value = await fs.readFile(path, encoding);
     return new VFile({ path, value, data: { encoding } });
 }
