@@ -11,7 +11,7 @@
         "newLine": "LF",
         "noImplicitAny": true,
         "noImplicitThis": true,
-        "noUnusedLocals": true,
+        "noUnusedLocals": false,
         "noUnusedParameters": true,
         "sourceMap": true,
         "skipLibCheck": true,
