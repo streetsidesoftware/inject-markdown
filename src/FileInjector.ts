@@ -9,25 +9,19 @@ import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
 import { VFile } from 'vfile';
 import { reporter } from 'vfile-reporter';
-import { parentPort } from 'worker_threads';
 
 import { BufferEncoding, FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
 
 type Node = Root | Content;
 
-// const injectStartRegExp = /^[ \t]*<!---?\s*@@inject(?:-start)?:/gm;
-// const injectEndRegExp = /^[ \t]*<!---?\s*@@inject-end:/gm;
-// const injectDisable = /@@inject-disable\b/g;
-// const injectEnable = /@@inject-enable\b/g;
-
 const injectDirectiveRegExp = /^[ \t]*<!---?\s*@@inject(?<type>|-start|-end):\s*(?<file>.*?)-?-->$/;
-
-// const commentStart = '<!---';
-// const commentEnd = '-->';
 
 const directiveRegExp = /^[ \t]*<!---?\s*@@inject\b/;
 
 const directivePrefix = '@@inject';
+const directiveStart = directivePrefix + ':';
+const directiveStartVerbose = directivePrefix + '-start:';
+const directiveEnd = directivePrefix + '-end:';
 
 export interface FileInjectorOptions {
     /** optional output directory */
@@ -35,7 +29,7 @@ export interface FileInjectorOptions {
     /** Current working directory */
     cwd?: string;
     /** Only clean the file, do not inject */
-    cleanOnly?: boolean;
+    clean?: boolean;
 }
 
 export class FileInjector {
@@ -106,7 +100,7 @@ function processFileInjections(file: VFile, fs: FileSystemAdapter, options: File
     function processInjections() {
         return async (root: Root, file: VFile): Promise<Root> => {
             root = deleteInjectedContent(root, file);
-            if (options.cleanOnly) return root;
+            if (options.clean) return root;
             root = await injectFiles(root);
             return root;
         };
@@ -132,17 +126,19 @@ function processFileInjections(file: VFile, fs: FileSystemAdapter, options: File
         const parent = directive.parent;
         const index = parent.children.indexOf(directive.node);
         assert(index >= 0);
-        const addStart = directive.node.value.includes('@@inject-start');
+        const startDirective = directive.node.value.includes(directiveStartVerbose)
+            ? directiveStartVerbose
+            : directiveStart;
         const root = await readAndParseMarkdownFile(fileName, header);
         remove(root, (n: Node) => isHtmlNode(n) && n.value.includes('@@inject'));
         const encodedFile = encodeURI(fileName) + (header ? '#' + encodeURIComponent(header) : '');
         const start: HTML = {
             type: 'html',
-            value: `<!--- @@inject${addStart ? '-start' : ''}: ${encodedFile} --->`,
+            value: `<!--- ${startDirective} ${encodedFile} --->`,
         };
         const end: HTML = {
             type: 'html',
-            value: `<!--- @@inject-end: ${encodedFile} --->`,
+            value: `<!--- ${directiveEnd} ${encodedFile} --->`,
         };
         parent.children.splice(index, 1, start, ...root.children, end);
     }

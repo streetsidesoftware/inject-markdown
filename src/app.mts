@@ -63,6 +63,7 @@ async function app(program = defaultCommand, argv?: string[]) {
         .option('--no-must-find-files', 'No error if files are not found.')
         .option('--output-dir <dir>', 'Output Directory')
         .option('--cwd <dir>', 'Current Directory')
+        .option('--clean', 'Remove the injected content.')
         .version(await version())
         .action(async (files: string[], options: Options, _command: Command) => {
             const result = await processGlobs(files, options);
