@@ -1,5 +1,5 @@
 import assert from 'assert';
-import type { Content, HTML, Root, Parent } from 'mdast';
+import type { Content, HTML, Root, Parent, Heading } from 'mdast';
 import * as path from 'node:path';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
@@ -16,7 +16,7 @@ type Node = Root | Content;
 
 const injectDirectiveRegExp = /^[ \t]*<!---?\s*@@inject(?<type>|-start|-end):\s*(?<file>.*?)-?-->$/;
 
-const directiveRegExp = /^[ \t]*<!---?\s*@@inject\b/;
+const directiveRegExp = /^[ \t]*<!---?\s*@@inject(\b|-)/;
 
 const directivePrefix = '@@inject';
 const directiveStart = directivePrefix + ':';
@@ -130,7 +130,6 @@ function processFileInjections(file: VFile, fs: FileSystemAdapter, options: File
             ? directiveStartVerbose
             : directiveStart;
         const root = await readAndParseMarkdownFile(fileName, header);
-        remove(root, (n: Node) => isHtmlNode(n) && n.value.includes('@@inject'));
         const encodedFile = encodeURI(fileName) + (header ? '#' + encodeURIComponent(header) : '');
         const start: HTML = {
             type: 'html',
@@ -143,12 +142,14 @@ function processFileInjections(file: VFile, fs: FileSystemAdapter, options: File
         parent.children.splice(index, 1, start, ...root.children, end);
     }
 
-    async function readAndParseMarkdownFile(fileName: string, _atHeader: string | undefined): Promise<Root> {
+    async function readAndParseMarkdownFile(fileName: string, header: string | undefined): Promise<Root> {
         const dir = file.dirname || process.cwd();
         const resolvedFile = path.resolve(dir, fileName);
         try {
             const vFile = await readFile(fs, resolvedFile);
-            return parseMarkdownFile(vFile);
+            const root = parseMarkdownFile(vFile);
+            sanitizeImport(root);
+            return extractHeader(root, header);
         } catch (e) {
             file.message(e as Error);
             return unified().use(remarkParse).parse(`\
@@ -161,6 +162,58 @@ function processFileInjections(file: VFile, fs: FileSystemAdapter, options: File
     function parseMarkdownFile(file: VFile): Root {
         return unified().use(remarkParse).parse(file);
     }
+}
+
+function sanitizeImport(root: Root): Root {
+    remove(root, (n: Node) => isHtmlNode(n) && directiveRegExp.test(n.value));
+    return root;
+}
+
+function extractHeader(root: Root, header: string | undefined): Root {
+    if (!header) return root;
+
+    function normalizeHeader(h: string): string {
+        return h.toLowerCase().replace(/[-_\s#`*]/g, '');
+    }
+
+    const searchFor = normalizeHeader(header);
+    const children = root.children;
+    const foundIdx = children.findIndex(
+        (n: Content) => isHeadingNode(n) && normalizeHeader(headingString(n)) === searchFor
+    );
+    const found = root.children[foundIdx];
+    if (!found || !isHeadingNode(found)) {
+        return {
+            type: 'root',
+            children: [
+                {
+                    type: 'html',
+                    value: `<!--- header: "${header}" not found.  --->`,
+                },
+            ],
+        };
+    }
+
+    const nodes: Content[] = [found];
+
+    const depth = found.depth;
+
+    for (let i = foundIdx + 1; i < children.length; ++i) {
+        const n = children[i];
+        if (isHeadingNode(n) && n.depth <= depth) {
+            break;
+        }
+        nodes.push(n);
+    }
+
+    return { type: 'root', children: nodes };
+}
+
+function headingString(n: Heading): string {
+    const md = unified()
+        .use(remarkStringify)
+        .stringify({ type: 'root', children: [n] });
+    return md;
 }
 
 function deleteInjectedContent(root: Root, file: VFile): Root {
@@ -309,6 +362,10 @@ function detectLineEnding(content: string): string {
 
 function isHtmlNode(n: Node | unknown): n is HTML {
     return is(n, 'html');
+}
+
+function isHeadingNode(n: Node | unknown): n is Heading {
+    return is(n, 'heading');
 }
 
 function isInjectNode(n: Node | unknown): n is HTML {

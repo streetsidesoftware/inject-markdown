@@ -14,7 +14,7 @@ const allowedFileExtensions: Record<string, boolean | undefined> = {
 
 async function version(): Promise<string> {
     const pathSelf = fileURLToPath(import.meta.url);
-    const pathPackageJson = path.join(path.basename(pathSelf), '../package.json');
+    const pathPackageJson = path.join(path.dirname(pathSelf), '../package.json');
     const packageJson = JSON.parse(await fs.readFile(pathPackageJson, 'utf-8'));
     return (typeof packageJson === 'object' && packageJson?.version) || '0.0.0';
 }
@@ -48,8 +48,9 @@ async function processGlobs(globs: string[], options: Options): Promise<boolean>
     const injector = new FileInjector(fs, options);
 
     for (const file of files) {
+        console.log(`Start: %s`, file);
         const r = await injector.processFile(file);
-        console.log('file: %s %o', file, r);
+        console.log('Finish file: %s %o', file, r);
     }
 
     return true;

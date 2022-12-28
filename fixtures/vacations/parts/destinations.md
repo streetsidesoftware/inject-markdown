@@ -1,6 +1,10 @@
+<!--- @@inject: destinations/amsterdam.md --->
+
 ## Amsterdam
 
 Amsterdam is full of beautiful canals.
+
+<!--- @@inject-end: destinations/amsterdam.md --->
 
 ## Orlando
 

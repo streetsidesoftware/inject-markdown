@@ -10,7 +10,8 @@
             "name": "Launch Program",
             "skipFiles": ["<node_internals>/**"],
             "program": "${workspaceFolder}/bin.mjs",
-            "args": ["fixtures/*.md", "--output-dir=temp"],
+            "args": ["*.md", "--output-dir=${workspaceFolder}/temp"],
+            "cwd": "${workspaceFolder}/fixtures/vacations",
             "outFiles": ["${workspaceFolder}/dist/**/*.js"]
         }
     ]
