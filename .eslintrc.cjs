@@ -56,13 +56,6 @@ const config = {
         },
         {
             files: ['**/*.test.ts', '**/*.spec.ts'],
-            extends: 'plugin:jest/recommended',
-            env: {
-                jest: true,
-            },
-            rules: {
-                'jest/valid-title': 'warn',
-            },
         },
     ],
     settings: {
