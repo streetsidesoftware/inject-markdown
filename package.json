@@ -9,8 +9,8 @@
   "scripts": {
     "build": "tsc -p .",
     "watch": "tsc -p . --watch",
-    "test": "vitest",
-    "test:bin": "./bin.mjs \"fixtures/*.md\" --output-dir=fixtures/output"
+    "test": "vitest run",
+    "test:bin": "./bin.mjs \"fixtures/*/*.md\" --output-dir=fixtures-output"
   },
   "keywords": [],
   "author": {
