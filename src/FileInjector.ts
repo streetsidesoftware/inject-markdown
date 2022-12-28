@@ -33,6 +33,8 @@ export interface FileInjectorOptions {
     outputDir?: string;
     /** Current working directory */
     cwd?: string;
+    /** Only clean the file, do not inject */
+    cleanOnly?: boolean;
 }
 
 export class FileInjector {
@@ -46,58 +48,80 @@ export class FileInjector {
      */
     async processFile(filePath: PathLike, encoding: BufferEncoding = 'utf8'): Promise<boolean> {
         const file = await readFile(this.fs, filePath, encoding);
+        return processFileInjections(file, this.fs, this.options);
+    }
+}
+
+function processFileInjections(file: VFile, fs: FileSystemAdapter, options: FileInjectorOptions): Promise<boolean> {
+    return __processFile();
+
+    async function __processFile(): Promise<boolean> {
         const fileValue = file.value;
-        const content = extractContent(file, encoding);
+        const content = extractContent(file);
         const lineEnding = detectLineEnding(content);
-        const result = await processFileContent(this.fs, file);
+        const result = await processFileContent();
         if (result.value === fileValue) {
-            this.options.outputDir && (await this.writeResult(result));
+            options.outputDir && (await writeResult(result));
             return false;
         }
         console.log(reporter(result));
-        const resultAsString = extractContent(result, encoding);
+        const resultAsString = extractContent(result);
         const resultContent = fixContentLineEndings(resultAsString, lineEnding, hasEofNewLine(content));
         if (content === resultContent) {
-            this.options.outputDir && (await this.writeResult(result));
+            options.outputDir && (await writeResult(result));
             return false;
         }
-        await this.writeResult(result);
+        await writeResult(result);
         return true;
     }
 
-    private async writeResult(file: VFile): Promise<void> {
+    async function writeResult(file: VFile): Promise<void> {
         const content = extractContent(file);
-        const filePath = this.determineTargetPath(file);
+        const filePath = determineTargetPath(file);
         const dir = path.dirname(filePath);
-        await this.fs.mkdir(dir, { recursive: true });
-        return this.fs.writeFile(filePath, content, getEncoding(file));
+        await fs.mkdir(dir, { recursive: true });
+        return fs.writeFile(filePath, content, getEncoding(file));
     }
 
-    private determineTargetPath(file: VFile): string {
-        const outDir = this.options.outputDir;
+    function determineTargetPath(file: VFile): string {
+        const outDir = options.outputDir;
         if (!outDir) return file.path;
 
-        const cwd = path.resolve(this.options.cwd || file.cwd);
+        const cwd = path.resolve(options.cwd || file.cwd);
         const srcPath = path.resolve(cwd, file.path);
         const relPath = path.relative(cwd, srcPath);
 
         return path.join(path.resolve(outDir), relPath);
     }
-}
 
-async function processFileContent(fs: FileSystemAdapter, file: VFile): Promise<VFile> {
-    if (!extractContent(file).includes(directivePrefix)) {
-        return file;
+    async function processFileContent(): Promise<VFile> {
+        if (!extractContent(file).includes(directivePrefix)) {
+            return file;
+        }
+        const result = await unified().use(remarkParse).use(processInjections).use(remarkStringify).process(file);
+        return result;
     }
-    const result = await unified().use(remarkParse).use(processInjections, fs).use(remarkStringify).process(file);
-    return result;
+
+    function processInjections() {
+        return (root: Root, file: VFile): Root => {
+            root = deleteInjectedContent(root, file);
+            if (options.cleanOnly) return root;
+            root = injectFiles(root);
+            return root;
+        };
+    }
 }
 
-function processInjections(_fs: FileSystemAdapter) {
-    return (root: Root, file: VFile): Root => {
-        root = deleteInjectedContent(root, file);
-        return root;
-    };
+function injectFiles(root: Root): Root {
+    const directiveNodes = collectInjectionNodes(root);
+
+    for (const node of directiveNodes) {
+        const d = parseDirectiveNode(node);
+        if (!d) continue;
+        console.log(d.file);
+    }
+
+    return root;
 }
 
 function deleteInjectedContent(root: Root, file: VFile): Root {
@@ -185,7 +209,7 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFile): DirectivePair
         return true;
     }
 
-    const dnp = nodes.map((node) => ({ node, directive: parseDirective(node.node.value) })).filter(validate);
+    const dnp = nodes.map((node) => ({ node, directive: parseDirectiveNode(node) })).filter(validate);
 
     const pairs: DirectivePair[] = [];
 
@@ -209,6 +233,10 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFile): DirectivePair
     }
 
     return pairs.reverse();
+}
+
+function parseDirectiveNode(node: DirectiveNode): Directive | undefined {
+    return parseDirective(node.node.value);
 }
 
 function parseDirective(html: string): Directive | undefined {
