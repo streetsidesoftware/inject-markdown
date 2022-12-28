@@ -1,5 +1,5 @@
 import assert from 'assert';
-import type { Content, HTML, Root } from 'mdast';
+import type { Content, HTML, Root, Parent } from 'mdast';
 import * as path from 'node:path';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
@@ -9,6 +9,7 @@ import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
 import { VFile } from 'vfile';
 import { reporter } from 'vfile-reporter';
+import { parentPort } from 'worker_threads';
 
 import { BufferEncoding, FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
 
@@ -115,19 +116,38 @@ function processFileInjections(file: VFile, fs: FileSystemAdapter, options: File
         const directiveNodes = collectInjectionNodes(root);
 
         for (const node of directiveNodes) {
-            const d = parseDirectiveNode(node);
-            if (!d) continue;
-            await injectFile(d);
+            if (!node.file) continue;
+            await injectFile(node);
         }
 
         return root;
     }
 
-    async function injectFile(directive: Directive): Promise<void> {
-        console.log(directive.file);
+    async function injectFile(directive: DirectiveNode): Promise<void> {
+        if (!directive.file || directive.type !== 'start') return;
+        const [encodedName, header] = directive.file.split('#', 2);
+        const fileName = decodeURI(encodedName);
+        console.log(fileName);
+
+        const parent = directive.parent;
+        const index = parent.children.indexOf(directive.node);
+        assert(index >= 0);
+        const addStart = directive.node.value.includes('@@inject-start');
+        const root = await readAndParseMarkdownFile(fileName, header);
+        remove(root, (n: Node) => isHtmlNode(n) && n.value.includes('@@inject'));
+        const encodedFile = encodeURI(fileName) + (header ? '#' + encodeURIComponent(header) : '');
+        const start: HTML = {
+            type: 'html',
+            value: `<!--- @@inject${addStart ? '-start' : ''}: ${encodedFile} --->`,
+        };
+        const end: HTML = {
+            type: 'html',
+            value: `<!--- @@inject-end: ${encodedFile} --->`,
+        };
+        parent.children.splice(index, 1, start, ...root.children, end);
     }
 
-    async function _readAndParseMarkdownFile(fileName: string): Promise<Root> {
+    async function readAndParseMarkdownFile(fileName: string, _atHeader: string | undefined): Promise<Root> {
         const dir = file.dirname || process.cwd();
         const resolvedFile = path.resolve(dir, fileName);
         try {
@@ -198,11 +218,6 @@ function deleteInjectedContent(root: Root, file: VFile): Root {
     return root;
 }
 
-interface DirectiveNode {
-    node: HTML;
-    parent: Node | null;
-}
-
 interface DirectivePair {
     start?: DirectiveNode | undefined;
     end?: DirectiveNode | undefined;
@@ -213,10 +228,13 @@ interface Directive {
     file: string;
 }
 
-interface NodeAndDirective extends Partial<Directive>, DirectiveNode {}
+interface DirectiveNode extends Partial<Directive> {
+    node: HTML;
+    parent: Parent;
+}
 
 function findInjectionPairs(nodes: DirectiveNode[], vfile: VFile): DirectivePair[] {
-    function validate(n: NodeAndDirective): n is Required<NodeAndDirective> {
+    function validate(n: DirectiveNode): n is Required<DirectiveNode> {
         if (!n.type) {
             vfile.message('Unable to parse @@inject directive.', n.node.position);
             return false;
@@ -228,11 +246,11 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFile): DirectivePair
         return true;
     }
 
-    const dnp = nodes.map((node) => ({ ...node, ...(parseDirectiveNode(node) || {}) })).filter(validate);
+    const dnp = nodes.filter(validate);
 
     const pairs: DirectivePair[] = [];
 
-    let last: NodeAndDirective | undefined = undefined;
+    let last: DirectiveNode | undefined = undefined;
     for (const n of dnp.reverse()) {
         if (n.type === 'start') {
             if (last?.file && last?.file !== n.file) {
@@ -254,8 +272,8 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFile): DirectivePair
     return pairs.reverse();
 }
 
-function parseDirectiveNode(node: DirectiveNode): Directive | undefined {
-    return parseDirective(node.node.value);
+function parseDirectiveNode(node: HTML): Directive | undefined {
+    return parseDirective(node.value);
 }
 
 function parseDirective(html: string): Directive | undefined {
@@ -272,10 +290,11 @@ function parseDirective(html: string): Directive | undefined {
 function collectInjectionNodes(root: Root): DirectiveNode[] {
     const nodes: DirectiveNode[] = [];
     visit(root, isInjectNode, (node, _index, parent) => {
-        nodes.push({ node, parent });
+        parent && nodes.push({ node, parent });
     });
 
-    return nodes;
+    const dNodes = nodes.map((node) => ({ ...node, ...(parseDirectiveNode(node.node) || {}) }));
+    return dNodes;
 }
 
 interface VFileData {
