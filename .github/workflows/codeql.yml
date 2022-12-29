@@ -12,6 +12,7 @@
 name: "CodeQL"
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main" ]
   pull_request:
@@ -19,6 +20,7 @@ on:
     branches: [ "main" ]
   schedule:
     - cron: '15 13 * * 2'
+  
 
 jobs:
   analyze:
