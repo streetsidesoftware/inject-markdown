@@ -24,10 +24,24 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup
-        # Directory name only
-        uses: ./.github/actions/setup
+        uses: ./.github/actions/install-build-test
         with:
           node-version: ${{ matrix.node-version }}
-      - run: pnpm i
-      - run: pnpm run build
-      - run: pnpm test
+
+  test-os:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [18.x]
+        os:
+          - windows-latest
+          - macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/install-build-test
+        with:
+          node-version: ${{ matrix.node-version }}
