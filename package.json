@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsc -p .",
     "watch": "tsc -p . --watch",
+    "coverage": "vitest run --coverage",
     "test": "vitest run",
     "test:bin": "./bin.mjs \"fixtures/*/*.md\" --output-dir=fixtures-output"
   },

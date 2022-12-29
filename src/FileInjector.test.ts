@@ -1,9 +1,10 @@
 import { describe, expect, MockedFunction, test, vi } from 'vitest';
 import type { FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
-import { FileInjector } from './FileInjector.js';
+import { FileInjector, Logger } from './FileInjector.js';
 import * as fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import * as path from 'path';
+import { format } from 'util';
 
 const __file__ = fileURLToPath(import.meta.url);
 const __dirname__ = path.dirname(__file__);
@@ -34,9 +35,12 @@ describe('FileInjector', () => {
         ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_' }}                             | ${true}        | ${'_out_/fixtures/vacations/vacations.md'}
         ${'fixtures/vacations/vacations.md'} | ${{ cwd: 'fixtures/vacations/', outputDir: '_out_' }} | ${true}        | ${'_out_/vacations.md'}
         ${'README.md'}                       | ${{ outputDir: '_out_' }}                             | ${false}       | ${'_out_/README.md'}
-    `('processFile', async ({ file, options, expectedResult, expectedFile }) => {
+    `('processFile $file $options', async ({ file, options, expectedResult, expectedFile }) => {
+        const logger = createLogger();
         file = path.resolve(__root__, file);
         options.cwd = options.cwd || __root__;
+        options.color = options.color ?? false;
+        options.logger = logger;
         expectedFile = path.resolve(__root__, expectedFile);
         const fsa = createFSA();
         const fi = new FileInjector(fsa, options);
@@ -44,6 +48,7 @@ describe('FileInjector', () => {
         expect(r).toBe(expectedResult);
         expect(fsa.mkdir).toHaveBeenCalledWith(path.dirname(expectedFile), { recursive: true });
         expect(normalizeWriteFileCalls(fsa.writeFile)).toMatchSnapshot();
+        // expect(logger.history).toMatchSnapshot();
     });
 });
 
@@ -128,4 +133,31 @@ function createFSA(): FSA {
     };
 
     return fsa;
+}
+
+function createLogger() {
+    type Target = 'error' | 'log' | 'warn' | 'stdout' | 'stderr';
+    const history: { target: Target; text: string }[] = [];
+
+    function f(target: Target): typeof console.log {
+        function log(...params: Parameters<typeof console.log>) {
+            history.push({ target, text: format(...params) });
+        }
+        return log;
+    }
+    const log = f('log');
+    const error = f('error');
+    const warn = f('warn');
+    const stderr = f('stderr');
+    const stdout = f('stdout');
+
+    const logger = {
+        log: vi.fn().mockImplementation(log),
+        error: vi.fn(error),
+        warn: vi.fn(warn),
+        writeStdout: vi.fn((t) => stdout(t)),
+        writeStderr: vi.fn((t) => stderr(t)),
+        history,
+    };
+    return logger satisfies Logger;
 }

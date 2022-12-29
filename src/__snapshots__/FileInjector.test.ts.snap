@@ -1,152 +1,18 @@
 // Vitest Snapshot v1
 
-exports[`FileInjector > processFile 1`] = `
+exports[`FileInjector > processFile 'README.md' { outputDir: '_out_' } 1`] = `
 [
   [
-    "fixtures/vacations/vacations.md",
-    "# Vacations
-
-## Destinations
-
-<!--- @@inject: parts/destinations.md --->
-
-## Amsterdam
-
-Amsterdam is full of beautiful canals.
-
-## Orlando
-
-There are many amusement parks in Orlando.
-
-## New York City
-
-It is a wonderful place to catch a show.
-
-## San Francisco
-
-Do not miss out on the Golden Gate Bridge.
-
-<!--- @@inject-end: parts/destinations.md --->
-
-*   Prices
-    <!--- @@inject: parts/prices.md --->
-    ## Data
-    | Name             | City      | Cost   |
-    | ---------------- | --------- | ------ |
-    | Parade of Lights | Amsterdam | €100/p |
-    | Disney World     | Orlando   | $200/p |
-    <!--- @@inject-end: parts/prices.md --->
-
-# Highlight Destination (Amsterdam)
-
-<!--- @@inject: parts/destinations.md#Amsterdam --->
-
-## Amsterdam
-
-Amsterdam is full of beautiful canals.
-
-<!--- @@inject-end: parts/destinations.md#Amsterdam --->
-
-## Code
-
-<!--- @@inject-start: parts/code.md --->
-
-## Example
-
-\`\`\`ts
-import * as fs from 'fs/promises';
-import * as path from 'path';
-\`\`\`
-
-<!--- @@inject-end: parts/code.md --->
-
-<pre>
-<!--- @@inject: parts/destinations.md -->
-</pre>
-
-\`\`\`markdown
-<!--- @@inject: parts/destinations.md -->
-\`\`\`
+    "_out_/README.md",
+    "# inject-markdown
+Tool to inject files into markdown files.
 ",
     "utf8",
   ],
 ]
 `;
 
-exports[`FileInjector > processFile 2`] = `
-[
-  [
-    "_out_/fixtures/vacations/vacations.md",
-    "# Vacations
-
-## Destinations
-
-<!--- @@inject: parts/destinations.md --->
-
-## Amsterdam
-
-Amsterdam is full of beautiful canals.
-
-## Orlando
-
-There are many amusement parks in Orlando.
-
-## New York City
-
-It is a wonderful place to catch a show.
-
-## San Francisco
-
-Do not miss out on the Golden Gate Bridge.
-
-<!--- @@inject-end: parts/destinations.md --->
-
-*   Prices
-    <!--- @@inject: parts/prices.md --->
-    ## Data
-    | Name             | City      | Cost   |
-    | ---------------- | --------- | ------ |
-    | Parade of Lights | Amsterdam | €100/p |
-    | Disney World     | Orlando   | $200/p |
-    <!--- @@inject-end: parts/prices.md --->
-
-# Highlight Destination (Amsterdam)
-
-<!--- @@inject: parts/destinations.md#Amsterdam --->
-
-## Amsterdam
-
-Amsterdam is full of beautiful canals.
-
-<!--- @@inject-end: parts/destinations.md#Amsterdam --->
-
-## Code
-
-<!--- @@inject-start: parts/code.md --->
-
-## Example
-
-\`\`\`ts
-import * as fs from 'fs/promises';
-import * as path from 'path';
-\`\`\`
-
-<!--- @@inject-end: parts/code.md --->
-
-<pre>
-<!--- @@inject: parts/destinations.md -->
-</pre>
-
-\`\`\`markdown
-<!--- @@inject: parts/destinations.md -->
-\`\`\`
-",
-    "utf8",
-  ],
-]
-`;
-
-exports[`FileInjector > processFile 3`] = `
+exports[`FileInjector > processFile 'fixtures/vacations/vacations.md' { cwd: 'fixtures/vacations/', …(1) } 1`] = `
 [
   [
     "_out_/vacations.md",
@@ -219,12 +85,146 @@ import * as path from 'path';
 ]
 `;
 
-exports[`FileInjector > processFile 4`] = `
+exports[`FileInjector > processFile 'fixtures/vacations/vacations.md' { outputDir: '_out_' } 1`] = `
 [
   [
-    "_out_/README.md",
-    "# inject-markdown
-Tool to inject files into markdown files.
+    "_out_/fixtures/vacations/vacations.md",
+    "# Vacations
+
+## Destinations
+
+<!--- @@inject: parts/destinations.md --->
+
+## Amsterdam
+
+Amsterdam is full of beautiful canals.
+
+## Orlando
+
+There are many amusement parks in Orlando.
+
+## New York City
+
+It is a wonderful place to catch a show.
+
+## San Francisco
+
+Do not miss out on the Golden Gate Bridge.
+
+<!--- @@inject-end: parts/destinations.md --->
+
+*   Prices
+    <!--- @@inject: parts/prices.md --->
+    ## Data
+    | Name             | City      | Cost   |
+    | ---------------- | --------- | ------ |
+    | Parade of Lights | Amsterdam | €100/p |
+    | Disney World     | Orlando   | $200/p |
+    <!--- @@inject-end: parts/prices.md --->
+
+# Highlight Destination (Amsterdam)
+
+<!--- @@inject: parts/destinations.md#Amsterdam --->
+
+## Amsterdam
+
+Amsterdam is full of beautiful canals.
+
+<!--- @@inject-end: parts/destinations.md#Amsterdam --->
+
+## Code
+
+<!--- @@inject-start: parts/code.md --->
+
+## Example
+
+\`\`\`ts
+import * as fs from 'fs/promises';
+import * as path from 'path';
+\`\`\`
+
+<!--- @@inject-end: parts/code.md --->
+
+<pre>
+<!--- @@inject: parts/destinations.md -->
+</pre>
+
+\`\`\`markdown
+<!--- @@inject: parts/destinations.md -->
+\`\`\`
+",
+    "utf8",
+  ],
+]
+`;
+
+exports[`FileInjector > processFile 'fixtures/vacations/vacations.md' {} 1`] = `
+[
+  [
+    "fixtures/vacations/vacations.md",
+    "# Vacations
+
+## Destinations
+
+<!--- @@inject: parts/destinations.md --->
+
+## Amsterdam
+
+Amsterdam is full of beautiful canals.
+
+## Orlando
+
+There are many amusement parks in Orlando.
+
+## New York City
+
+It is a wonderful place to catch a show.
+
+## San Francisco
+
+Do not miss out on the Golden Gate Bridge.
+
+<!--- @@inject-end: parts/destinations.md --->
+
+*   Prices
+    <!--- @@inject: parts/prices.md --->
+    ## Data
+    | Name             | City      | Cost   |
+    | ---------------- | --------- | ------ |
+    | Parade of Lights | Amsterdam | €100/p |
+    | Disney World     | Orlando   | $200/p |
+    <!--- @@inject-end: parts/prices.md --->
+
+# Highlight Destination (Amsterdam)
+
+<!--- @@inject: parts/destinations.md#Amsterdam --->
+
+## Amsterdam
+
+Amsterdam is full of beautiful canals.
+
+<!--- @@inject-end: parts/destinations.md#Amsterdam --->
+
+## Code
+
+<!--- @@inject-start: parts/code.md --->
+
+## Example
+
+\`\`\`ts
+import * as fs from 'fs/promises';
+import * as path from 'path';
+\`\`\`
+
+<!--- @@inject-end: parts/code.md --->
+
+<pre>
+<!--- @@inject: parts/destinations.md -->
+</pre>
+
+\`\`\`markdown
+<!--- @@inject: parts/destinations.md -->
+\`\`\`
 ",
     "utf8",
   ],

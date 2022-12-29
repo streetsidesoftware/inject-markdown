@@ -43,14 +43,10 @@ async function processGlobs(globs: string[], options: Options): Promise<boolean>
         return !options.mustFindFiles;
     }
 
-    console.log('%o', files);
-
     const injector = new FileInjector(fs, options);
 
     for (const file of files) {
-        console.log(`Start: %s`, file);
         const r = await injector.processFile(file);
-        console.log('Finish file: %s %o', file, r);
     }
 
     return true;
@@ -65,8 +61,13 @@ async function app(program = defaultCommand, argv?: string[]) {
         .option('--output-dir <dir>', 'Output Directory')
         .option('--cwd <dir>', 'Current Directory')
         .option('--clean', 'Remove the injected content.')
+        .option('--verbose', 'Verbose output.')
+        .option('--silent', 'Only output errors.')
+        .option('--color', 'Force color.')
+        .option('--no-color', 'Do not use color.')
         .version(await version())
         .action(async (files: string[], options: Options, _command: Command) => {
+            console.log('Options: %o', options);
             const result = await processGlobs(files, options);
             if (!result) {
                 throw new CommanderError(1, 'Not Found', 'No files found.');

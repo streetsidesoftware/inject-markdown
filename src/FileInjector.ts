@@ -1,5 +1,5 @@
 import assert from 'assert';
-import type { Content, HTML, Root, Parent, Heading } from 'mdast';
+import type { Content, Heading, HTML, Parent, Root } from 'mdast';
 import * as path from 'node:path';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
@@ -9,8 +9,8 @@ import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
 import { VFile } from 'vfile';
 import { reporter } from 'vfile-reporter';
-
 import { BufferEncoding, FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
+import chalk, { supportsColor } from 'chalk';
 
 type Node = Root | Content;
 
@@ -23,6 +23,14 @@ const directiveStart = directivePrefix + ':';
 const directiveStartVerbose = directivePrefix + '-start:';
 const directiveEnd = directivePrefix + '-end:';
 
+export interface Logger {
+    log: typeof console.log;
+    error: typeof console.error;
+    warn: typeof console.warn;
+    writeStdout(text: string): void;
+    writeStderr(text: string): void;
+}
+
 export interface FileInjectorOptions {
     /** optional output directory */
     outputDir?: string;
@@ -30,6 +38,28 @@ export interface FileInjectorOptions {
     cwd?: string;
     /** Only clean the file, do not inject */
     clean?: boolean;
+
+    /**
+     * Only show errors.
+     */
+    silent?: boolean;
+
+    /**
+     * Use color
+     * `true` - force color
+     * `false` - no color
+     * `undefined` - let chalk decide.
+     */
+    color?: boolean | undefined;
+
+    /**
+     * Verbose Level
+     * `0` || `false` = none
+     * `1` || `true` = light
+     */
+    verbose?: number | boolean;
+
+    logger?: Logger;
 }
 
 export class FileInjector {
@@ -46,16 +76,55 @@ export class FileInjector {
      */
     async processFile(filePath: PathLike, encoding: BufferEncoding = 'utf8'): Promise<boolean> {
         const file = await readFile(this.fs, filePath, encoding);
-        return await processFileInjections(file, this.fs, { ...this.options, cwd: this.cwd });
+        const logger: Logger = {
+            log: console.log.bind(console),
+            error: console.error.bind(console),
+            warn: console.error.bind(console),
+            writeStdout: process.stdout.write.bind(process.stdout),
+            writeStderr: process.stderr.write.bind(process.stderr),
+        };
+        return await processFileInjections(file, this.fs, {
+            ...this.options,
+            cwd: this.cwd,
+            logger: this.options.logger || logger,
+            verbose: (!this.options.silent && this.options.verbose) || false,
+        });
     }
 }
 
 interface ProcessFileInjections extends FileInjectorOptions {
     cwd: string;
+    logger: Logger;
 }
 
-function processFileInjections(file: VFile, fs: FileSystemAdapter, options: ProcessFileInjections): Promise<boolean> {
-    return __processFile();
+function ident(s: string): string {
+    return s;
+}
+
+async function processFileInjections(
+    file: VFile,
+    fs: FileSystemAdapter,
+    options: ProcessFileInjections
+): Promise<boolean> {
+    setColor();
+    const yellow = chalk.yellow;
+    const green = chalk.green;
+    const gray = chalk.gray;
+    const console = options.logger;
+    const stderr = options.silent ? { write: () => undefined } : { write: (s: string) => console.writeStderr(s) };
+    stderr.write(yellow(relativePathNormalized(file.path, options.cwd)) + ' ...');
+    const r = await __processFile();
+    stderr.write((options.verbose ? '\n  ' : ' ') + green('done.') + '\n');
+    return r;
+
+    function setColor() {
+        if (options.color === false) {
+            chalk.level = 0;
+        }
+        if (options.color) {
+            chalk.level = chalk.level || (supportsColor && supportsColor.level) || 2;
+        }
+    }
 
     async function __processFile(): Promise<boolean> {
         const fileValue = file.value;
@@ -66,7 +135,7 @@ function processFileInjections(file: VFile, fs: FileSystemAdapter, options: Proc
             options.outputDir && (await writeResult(result));
             return false;
         }
-        console.log(reporter(result));
+        result.messages.length && console.error('\n' + reporter(result));
         const resultAsString = extractContent(result);
         const resultContent = fixContentLineEndings(resultAsString, lineEnding, hasEofNewLine(content));
         if (content === resultContent) {
@@ -128,7 +197,8 @@ function processFileInjections(file: VFile, fs: FileSystemAdapter, options: Proc
         if (!directive.file || directive.type !== 'start') return;
         const [encodedName, header] = directive.file.split('#', 2);
         const fileName = decodeURI(encodedName);
-        console.log(fileName);
+
+        options.verbose && stderr.write(`\n  ${gray(relativePathNormalized(fileName))}`);
 
         const parent = directive.parent;
         const index = parent.children.indexOf(directive.node);
@@ -150,8 +220,7 @@ function processFileInjections(file: VFile, fs: FileSystemAdapter, options: Proc
     }
 
     async function readAndParseMarkdownFile(fileName: string, header: string | undefined): Promise<Root> {
-        const dir = file.dirname || options.cwd;
-        const resolvedFile = path.resolve(dir, fileName);
+        const resolvedFile = resolvePath(fileName);
         try {
             const vFile = await readFile(fs, resolvedFile);
             const root = parseMarkdownFile(vFile);
@@ -161,13 +230,23 @@ function processFileInjections(file: VFile, fs: FileSystemAdapter, options: Proc
             file.message(e as Error);
             return unified().use(remarkParse).parse(`\
 <!---
-  Failed to read "${fileName}"
+  Failed to read "${relativePathNormalized(resolvedFile)}"
 --->`);
         }
     }
 
     function parseMarkdownFile(file: VFile): Root {
         return unified().use(remarkParse).parse(file);
+    }
+
+    function resolvePath(p: string): string {
+        const dir = file.dirname || options.cwd;
+        return path.resolve(dir, p);
+    }
+
+    function relativePathNormalized(p: string, relDir?: string): string {
+        const dir = relDir || file.dirname || options.cwd;
+        return normalizePath(path.relative(dir, resolvePath(p)));
     }
 }
 
@@ -406,4 +485,12 @@ function hasEofNewLine(content: string): boolean {
 
 function isDefined<T>(v: T | undefined | null): v is T {
     return v !== undefined && v !== null;
+}
+
+export function normalizePath(p: string): string;
+export function normalizePath(p: URL): URL;
+export function normalizePath(p: PathLike): PathLike;
+export function normalizePath(p: PathLike): PathLike {
+    if (typeof p !== 'string') return p;
+    return path.sep === '\\' ? p.replace(/\\/g, '/') : p;
 }
