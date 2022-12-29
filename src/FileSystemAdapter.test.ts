@@ -1,6 +1,6 @@
+import * as fs from 'node:fs/promises';
 import { describe, expect, test } from 'vitest';
 import type { FileSystemAdapter } from './FileSystemAdapter.js';
-import * as fs from 'node:fs/promises';
 
 describe('Validate FileSystemAdapter types', () => {
     test('FileSystemAdapter', () => {
