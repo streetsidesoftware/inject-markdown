@@ -33,6 +33,8 @@ describe('FileInjector', () => {
         file                                 | options                                               | expectedResult | expectedFile
         ${'fixtures/vacations/vacations.md'} | ${{}}                                                 | ${true}        | ${'fixtures/vacations/vacations.md'}
         ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_' }}                             | ${true}        | ${'_out_/fixtures/vacations/vacations.md'}
+        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_', verbose: true }}              | ${true}        | ${'_out_/fixtures/vacations/vacations.md'}
+        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_', silent: true }}               | ${true}        | ${'_out_/fixtures/vacations/vacations.md'}
         ${'fixtures/vacations/vacations.md'} | ${{ cwd: 'fixtures/vacations/', outputDir: '_out_' }} | ${true}        | ${'_out_/vacations.md'}
         ${'README.md'}                       | ${{ outputDir: '_out_' }}                             | ${false}       | ${'_out_/README.md'}
     `('processFile $file $options', async ({ file, options, expectedResult, expectedFile }) => {
@@ -48,7 +50,7 @@ describe('FileInjector', () => {
         expect(r).toBe(expectedResult);
         expect(fsa.mkdir).toHaveBeenCalledWith(path.dirname(expectedFile), { recursive: true });
         expect(normalizeWriteFileCalls(fsa.writeFile)).toMatchSnapshot();
-        // expect(logger.history).toMatchSnapshot();
+        expect(logger.history).toMatchSnapshot();
     });
 });
 

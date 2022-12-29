@@ -67,7 +67,7 @@ async function app(program = defaultCommand, argv?: string[]) {
         .option('--no-color', 'Do not use color.')
         .version(await version())
         .action(async (files: string[], options: Options, _command: Command) => {
-            console.log('Options: %o', options);
+            // console.log('Options: %o', options);
             const result = await processGlobs(files, options);
             if (!result) {
                 throw new CommanderError(1, 'Not Found', 'No files found.');
