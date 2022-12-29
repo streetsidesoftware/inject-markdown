@@ -3,9 +3,13 @@ ignorePaths: []
 dictionaryDefinitions: []
 dictionaries: []
 words:
-    - globby
-    - mdast
-    - unist
-    - vfile
+  - autobuild
+  - buildscript
+  - codeql
+  - globby
+  - mdast
+  - pnpm
+  - unist
+  - vfile
 ignoreWords: []
 import: []
