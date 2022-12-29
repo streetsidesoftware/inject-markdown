@@ -22,6 +22,7 @@ jobs:
           - ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v3
       - name: Setup
         # Directory name only
         uses: ./.github/actions/setup
