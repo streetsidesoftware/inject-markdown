@@ -9,7 +9,6 @@ import { FileInjector, FileInjectorOptions } from './FileInjector.js';
 const excludes = ['node_modules'];
 const allowedFileExtensions: Record<string, boolean | undefined> = {
     '.md': true,
-    '.mdx': true,
 };
 
 async function version(): Promise<string> {
