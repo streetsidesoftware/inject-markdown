@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Command line tool to inject files into markdown files.",
   "type": "module",
+  "packageManager": "pnpm@7.18.2",
   "bin": {
     "inject-markdown": "./bin.mjs"
   },
