@@ -33,7 +33,10 @@ export interface FileInjectorOptions {
 }
 
 export class FileInjector {
-    constructor(readonly fs: FileSystemAdapter, readonly options: FileInjectorOptions) {}
+    private cwd: string;
+    constructor(readonly fs: FileSystemAdapter, readonly options: FileInjectorOptions) {
+        this.cwd = path.resolve(options.cwd || process.cwd());
+    }
 
     /**
      * Process all injections for a file.
@@ -43,11 +46,15 @@ export class FileInjector {
      */
     async processFile(filePath: PathLike, encoding: BufferEncoding = 'utf8'): Promise<boolean> {
         const file = await readFile(this.fs, filePath, encoding);
-        return processFileInjections(file, this.fs, this.options);
+        return await processFileInjections(file, this.fs, { ...this.options, cwd: this.cwd });
     }
 }
 
-function processFileInjections(file: VFile, fs: FileSystemAdapter, options: FileInjectorOptions): Promise<boolean> {
+interface ProcessFileInjections extends FileInjectorOptions {
+    cwd: string;
+}
+
+function processFileInjections(file: VFile, fs: FileSystemAdapter, options: ProcessFileInjections): Promise<boolean> {
     return __processFile();
 
     async function __processFile(): Promise<boolean> {
@@ -82,7 +89,7 @@ function processFileInjections(file: VFile, fs: FileSystemAdapter, options: File
         const outDir = options.outputDir;
         if (!outDir) return file.path;
 
-        const cwd = path.resolve(options.cwd || file.cwd);
+        const cwd = options.cwd;
         const srcPath = path.resolve(cwd, file.path);
         const relPath = path.relative(cwd, srcPath);
 
@@ -143,7 +150,7 @@ function processFileInjections(file: VFile, fs: FileSystemAdapter, options: File
     }
 
     async function readAndParseMarkdownFile(fileName: string, header: string | undefined): Promise<Root> {
-        const dir = file.dirname || process.cwd();
+        const dir = file.dirname || options.cwd;
         const resolvedFile = path.resolve(dir, fileName);
         try {
             const vFile = await readFile(fs, resolvedFile);
