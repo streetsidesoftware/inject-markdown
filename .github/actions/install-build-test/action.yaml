@@ -11,7 +11,7 @@ runs:
       # Directory name only
       uses: ./.github/actions/setup
       with:
-        node-version: ${{ input.node-version }}
+        node-version: ${{ inputs.node-version }}
     - shell: bash
       run: |
         pnpm i
