@@ -1,7 +1,7 @@
 import {} from 'chalk';
 import { Command, CommanderError, program as defaultCommand } from 'commander';
 import * as fs from 'fs/promises';
-import { globby } from 'globby';
+import { globby, type Options as GlobbyOptions } from 'globby';
 import { fileURLToPath } from 'node:url';
 import * as path from 'path';
 import { FileInjector, FileInjectorOptions } from './FileInjector.js';
@@ -22,21 +22,26 @@ interface Options extends FileInjectorOptions {
     mustFindFiles: boolean;
 }
 
-async function findFiles(globs: string[]) {
+async function findFiles(globs: string[], cwd: string | undefined) {
+    const _cwd = process.cwd();
+    cwd && process.chdir(cwd);
+    const options: GlobbyOptions = {
+        ignore: excludes,
+        onlyFiles: true,
+    };
     const files = await globby(
         globs.map((a) => a.trim()).filter((a) => !!a),
-        {
-            ignore: excludes,
-            onlyFiles: true,
-        }
+        options
     );
+    process.chdir(_cwd);
+    // console.log('%o', files);
     return files.filter((f) => path.extname(f) in allowedFileExtensions);
 }
 
 async function processGlobs(globs: string[], options: Options): Promise<boolean> {
     if (!globs.length) return false;
 
-    const files = await findFiles(globs);
+    const files = await findFiles(globs, options.cwd);
 
     if (!files.length) {
         return !options.mustFindFiles;

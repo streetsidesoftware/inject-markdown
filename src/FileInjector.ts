@@ -23,6 +23,15 @@ const directiveStart = directivePrefix + ':';
 const directiveStartVerbose = directivePrefix + '-start:';
 const directiveEnd = directivePrefix + '-end:';
 
+const outputOptions = {
+    bullet: '-',
+    emphasis: '_',
+    fence: '`',
+    fences: true,
+    incrementListMarker: false,
+    strong: '*',
+} as const;
+
 export interface Logger {
     log: typeof console.log;
     error: typeof console.error;
@@ -75,7 +84,8 @@ export class FileInjector {
      * @returns true if changed, otherwise false.
      */
     async processFile(filePath: PathLike, encoding: BufferEncoding = 'utf8'): Promise<boolean> {
-        const file = await readFile(this.fs, filePath, encoding);
+        const p = typeof filePath === 'string' ? path.resolve(this.cwd, filePath) : filePath;
+        const file = await readFile(this.fs, p, encoding);
         const logger: Logger = {
             log: console.log.bind(console),
             error: console.error.bind(console),
@@ -97,20 +107,17 @@ interface ProcessFileInjections extends FileInjectorOptions {
     logger: Logger;
 }
 
-function ident(s: string): string {
-    return s;
-}
-
 async function processFileInjections(
     file: VFile,
     fs: FileSystemAdapter,
     options: ProcessFileInjections
 ): Promise<boolean> {
     setColor();
+    const console = options.logger;
+    // console.log('File: %s\nOptions: %o', file.path, options);
     const yellow = chalk.yellow;
     const green = chalk.green;
     const gray = chalk.gray;
-    const console = options.logger;
     const stderr = options.silent ? { write: () => undefined } : { write: (s: string) => console.writeStderr(s) };
     stderr.write(yellow(relativePathNormalized(file.path, options.cwd)) + ' ...');
     const r = await __processFile();
@@ -169,7 +176,11 @@ async function processFileInjections(
         if (!extractContent(file).includes(directivePrefix)) {
             return file;
         }
-        const result = await unified().use(remarkParse).use(processInjections).use(remarkStringify).process(file);
+        const result = await unified()
+            .use(remarkParse)
+            .use(processInjections)
+            .use(remarkStringify, outputOptions)
+            .process(file);
         return result;
     }
 
