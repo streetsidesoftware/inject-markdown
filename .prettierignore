@@ -10,3 +10,5 @@ CHANGELOG.md
 coverage
 cspell.json
 **/*.schema.json
+/fixtures-output/**
+.release-please-manifest.json

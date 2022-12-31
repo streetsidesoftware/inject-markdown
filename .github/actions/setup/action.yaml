@@ -16,3 +16,7 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
         cache: 'pnpm'
+
+    - name: Install
+      run: pnpm i
+      shell: bash
