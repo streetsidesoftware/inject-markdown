@@ -39,6 +39,6 @@ jobs:
           pnpm i
           pnpm build
 
-      - run: pnpm publish
+      - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.PUBLISH_NPM}}
