@@ -22,7 +22,7 @@ Do not miss out on the Golden Gate Bridge.
 
 <!--- @@inject-end: parts/destinations.md --->
 
-*   Prices
+-   Prices
     <!--- @@inject: parts/prices.md --->
     ## Data
     | Name             | City      | Cost   |
