@@ -16,7 +16,11 @@
     "test": "vitest run",
     "test:bin": "./bin.mjs \"fixtures/*/*.md\" --output-dir=fixtures-output"
   },
-  "keywords": [],
+  "keywords": [
+    "markdown",
+    "inject",
+    "import"
+  ],
   "author": {
     "name": "Street Side Software",
     "url": "https://github.com/streetsidesoftware"
