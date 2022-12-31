@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/streetsidesoftware/inject-markdown/compare/v1.0.0...v1.1.0) (2022-12-31)
+
+
+### Features
+
+* Support injecting code blocks ([#8](https://github.com/streetsidesoftware/inject-markdown/issues/8)) ([95b49ab](https://github.com/streetsidesoftware/inject-markdown/commit/95b49ab69bc735288e71e3d4bc312f631e510b46))
+
 ## 1.0.0 (2022-12-31)
 
 
