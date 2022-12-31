@@ -61,6 +61,7 @@
   "files": [
     "bin.mjs",
     "dist/**/*.mjs",
+    "dist/**/*.js",
     "!**/*.test.*",
     "!**/*.map"
   ],
