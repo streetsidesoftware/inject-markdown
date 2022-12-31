@@ -14,7 +14,7 @@
     "sample:clean": "./bin.mjs --clean \"sample-clean/**/*.md\"",
     "sample:hydrate": "./bin.mjs \"*.md\" --cwd=sample-clean --output-dir=sample-hydrated",
     "test": "vitest run",
-    "test:bin": "./bin.mjs \"*/*.md\" --cwd=fixtures --output-dir=fixtures-output",
+    "test:bin": "./bin.mjs \"**\" --cwd=fixtures --output-dir=fixtures-output",
     "prepare": "pnpm build"
   },
   "keywords": [
