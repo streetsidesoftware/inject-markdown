@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/streetsidesoftware/inject-markdown/compare/v1.1.0...v1.1.1) (2022-12-31)
+
+
+### Bug Fixes
+
+* Fix publish step ([ffff211](https://github.com/streetsidesoftware/inject-markdown/commit/ffff2119b48badd43306d873178e30544579970d))
+
 ## [1.1.0](https://github.com/streetsidesoftware/inject-markdown/compare/v1.0.0...v1.1.0) (2022-12-31)
 
 
