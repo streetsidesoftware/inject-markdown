@@ -1,9 +1,15 @@
+name: release-please
+
 on:
   workflow_dispatch:
   push:
     branches:
       - main
-name: release-please
+
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -26,12 +32,6 @@ jobs:
     steps:
       # The logic below handles the npm publication:
       - uses: actions/checkout@v3
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          registry-url: 'https://registry.npmjs.org'
-
       - name: Setup
         uses: ./.github/actions/setup
 
