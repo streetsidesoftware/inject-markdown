@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsc -p .",
     "watch": "tsc -p . --watch",
+    "build:readme": "./scripts/update_readme.sh",
     "coverage": "vitest run --coverage",
     "lint": "pnpm eslint && pnpm prettier",
     "lint:fix": "pnpm eslint:fix && pnpm prettier:fix",
