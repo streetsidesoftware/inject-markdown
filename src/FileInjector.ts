@@ -1,5 +1,5 @@
 import assert from 'assert';
-import type { Content, Heading, HTML, Parent, Root } from 'mdast';
+import type { Content, Heading, HTML, Parent, Root, Code } from 'mdast';
 import * as path from 'node:path';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
@@ -11,16 +11,18 @@ import { VFile } from 'vfile';
 import { reporter } from 'vfile-reporter';
 import { BufferEncoding, FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
 import chalk, { supportsColor } from 'chalk';
+import { fileType } from './fileType.mjs';
 
 type Node = Root | Content;
 
-const injectDirectiveRegExp = /^[ \t]*<!---?\s*@@inject(?<type>|-start|-end):\s*(?<file>.*?)-?-->$/;
+const injectDirectiveRegExp = /^[ \t]*<!---?\s*@@inject(?<type>|-start|-end|-code):\s*(?<file>.*?)-?-->$/;
 
 const directiveRegExp = /^[ \t]*<!---?\s*@@inject(\b|-)/;
 
 const directivePrefix = '@@inject';
 const directiveStart = directivePrefix + ':';
 const directiveStartVerbose = directivePrefix + '-start:';
+const directiveStartCode = directivePrefix + '-code:';
 const directiveEnd = directivePrefix + '-end:';
 
 const outputOptions = {
@@ -205,20 +207,45 @@ async function processFileInjections(
     }
 
     async function injectFile(directive: DirectiveNode): Promise<void> {
+        switch (directive.type) {
+            case 'start':
+                return injectMarkdownFile(directive);
+            case 'code':
+                return injectCodeFile(directive);
+        }
+    }
+
+    async function injectMarkdownFile(directive: DirectiveNode): Promise<void> {
         if (!directive.file || directive.type !== 'start') return;
         const [encodedName, header] = directive.file.split('#', 2);
         const fileName = decodeURI(encodedName);
-
         options.verbose && stderr.write(`\n  ${gray(relativePathNormalized(fileName))}`);
+        const root = await readAndParseMarkdownFile(fileName, header);
+        return injectContent(directive, root);
+    }
 
+    async function injectCodeFile(directive: DirectiveNode): Promise<void> {
+        if (!directive.file || directive.type !== 'code') return;
+        const [encodedName, lang] = directive.file.split('#', 2);
+        const fileName = decodeURI(encodedName);
+        options.verbose && stderr.write(`\n  ${gray(relativePathNormalized(fileName))}`);
+        const root = await readAndParseCodeFile(fileName, lang);
+        return injectContent(directive, root);
+    }
+
+    async function injectContent(directive: DirectiveNode, root: Root): Promise<void> {
+        if (!directive.file) return;
+        const [encodedName, header] = directive.file.split('#', 2);
+        const fileName = decodeURI(encodedName);
+        const encodedFile = encodeURI(fileName) + (header ? '#' + encodeURIComponent(header) : '');
         const parent = directive.parent;
         const index = parent.children.indexOf(directive.node);
         assert(index >= 0);
         const startDirective = directive.node.value.includes(directiveStartVerbose)
             ? directiveStartVerbose
+            : directive.node.value.includes(directiveStartCode)
+            ? directiveStartCode
             : directiveStart;
-        const root = await readAndParseMarkdownFile(fileName, header);
-        const encodedFile = encodeURI(fileName) + (header ? '#' + encodeURIComponent(header) : '');
         const start: HTML = {
             type: 'html',
             value: `<!--- ${startDirective} ${encodedFile} --->`,
@@ -230,19 +257,45 @@ async function processFileInjections(
         parent.children.splice(index, 1, start, ...root.children, end);
     }
 
-    async function readAndParseMarkdownFile(fileName: string, header: string | undefined): Promise<Root> {
-        const resolvedFile = resolvePath(fileName);
+    async function readAndParseCodeFile(fileName: string, lang: string): Promise<Root> {
         try {
-            const vFile = await readFile(fs, resolvedFile);
+            const vFile = await resolveAndReadFile(fileName);
+            const content = extractContent(vFile);
+            const code: Code = {
+                type: 'code',
+                lang: lang || fileType(fileName),
+                value: content.trim(),
+            };
+            return {
+                type: 'root',
+                children: [code],
+            };
+        } catch (e) {
+            const err = toError(e);
+            file.message(err.message);
+            return errorToComment(err);
+        }
+    }
+
+    async function readAndParseMarkdownFile(fileName: string, header: string | undefined): Promise<Root> {
+        try {
+            const vFile = await resolveAndReadFile(fileName);
             const root = parseMarkdownFile(vFile);
             sanitizeImport(root);
             return extractHeader(root, header);
         } catch (e) {
-            file.message(e as Error);
-            return unified().use(remarkParse).parse(`\
-<!---
-  Failed to read "${relativePathNormalized(resolvedFile)}"
---->`);
+            const err = toError(e);
+            file.message(err.message);
+            return errorToComment(err);
+        }
+    }
+
+    async function resolveAndReadFile(fileName: string): Promise<VFile> {
+        const resolvedFile = resolvePath(fileName);
+        try {
+            return await readFile(fs, resolvedFile);
+        } catch (e) {
+            throw new Error(`Failed to read "${relativePathNormalized(resolvedFile)}"`);
         }
     }
 
@@ -369,8 +422,9 @@ interface DirectivePair {
     end?: DirectiveNode | undefined;
 }
 
+type DirectiveType = 'start' | 'end' | 'code';
 interface Directive {
-    type: 'start' | 'end';
+    type: DirectiveType;
     file: string;
 }
 
@@ -379,13 +433,19 @@ interface DirectiveNode extends Partial<Directive> {
     parent: Parent;
 }
 
+const startTypes: Record<DirectiveType, boolean> = {
+    start: true,
+    code: true,
+    end: false,
+} as const;
+
 function findInjectionPairs(nodes: DirectiveNode[], vfile: VFile): DirectivePair[] {
     function validate(n: DirectiveNode): n is Required<DirectiveNode> {
         if (!n.type) {
             vfile.message('Unable to parse @@inject directive.', n.node.position);
             return false;
         }
-        if (n.type === 'start' && !n.file) {
+        if (startTypes[n.type] && !n.file) {
             vfile.message('Missing injection filename.', n.node.position);
             return false;
         }
@@ -395,10 +455,9 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFile): DirectivePair
     const dnp = nodes.filter(validate);
 
     const pairs: DirectivePair[] = [];
-
     let last: DirectiveNode | undefined = undefined;
     for (const n of dnp.reverse()) {
-        if (n.type === 'start') {
+        if (startTypes[n.type]) {
             if (last?.file && last?.file !== n.file) {
                 vfile.message(`Unmatched @@inject-end "${last.file || ''}"`, last.node.position);
                 pairs.push({ end: last });
@@ -426,9 +485,13 @@ function parseDirective(html: string): Directive | undefined {
     const m = html.match(injectDirectiveRegExp);
     if (!m || !m.groups) return undefined;
 
+    const file = m.groups['file'].trim();
+    const isEnd = m.groups['type'] === '-end';
+    const isCode = (!isEnd && !file.replace(/#.*/, '').toLowerCase().endsWith('.md')) || m.groups['type'] === '-code';
+
     const d: Directive = {
-        type: m.groups['type'] === '-end' ? 'end' : 'start',
-        file: m.groups['file'].trim(),
+        type: isEnd ? 'end' : isCode ? 'code' : 'start',
+        file,
     };
     return d;
 }
@@ -504,4 +567,18 @@ export function normalizePath(p: PathLike): PathLike;
 export function normalizePath(p: PathLike): PathLike {
     if (typeof p !== 'string') return p;
     return path.sep === '\\' ? p.replace(/\\/g, '/') : p;
+}
+
+function toError(e: unknown): Error {
+    if (e && typeof e === 'object') return e as Error;
+    if (typeof e === 'string') return new Error(e);
+    return new Error('Unknown');
+}
+
+function errorToComment(err: Error): Root {
+    const msg = (err.message || err.toString()).split('\n').join('\n  ');
+    return unified().use(remarkParse).parse(`\
+<!---
+  ${msg}
+--->`);
 }
