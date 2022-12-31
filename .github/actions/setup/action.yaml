@@ -2,8 +2,9 @@ name: setup_node
 description: Setup Node, and install Pnpm
 inputs:
   node-version:
-    required: true
+    required: false
     description: The version of Node to use.
+    default: '18.x'
 runs:
   using: 'composite'
   steps:

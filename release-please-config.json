@@ -1,0 +1,15 @@
+{
+    "include-component-in-tag": false,
+    "include-v-in-tag": true,
+    "packages": {
+        ".": {
+            "releaseType": "node",
+            "draft": false,
+            "prerelease": false,
+            "bumpMinorPreMajor": false,
+            "bumpPatchForMinorPreMajor": false,
+            "changelogPath": "CHANGELOG.md",
+            "versioning": "default"
+        }
+    }
+}
