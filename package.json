@@ -16,11 +16,19 @@
     "test": "vitest run",
     "test:bin": "./bin.mjs \"fixtures/*/*.md\" --output-dir=fixtures-output"
   },
-  "keywords": [],
+  "keywords": [
+    "markdown",
+    "inject",
+    "import"
+  ],
   "author": {
     "name": "Street Side Software",
     "url": "https://github.com/streetsidesoftware"
   },
+  "bugs": {
+    "url": "https://github.com/streetsidesoftware/inject-markdown/issues"
+  },
+  "homepage": "https://github.com/streetsidesoftware/inject-markdown#readme",
   "license": "MIT",
   "devDependencies": {
     "@tsconfig/node16": "^1.0.3",
@@ -64,6 +72,6 @@
     "!**/*.map"
   ],
   "engines": {
-    "node": ">=16"
+    "node": ">=14"
   }
 }
