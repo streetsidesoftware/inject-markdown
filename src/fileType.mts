@@ -2,6 +2,7 @@ import * as path from 'node:path';
 
 const specialExtensions: Record<string, string | undefined> = {
     '.md': 'markdown',
+    '.txt': '',
 };
 
 export function fileType(filename: string): string {
@@ -11,5 +12,5 @@ export function fileType(filename: string): string {
         if (filename) return '';
     }
 
-    return specialExtensions[ext] || ext.slice(1);
+    return specialExtensions[ext] ?? ext.slice(1);
 }

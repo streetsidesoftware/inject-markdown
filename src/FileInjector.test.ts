@@ -17,8 +17,8 @@ describe('FileInjector', () => {
     });
 
     test.each`
-        file           | options | expectedResult
-        ${'README.md'} | ${{}}   | ${false}
+        file           | options                              | expectedResult
+        ${'README.md'} | ${{ cwd: 'fixtures/no-injections' }} | ${false}
     `('processFile no change', async ({ file, options, expectedResult }) => {
         file = path.resolve(__root__, file);
         options.cwd = options.cwd || __root__;
@@ -30,16 +30,15 @@ describe('FileInjector', () => {
     });
 
     test.each`
-        file                                 | options                                               | expectedResult | expectedFile
-        ${'fixtures/vacations/vacations.md'} | ${{}}                                                 | ${true}        | ${'fixtures/vacations/vacations.md'}
-        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_' }}                             | ${true}        | ${'_out_/fixtures/vacations/vacations.md'}
-        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_', verbose: true }}              | ${true}        | ${'_out_/fixtures/vacations/vacations.md'}
-        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_', silent: true }}               | ${true}        | ${'_out_/fixtures/vacations/vacations.md'}
-        ${'fixtures/vacations/vacations.md'} | ${{ cwd: 'fixtures/vacations/', outputDir: '_out_' }} | ${true}        | ${'_out_/vacations.md'}
-        ${'README.md'}                       | ${{ outputDir: '_out_' }}                             | ${false}       | ${'_out_/README.md'}
+        file                                 | options                                                  | expectedResult | expectedFile
+        ${'fixtures/vacations/vacations.md'} | ${{}}                                                    | ${true}        | ${'fixtures/vacations/vacations.md'}
+        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_' }}                                | ${true}        | ${'_out_/fixtures/vacations/vacations.md'}
+        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_', verbose: true }}                 | ${true}        | ${'_out_/fixtures/vacations/vacations.md'}
+        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_', silent: true }}                  | ${true}        | ${'_out_/fixtures/vacations/vacations.md'}
+        ${'vacations.md'}                    | ${{ cwd: 'fixtures/vacations/', outputDir: '_out_' }}    | ${true}        | ${'_out_/vacations.md'}
+        ${'README.md'}                       | ${{ cwd: 'fixtures/no-injections', outputDir: '_out_' }} | ${false}       | ${'_out_/README.md'}
     `('processFile $file $options', async ({ file, options, expectedResult, expectedFile }) => {
         const logger = createLogger();
-        file = path.resolve(__root__, file);
         options.cwd = options.cwd || __root__;
         options.color = options.color ?? false;
         options.logger = logger;
