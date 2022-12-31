@@ -1,156 +1,23 @@
 // Vitest Snapshot v1
 
-exports[`FileInjector > processFile 'README.md' { outputDir: '_out_' } 1`] = `
+exports[`FileInjector > processFile 'README.md' { cwd: 'fixtures/no-injections', …(1) } 1`] = `
 [
   [
     "_out_/README.md",
-    "# Inject Markdown
+    "# Without injections
 
-Inject files into a Markdown file.
-
-## Justification
-
-Sometimes it is necessary to assemble content into a static markdown file like \`README.md\`.
-Manually copying and pasting content leads to duplication making it difficult to keep things in sync.
-
-## Usage
-
-Use HTML comments to mark where content will be injected.
-
-\`\`\`markdown
-<!--- @@inject: fixtures/sample-src.md --->
-\`\`\`
-
-\`\`\`sh
-npx inject-markdown README.md
-\`\`\`
-
-## \`--help\`
-
-\`\`\`sh
-npx inject-markdown --help
-\`\`\`
-
-**Result**
-
-\`\`\`
-Usage: inject-markdown [options] <files...>
-
-Inject file content into markdown files.
-
-Arguments:
-  files                 Files to scan for injected content.
-
-Options:
-  --no-must-find-files  No error if files are not found.
-  --output-dir <dir>    Output Directory
-  --cwd <dir>           Current Directory
-  --clean               Remove the injected content.
-  --verbose             Verbose output.
-  --silent              Only output errors.
-  --color               Force color.
-  --no-color            Do not use color.
-  -V, --version         output the version number
-  -h, --help            display help for command
-\`\`\`
+This file does not have any injections.
 ",
     "utf8",
   ],
 ]
 `;
 
-exports[`FileInjector > processFile 'README.md' { outputDir: '_out_' } 2`] = `
+exports[`FileInjector > processFile 'README.md' { cwd: 'fixtures/no-injections', …(1) } 2`] = `
 [
   {
     "target": "stderr",
     "text": "README.md ...",
-  },
-  {
-    "target": "stderr",
-    "text": " done.
-",
-  },
-]
-`;
-
-exports[`FileInjector > processFile 'fixtures/vacations/vacations.md' { cwd: 'fixtures/vacations/', …(1) } 1`] = `
-[
-  [
-    "_out_/vacations.md",
-    "# Vacations
-
-## Destinations
-
-<!--- @@inject: parts/destinations.md --->
-
-## Amsterdam
-
-Amsterdam is full of beautiful canals.
-
-## Orlando
-
-There are many amusement parks in Orlando.
-
-## New York City
-
-It is a wonderful place to catch a show.
-
-## San Francisco
-
-Do not miss out on the Golden Gate Bridge.
-
-<!--- @@inject-end: parts/destinations.md --->
-
--   Prices
-    <!--- @@inject: parts/prices.md --->
-    ## Data
-    | Name             | City      | Cost   |
-    | ---------------- | --------- | ------ |
-    | Parade of Lights | Amsterdam | €100/p |
-    | Disney World     | Orlando   | $200/p |
-    <!--- @@inject-end: parts/prices.md --->
-
-# Highlight Destination (Amsterdam)
-
-<!--- @@inject: parts/destinations.md#Amsterdam --->
-
-## Amsterdam
-
-Amsterdam is full of beautiful canals.
-
-<!--- @@inject-end: parts/destinations.md#Amsterdam --->
-
-## Code
-
-<!--- @@inject-start: parts/code.md --->
-
-## Example
-
-\`\`\`ts
-import * as fs from 'fs/promises';
-import * as path from 'path';
-\`\`\`
-
-<!--- @@inject-end: parts/code.md --->
-
-<pre>
-<!--- @@inject: parts/destinations.md -->
-</pre>
-
-\`\`\`markdown
-<!--- @@inject: parts/destinations.md -->
-\`\`\`
-",
-    "utf8",
-  ],
-]
-`;
-
-exports[`FileInjector > processFile 'fixtures/vacations/vacations.md' { cwd: 'fixtures/vacations/', …(1) } 2`] = `
-[
-  {
-    "target": "stderr",
-    "text": "vacations.md ...",
   },
   {
     "target": "stderr",
@@ -508,6 +375,93 @@ exports[`FileInjector > processFile 'fixtures/vacations/vacations.md' {} 2`] = `
   {
     "target": "stderr",
     "text": "fixtures/vacations/vacations.md ...",
+  },
+  {
+    "target": "stderr",
+    "text": " done.
+",
+  },
+]
+`;
+
+exports[`FileInjector > processFile 'vacations.md' { cwd: 'fixtures/vacations/', …(1) } 1`] = `
+[
+  [
+    "_out_/vacations.md",
+    "# Vacations
+
+## Destinations
+
+<!--- @@inject: parts/destinations.md --->
+
+## Amsterdam
+
+Amsterdam is full of beautiful canals.
+
+## Orlando
+
+There are many amusement parks in Orlando.
+
+## New York City
+
+It is a wonderful place to catch a show.
+
+## San Francisco
+
+Do not miss out on the Golden Gate Bridge.
+
+<!--- @@inject-end: parts/destinations.md --->
+
+-   Prices
+    <!--- @@inject: parts/prices.md --->
+    ## Data
+    | Name             | City      | Cost   |
+    | ---------------- | --------- | ------ |
+    | Parade of Lights | Amsterdam | €100/p |
+    | Disney World     | Orlando   | $200/p |
+    <!--- @@inject-end: parts/prices.md --->
+
+# Highlight Destination (Amsterdam)
+
+<!--- @@inject: parts/destinations.md#Amsterdam --->
+
+## Amsterdam
+
+Amsterdam is full of beautiful canals.
+
+<!--- @@inject-end: parts/destinations.md#Amsterdam --->
+
+## Code
+
+<!--- @@inject-start: parts/code.md --->
+
+## Example
+
+\`\`\`ts
+import * as fs from 'fs/promises';
+import * as path from 'path';
+\`\`\`
+
+<!--- @@inject-end: parts/code.md --->
+
+<pre>
+<!--- @@inject: parts/destinations.md -->
+</pre>
+
+\`\`\`markdown
+<!--- @@inject: parts/destinations.md -->
+\`\`\`
+",
+    "utf8",
+  ],
+]
+`;
+
+exports[`FileInjector > processFile 'vacations.md' { cwd: 'fixtures/vacations/', …(1) } 2`] = `
+[
+  {
+    "target": "stderr",
+    "text": "vacations.md ...",
   },
   {
     "target": "stderr",
