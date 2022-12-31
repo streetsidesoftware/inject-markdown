@@ -33,3 +33,9 @@ To write the result to another directory, use `--output-dir`:
 ```sh
 npx inject-markdown README.md --output-dir hydrated
 ```
+
+⬇︎⬇︎⬇︎⬇︎ Below is the content of `first-sample.md` injected as code. ⬇︎⬇︎⬇︎⬇︎
+
+<!--- @@inject-code: first-sample.md --->
+
+⬆︎⬆︎⬆︎⬆︎ Above is the content of `first-sample.md` injected as code. ⬆︎⬆︎⬆︎⬆︎
