@@ -77,7 +77,12 @@ export function relativePath(fromUrl: URL, toUrl: URL): RelURL {
  * @returns the parent URL.
  */
 export function urlDirectory(url: URL): URL {
-    return dirToUrl(posix.dirname(url.pathname), url);
+    const clone = new URL(url.href);
+    clone.pathname = posix.dirname(url.pathname);
+    if (!clone.pathname.endsWith('/')) {
+        clone.pathname += '/';
+    }
+    return clone;
 }
 
 export function parseRelativeUrl(url: string): RelURL {
