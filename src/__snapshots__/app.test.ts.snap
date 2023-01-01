@@ -1,0 +1,7 @@
+// Vitest Snapshot v1
+
+exports[`app > compiles 1`] = `
+[
+  "run",
+]
+`;

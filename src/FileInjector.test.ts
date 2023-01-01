@@ -1,14 +1,16 @@
-import { describe, expect, MockedFunction, test, vi } from 'vitest';
-import type { FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
-import { FileInjector, Logger } from './FileInjector.js';
-import * as fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import * as path from 'path';
 import { format } from 'util';
+import { describe, expect, MockedFunction, test, vi } from 'vitest';
+import { FileInjector, Logger } from './FileInjector.js';
+import type { FileSystemAdapter, PathLike, BufferEncoding } from './FileSystemAdapter.js';
+import { nodeFsa } from './fsa.js';
 
 const __file__ = fileURLToPath(import.meta.url);
 const __dirname__ = path.dirname(__file__);
 const __root__ = path.join(__dirname__, '..');
+
+const appFsa = nodeFsa();
 
 describe('FileInjector', () => {
     test('FileInjector', () => {
@@ -20,7 +22,6 @@ describe('FileInjector', () => {
         file           | options                              | expectedResult
         ${'README.md'} | ${{ cwd: 'fixtures/no-injections' }} | ${false}
     `('processFile no change', async ({ file, options, expectedResult }) => {
-        file = path.resolve(__root__, file);
         options.cwd = options.cwd || __root__;
         const fsa = createFSA();
         const fi = new FileInjector(fsa, options);
@@ -111,7 +112,7 @@ function createFSA(): FSA {
     async function readFile(p: PathLike, e: BufferEncoding): Promise<string> {
         const found = store.get(p);
         if (typeof found === 'string') return found;
-        const data = await fs.readFile(p, e);
+        const data = await appFsa.readFile(p, e);
         store.set(p, data);
         return data;
     }

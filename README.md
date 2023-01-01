@@ -25,8 +25,6 @@ npx inject-markdown README.md
 npx inject-markdown --help
 ```
 
-**Result**
-
 <!--- @@inject: content/help.txt --->
 
 ```
@@ -51,3 +49,70 @@ Options:
 ```
 
 <!--- @@inject-end: content/help.txt --->
+
+## Import Code
+
+All non-markdown files will be imported as a code block.
+
+```markdown
+<!--- @@inject: content/code.ts --->
+```
+
+<!--- @@inject: content/code.ts --->
+
+```ts
+export function sayHello(name: string): string {
+  return `Hello ${name}`;
+}
+```
+
+<!--- @@inject-end: content/code.ts --->
+
+## Import `json` as `jsonc`
+
+```markdown
+<!--- @@inject-code: content/sample.json#jsonc --->
+```
+
+<!--- @@inject-code: content/sample.json#jsonc --->
+
+```jsonc
+{
+  "name": "Sample"
+}
+```
+
+<!--- @@inject-end: content/sample.json#jsonc --->
+
+## Import Markdown as Code
+
+It is also possible to inject markdown:
+
+<!--- @@inject-code: content/example.md --->
+
+```markdown
+# Example
+
+This is an example bit of markdown.
+
+- first
+- second
+- third
+```
+
+<!--- @@inject-end: content/example.md --->
+
+## Import a section from a Markdown file
+
+<!--- @@inject: content/chapters.md#Chapter 3: Directives --->
+
+## Chapter 3: Directives
+
+- `@@inject: <markdown_file.md>[#heading]` and `@@inject-start:  <markdown_file.md>[#heading]` -- injects the contents of a markdown file.
+  - `<markdown_file.md>` -- the file to import
+  - `heading` -- optional heading to extract.
+- `@@inject: <non-markdown-file>[#lang]`, `@@inject-start:  <non-markdown-file>[#lang]`, and `@@inject-code: <file>[#lang]`
+  - `<non-markdown-file>`, `<file>` -- the file to import
+  - `lang` -- optional language to use for the code bock.
+
+<!--- @@inject-end: content/chapters.md#Chapter 3: Directives --->
