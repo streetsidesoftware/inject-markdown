@@ -6,14 +6,22 @@ import { fileURLToPath } from 'node:url';
 async function readFile(file: PathLike, encoding: BufferEncoding): Promise<string> {
     console.warn('readFile href: %s', file.toString());
     try {
-        if (isURL(file) && file.protocol === 'file:') {
-            const filePath = fileURLToPath(file);
-            console.warn('readFile file: %s', filePath);
-            return await fs.readFile(filePath, encoding);
+        if (isURL(file)) {
+            if (file.protocol === 'file:') {
+                const filePath = fileURLToPath(file);
+                console.warn('readFile file: %s', filePath);
+                return await fs.readFile(filePath, encoding);
+            }
+            console.warn('Unknown protocol: %o', {
+                protocol: file.protocol,
+                pathname: file.pathname,
+                search: file.search,
+                hash: file.hash,
+            });
         }
         return await fs.readFile(file, encoding);
     } catch (e) {
-        console.error('readFile failed: %s\n%s', file.toString(), e);
+        console.error('readFile failed: %o\n%s', file, e);
         throw e;
     }
 }
