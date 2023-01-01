@@ -302,7 +302,7 @@ async function processFileInjections(
             const vFile = await resolveAndReadFile(fileUrl);
             const root = parseMarkdownFile(vFile);
             sanitizeImport(root);
-            return extractHeader(root, fileUrl.hash);
+            return extractHeader(root, decodeURIComponent(fileUrl.hash.slice(1)));
         } catch (e) {
             const err = toError(e);
             file.message(err.message);
