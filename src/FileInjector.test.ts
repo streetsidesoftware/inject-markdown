@@ -1,10 +1,10 @@
-import { describe, expect, MockedFunction, test, vi } from 'vitest';
-import type { FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
-import { FileInjector, Logger } from './FileInjector.js';
 import * as fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import * as path from 'path';
 import { format } from 'util';
+import { describe, expect, MockedFunction, test, vi } from 'vitest';
+import { FileInjector, Logger } from './FileInjector.js';
+import type { FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
 
 const __file__ = fileURLToPath(import.meta.url);
 const __dirname__ = path.dirname(__file__);

@@ -20,6 +20,7 @@ async function version(): Promise<string> {
 
 interface Options extends FileInjectorOptions {
     mustFindFiles: boolean;
+    cwd?: string;
 }
 
 async function findFiles(globs: string[], cwd: string | undefined) {

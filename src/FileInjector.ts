@@ -56,9 +56,9 @@ export interface Logger {
 
 export interface FileInjectorOptions {
     /** optional output directory */
-    outputDir?: string;
+    outputDir?: string | undefined;
     /** Current working directory */
-    cwd?: PathLike;
+    cwd?: PathLike | undefined;
     /** Only clean the file, do not inject */
     clean?: boolean;
 
