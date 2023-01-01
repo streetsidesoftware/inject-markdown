@@ -8,9 +8,19 @@ describe('fsa', () => {
         ${import.meta.url}
         ${'README.md'}
         ${'README.md#Amsterdam'}
+        ${'https://raw.githubusercontent.com/streetsidesoftware/inject-markdown/df4cdb07d70f6d9247ea14a3ea4fa7b4512d329f/README.md'}
     `('readFile $file.toString()', async ({ file }) => {
         const fa = fsa.nodeFsa();
         const url = pathToUrl(file);
         await expect(fa.readFile(url, 'utf8')).resolves.toBeDefined();
+    });
+
+    test.each`
+        file
+        ${'https://raw.githubusercontent.com/streetsidesoftware/inject-markdown/df4cdb07d70f6d9247ea14a3ea4fa7b4512d329f/README.md#L5-L10'}
+    `('readFile $file.toString()', async ({ file }) => {
+        const fa = fsa.nodeFsa();
+        const url = pathToUrl(file);
+        await expect(fa.readFile(url, 'utf8')).resolves.toMatchSnapshot();
     });
 });
