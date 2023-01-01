@@ -9,9 +9,9 @@ async function readFile(file: PathLike, encoding: BufferEncoding): Promise<strin
         if (isURL(file) && file.protocol === 'file:') {
             const filePath = fileURLToPath(file);
             console.warn('readFile file: %s', filePath);
-            return fs.readFile(filePath, encoding);
+            return await fs.readFile(filePath, encoding);
         }
-        return fs.readFile(file, encoding);
+        return await fs.readFile(file, encoding);
     } catch (e) {
         console.error('readFile failed: %s\n%s', file.toString(), e);
         throw e;
