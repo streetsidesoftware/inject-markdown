@@ -4,9 +4,10 @@ import { isURL } from './url_helper.js';
 import { fileURLToPath } from 'node:url';
 
 async function readFile(file: PathLike, encoding: BufferEncoding): Promise<string> {
+    console.warn('readFile href: %o', file.toString());
     if (isURL(file) && file.protocol === 'file:') {
         const filePath = fileURLToPath(file);
-        console.warn('readFile:\n %o\n        %o', file.href, filePath);
+        console.warn('readFile file: %o', filePath);
         return fs.readFile(filePath, encoding);
     }
     return fs.readFile(file, encoding);
