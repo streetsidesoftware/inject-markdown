@@ -1,10 +1,11 @@
-import {} from 'chalk';
 import { Command, CommanderError, program as defaultCommand } from 'commander';
-import * as fs from 'fs/promises';
 import { globby, type Options as GlobbyOptions } from 'globby';
 import { fileURLToPath } from 'node:url';
 import * as path from 'path';
 import { FileInjector, FileInjectorOptions } from './FileInjector.js';
+import { nodeFsa } from './fsa.js';
+
+const fs = nodeFsa();
 
 const excludes = ['node_modules'];
 const allowedFileExtensions: Record<string, boolean | undefined> = {
@@ -14,7 +15,7 @@ const allowedFileExtensions: Record<string, boolean | undefined> = {
 async function version(): Promise<string> {
     const pathSelf = fileURLToPath(import.meta.url);
     const pathPackageJson = path.join(path.dirname(pathSelf), '../package.json');
-    const packageJson = JSON.parse(await fs.readFile(pathPackageJson, 'utf-8'));
+    const packageJson = JSON.parse(await fs.readFile(pathPackageJson, 'utf8'));
     return (typeof packageJson === 'object' && packageJson?.version) || '0.0.0';
 }
 
