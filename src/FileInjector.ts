@@ -7,11 +7,13 @@ import { unified } from 'unified';
 import { is } from 'unist-util-is';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
-import { VFile } from 'vfile';
+import { VFile, Data as VFileData } from 'vfile';
 import { reporter } from 'vfile-reporter';
 import { BufferEncoding, FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
 import chalk, { supportsColor } from 'chalk';
 import { fileType } from './fileType.mjs';
+import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, RelURL } from './url_helper.js';
+import { fileURLToPath } from 'url';
 
 type Node = Root | Content;
 
@@ -34,6 +36,16 @@ const outputOptions = {
     strong: '*',
 } as const;
 
+interface FileData extends VFileData {
+    encoding: BufferEncoding;
+    fileUrl: URL;
+    cwdUrl?: URL;
+}
+
+interface VFileEx extends VFile {
+    data: FileData;
+}
+
 export interface Logger {
     log: typeof console.log;
     error: typeof console.error;
@@ -46,7 +58,7 @@ export interface FileInjectorOptions {
     /** optional output directory */
     outputDir?: string;
     /** Current working directory */
-    cwd?: string;
+    cwd?: PathLike;
     /** Only clean the file, do not inject */
     clean?: boolean;
 
@@ -74,9 +86,9 @@ export interface FileInjectorOptions {
 }
 
 export class FileInjector {
-    private cwd: string;
+    private cwd: URL;
     constructor(readonly fs: FileSystemAdapter, readonly options: FileInjectorOptions) {
-        this.cwd = path.resolve(options.cwd || process.cwd());
+        this.cwd = dirToUrl(options?.cwd || '');
     }
 
     /**
@@ -86,8 +98,8 @@ export class FileInjector {
      * @returns true if changed, otherwise false.
      */
     async processFile(filePath: PathLike, encoding: BufferEncoding = 'utf8'): Promise<boolean> {
-        const p = typeof filePath === 'string' ? path.resolve(this.cwd, filePath) : filePath;
-        const file = await readFile(this.fs, p, encoding);
+        const fileUrl = pathToUrl(filePath, this.cwd);
+        const file = await readFile(this.fs, fileUrl, encoding);
         const logger: Logger = {
             log: console.log.bind(console),
             error: console.error.bind(console),
@@ -95,25 +107,33 @@ export class FileInjector {
             writeStdout: process.stdout.write.bind(process.stdout),
             writeStderr: process.stderr.write.bind(process.stderr),
         };
+        file.data.cwdUrl = this.cwd;
         return await processFileInjections(file, this.fs, {
             ...this.options,
             cwd: this.cwd,
+            fileUrl,
             logger: this.options.logger || logger,
             verbose: (!this.options.silent && this.options.verbose) || false,
+            outputDir: this.options.outputDir ? dirToUrl(this.options.outputDir) : undefined,
         });
     }
 }
 
-interface ProcessFileInjections extends FileInjectorOptions {
-    cwd: string;
+interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outputDir'> {
+    cwd: URL;
+    fileUrl: URL;
     logger: Logger;
+    outputDir: URL | undefined;
 }
 
 async function processFileInjections(
-    file: VFile,
+    vFile: VFileEx | VFile,
     fs: FileSystemAdapter,
     options: ProcessFileInjections
 ): Promise<boolean> {
+    assert(isVFileEx(vFile));
+    const file = vFile;
+    const fileUrl = file.data.fileUrl;
     setColor();
     const console = options.logger;
     // console.log('File: %s\nOptions: %o', file.path, options);
@@ -121,7 +141,7 @@ async function processFileInjections(
     const green = chalk.green;
     const gray = chalk.gray;
     const stderr = options.silent ? { write: () => undefined } : { write: (s: string) => console.writeStderr(s) };
-    stderr.write(yellow(relativePathNormalized(file.path, options.cwd)) + ' ...');
+    stderr.write(yellow(relativePathNormalized(file.data.fileUrl, options.cwd)) + ' ...');
     const r = await __processFile();
     stderr.write((options.verbose ? '\n  ' : ' ') + green('done.') + '\n');
     return r;
@@ -155,26 +175,25 @@ async function processFileInjections(
         return true;
     }
 
-    async function writeResult(file: VFile): Promise<void> {
+    async function writeResult(file: VFileEx): Promise<void> {
         const content = extractContent(file);
-        const filePath = determineTargetPath(file);
+        const filePath = fileURLToPath(determineTargetPath(file));
         const dir = path.dirname(filePath);
         await fs.mkdir(dir, { recursive: true });
         return fs.writeFile(filePath, content, getEncoding(file));
     }
 
-    function determineTargetPath(file: VFile): string {
+    function determineTargetPath(file: VFileEx): URL {
         const outDir = options.outputDir;
-        if (!outDir) return file.path;
+        const { fileUrl } = file.data;
+        if (!outDir) return fileUrl;
 
         const cwd = options.cwd;
-        const srcPath = path.resolve(cwd, file.path);
-        const relPath = path.relative(cwd, srcPath);
-
-        return path.join(path.resolve(outDir), relPath);
+        const relPath = relativePath(cwd, fileUrl);
+        return relPath.toUrl(outDir);
     }
 
-    async function processFileContent(): Promise<VFile> {
+    async function processFileContent(): Promise<VFileEx> {
         if (!extractContent(file).includes(directivePrefix)) {
             return file;
         }
@@ -183,11 +202,13 @@ async function processFileInjections(
             .use(processInjections)
             .use(remarkStringify, outputOptions)
             .process(file);
+        assert(isVFileEx(result));
         return result;
     }
 
     function processInjections() {
         return async (root: Root, file: VFile): Promise<Root> => {
+            assert(isVFileEx(file));
             root = deleteInjectedContent(root, file);
             if (options.clean) return root;
             root = await injectFiles(root);
@@ -217,27 +238,25 @@ async function processFileInjections(
 
     async function injectMarkdownFile(directive: DirectiveNode): Promise<void> {
         if (!directive.file || directive.type !== 'start') return;
-        const [encodedName, header] = directive.file.split('#', 2);
-        const fileName = decodeURI(encodedName);
-        options.verbose && stderr.write(`\n  ${gray(relativePathNormalized(fileName))}`);
-        const root = await readAndParseMarkdownFile(fileName, header);
+        const dFile = directive.file;
+        const directiveFileUrl = dFile.toUrl(fileUrl);
+        options.verbose && stderr.write(`\n  ${gray(dFile.href)}`);
+        const root = await readAndParseMarkdownFile(directiveFileUrl);
         return injectContent(directive, root);
     }
 
     async function injectCodeFile(directive: DirectiveNode): Promise<void> {
         if (!directive.file || directive.type !== 'code') return;
-        const [encodedName, lang] = directive.file.split('#', 2);
-        const fileName = decodeURI(encodedName);
-        options.verbose && stderr.write(`\n  ${gray(relativePathNormalized(fileName))}`);
-        const root = await readAndParseCodeFile(fileName, lang);
+        const dFile = directive.file;
+        const directiveFileUrl = dFile.toUrl(fileUrl);
+        options.verbose && stderr.write(`\n  ${gray(dFile.href)}`);
+        const root = await readAndParseCodeFile(directiveFileUrl);
         return injectContent(directive, root);
     }
 
     async function injectContent(directive: DirectiveNode, root: Root): Promise<void> {
         if (!directive.file) return;
-        const [encodedName, header] = directive.file.split('#', 2);
-        const fileName = decodeURI(encodedName);
-        const encodedFile = encodeURI(fileName) + (header ? '#' + encodeURIComponent(header) : '');
+        const href = normalizeHref(directive.file.href);
         const parent = directive.parent;
         const index = parent.children.indexOf(directive.node);
         assert(index >= 0);
@@ -248,22 +267,23 @@ async function processFileInjections(
             : directiveStart;
         const start: HTML = {
             type: 'html',
-            value: `<!--- ${startDirective} ${encodedFile} --->`,
+            value: `<!--- ${startDirective} ${href} --->`,
         };
         const end: HTML = {
             type: 'html',
-            value: `<!--- ${directiveEnd} ${encodedFile} --->`,
+            value: `<!--- ${directiveEnd} ${href} --->`,
         };
         parent.children.splice(index, 1, start, ...root.children, end);
     }
 
-    async function readAndParseCodeFile(fileName: string, lang: string): Promise<Root> {
+    async function readAndParseCodeFile(fileName: URL): Promise<Root> {
+        const lang = fileName.hash.slice(1);
         try {
             const vFile = await resolveAndReadFile(fileName);
             const content = extractContent(vFile);
             const code: Code = {
                 type: 'code',
-                lang: lang || fileType(fileName),
+                lang: lang || fileType(fileName.pathname),
                 value: content.trim(),
             };
             return {
@@ -277,12 +297,12 @@ async function processFileInjections(
         }
     }
 
-    async function readAndParseMarkdownFile(fileName: string, header: string | undefined): Promise<Root> {
+    async function readAndParseMarkdownFile(fileUrl: URL): Promise<Root> {
         try {
-            const vFile = await resolveAndReadFile(fileName);
+            const vFile = await resolveAndReadFile(fileUrl);
             const root = parseMarkdownFile(vFile);
             sanitizeImport(root);
-            return extractHeader(root, header);
+            return extractHeader(root, fileUrl.hash);
         } catch (e) {
             const err = toError(e);
             file.message(err.message);
@@ -290,27 +310,20 @@ async function processFileInjections(
         }
     }
 
-    async function resolveAndReadFile(fileName: string): Promise<VFile> {
-        const resolvedFile = resolvePath(fileName);
+    async function resolveAndReadFile(file: URL): Promise<VFileEx> {
         try {
-            return await readFile(fs, resolvedFile);
+            return await readFile(fs, file);
         } catch (e) {
-            throw new Error(`Failed to read "${relativePathNormalized(resolvedFile)}"`);
+            throw new Error(`Failed to read "${relativePathNormalized(file)}"`);
         }
     }
 
-    function parseMarkdownFile(file: VFile): Root {
+    function parseMarkdownFile(file: VFileEx): Root {
         return unified().use(remarkParse).parse(file);
     }
 
-    function resolvePath(p: string): string {
-        const dir = file.dirname || options.cwd;
-        return path.resolve(dir, p);
-    }
-
-    function relativePathNormalized(p: string, relDir?: string): string {
-        const dir = relDir || file.dirname || options.cwd;
-        return normalizePath(path.relative(dir, resolvePath(p)));
+    function relativePathNormalized(path: URL, relDir?: URL): string {
+        return relativePath(relDir || file.data.cwdUrl || options.cwd, path).toString();
     }
 }
 
@@ -366,7 +379,7 @@ function headingString(n: Heading): string {
     return md;
 }
 
-function deleteInjectedContent(root: Root, file: VFile): Root {
+function deleteInjectedContent(root: Root, file: VFileEx): Root {
     const directiveNodes = collectInjectionNodes(root);
     const pairs = findInjectionPairs(directiveNodes, file);
 
@@ -425,7 +438,7 @@ interface DirectivePair {
 type DirectiveType = 'start' | 'end' | 'code';
 interface Directive {
     type: DirectiveType;
-    file: string;
+    file: RelURL;
 }
 
 interface DirectiveNode extends Partial<Directive> {
@@ -439,7 +452,7 @@ const startTypes: Record<DirectiveType, boolean> = {
     end: false,
 } as const;
 
-function findInjectionPairs(nodes: DirectiveNode[], vfile: VFile): DirectivePair[] {
+function findInjectionPairs(nodes: DirectiveNode[], vfile: VFileEx): DirectivePair[] {
     function validate(n: DirectiveNode): n is Required<DirectiveNode> {
         if (!n.type) {
             vfile.message('Unable to parse @@inject directive.', n.node.position);
@@ -458,7 +471,7 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFile): DirectivePair
     let last: DirectiveNode | undefined = undefined;
     for (const n of dnp.reverse()) {
         if (startTypes[n.type]) {
-            if (last?.file && last?.file !== n.file) {
+            if (last?.file && last?.file.href !== n.file.href) {
                 vfile.message(`Unmatched @@inject-end "${last.file || ''}"`, last.node.position);
                 pairs.push({ end: last });
                 last = undefined;
@@ -485,9 +498,9 @@ function parseDirective(html: string): Directive | undefined {
     const m = html.match(injectDirectiveRegExp);
     if (!m || !m.groups) return undefined;
 
-    const file = m.groups['file'].trim();
+    const file = parseRelativeUrl(m.groups['file']);
     const isEnd = m.groups['type'] === '-end';
-    const isCode = (!isEnd && !file.replace(/#.*/, '').toLowerCase().endsWith('.md')) || m.groups['type'] === '-code';
+    const isCode = (!isEnd && !file.pathname.toLowerCase().endsWith('.md')) || m.groups['type'] === '-code';
 
     const d: Directive = {
         type: isEnd ? 'end' : isCode ? 'code' : 'start',
@@ -506,13 +519,15 @@ function collectInjectionNodes(root: Root): DirectiveNode[] {
     return dNodes;
 }
 
-interface VFileData {
-    encoding?: BufferEncoding;
-}
-
-async function readFile(fs: FileSystemAdapter, path: PathLike, encoding: BufferEncoding = 'utf8'): Promise<VFile> {
+async function readFile(fs: FileSystemAdapter, path: URL, encoding: BufferEncoding = 'utf8'): Promise<VFileEx> {
     const value = await fs.readFile(path, encoding);
-    return new VFile({ path, value, data: { encoding } });
+    const data: FileData = {
+        encoding,
+        fileUrl: path,
+    };
+    const file = new VFile({ path, value, data });
+    assert(isVFileEx(file));
+    return file;
 }
 
 function detectLineEnding(content: string): string {
@@ -535,12 +550,12 @@ function isInjectNode(n: Node | unknown): n is HTML {
     return directiveRegExp.test(n.value);
 }
 
-function extractContent(file: VFile, defaultEncoding?: BufferEncoding): string {
+function extractContent(file: VFileEx, defaultEncoding?: BufferEncoding): string {
     return toString(file.value, getEncoding(file, defaultEncoding));
 }
 
-function getEncoding(file: VFile, defaultEncoding: BufferEncoding = 'utf8'): BufferEncoding {
-    const data: VFileData = file.data;
+function getEncoding(file: VFileEx, defaultEncoding: BufferEncoding = 'utf8'): BufferEncoding {
+    const data: FileData = file.data;
     return data.encoding || defaultEncoding;
 }
 
@@ -581,4 +596,12 @@ function errorToComment(err: Error): Root {
 <!---
   ${msg}
 --->`);
+}
+
+function isVFileEx(file: VFile | VFileEx): file is VFileEx {
+    return !!file.data.fileUrl;
+}
+
+function normalizeHref(href: string): string {
+    return href.replace(/%20/g, ' ');
 }

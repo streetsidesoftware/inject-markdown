@@ -20,7 +20,6 @@ describe('FileInjector', () => {
         file           | options                              | expectedResult
         ${'README.md'} | ${{ cwd: 'fixtures/no-injections' }} | ${false}
     `('processFile no change', async ({ file, options, expectedResult }) => {
-        file = path.resolve(__root__, file);
         options.cwd = options.cwd || __root__;
         const fsa = createFSA();
         const fi = new FileInjector(fsa, options);

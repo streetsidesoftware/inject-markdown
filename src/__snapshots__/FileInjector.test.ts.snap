@@ -281,7 +281,7 @@ exports[`FileInjector > processFile 'fixtures/vacations/vacations.md' { outputDi
   {
     "target": "stderr",
     "text": "
-  parts/destinations.md",
+  parts/destinations.md#Amsterdam",
   },
   {
     "target": "stderr",
