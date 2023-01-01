@@ -1,5 +1,6 @@
 import fsPath from 'node:path';
 import * as url from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { posix } from 'path';
 
 const isUrlRegExp = /^(https?|file):/i;
@@ -21,23 +22,8 @@ export function pathToUrl(path: string | URL, rel?: URL): URL {
     if (isURL(path)) return path;
     if (isUrlRegExp.test(path)) return new URL(path, rel);
 
-    const possibleUrl = new URL(path.replace(/\\/g, '/'), rel || url.pathToFileURL('./'));
-
-    if (possibleUrl.protocol !== 'file:') {
-        return possibleUrl;
-    }
-
-    // Remove params and hash.
-    const pathOnly = path.replace(/[#?].*/g, '');
-    const relDir = rel ? url.fileURLToPath(rel) : '';
-    const resolved = relDir ? fsPath.resolve(relDir, pathOnly) : pathOnly;
-    const pathUrl = url.pathToFileURL(resolved);
-    if (!pathUrl.pathname.endsWith('/') && (pathOnly.endsWith('/') || pathOnly.endsWith('\\'))) {
-        pathUrl.pathname += '/';
-    }
-    pathUrl.search = possibleUrl.search;
-    pathUrl.hash = possibleUrl.hash;
-    return pathUrl;
+    const relUrl = parseRelativeUrl(path);
+    return relUrl.toUrl(rel || url.pathToFileURL('./'));
 }
 
 /**
@@ -129,6 +115,17 @@ class RelUrlImpl implements RelURL {
     }
 
     toUrl(baseUrl: URL): URL {
+        const href = this.href;
+        if (isUrlRegExp.test(href)) return new URL(href, baseUrl);
+        if (baseUrl.protocol === 'file:') {
+            const baseFile = fileURLToPath(baseUrl);
+            const baseDir = baseUrl.pathname.endsWith('/') ? baseFile : fsPath.dirname(baseFile);
+            const filename = fsPath.resolve(baseDir, this.pathname);
+            const url = pathToFileURL(filename);
+            url.search = this.search;
+            url.hash = this.hash;
+            return url;
+        }
         return new URL(this.href, baseUrl);
     }
 }
