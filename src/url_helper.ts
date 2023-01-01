@@ -30,7 +30,7 @@ export function pathToUrl(path: string | URL, rel?: URL): URL {
     // Remove params and hash.
     const pathOnly = path.replace(/[#?].*/g, '');
     const relDir = rel ? url.fileURLToPath(rel) : '';
-    const resolved = fsPath.resolve(relDir, pathOnly);
+    const resolved = relDir ? fsPath.resolve(relDir, pathOnly) : pathOnly;
     const pathUrl = url.pathToFileURL(resolved);
     if (!pathUrl.pathname.endsWith('/') && (pathOnly.endsWith('/') || pathOnly.endsWith('\\'))) {
         pathUrl.pathname += '/';
