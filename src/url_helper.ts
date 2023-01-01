@@ -49,11 +49,12 @@ export function pathToUrl(path: string | URL, rel?: URL): URL {
  * @returns a URL
  */
 export function dirToUrl(dir: string | URL, rel?: URL): URL {
-    const dirUrl = pathToUrl(dir, rel);
+    let dirUrl = pathToUrl(dir, rel);
     if (!dirUrl.pathname.endsWith('/')) {
         const pathname = dirUrl.pathname + '/';
         if (dir === dirUrl) {
-            return pathToUrl(pathname, dirUrl);
+            // Make a copy
+            dirUrl = new URL(dirUrl.href);
         }
         dirUrl.pathname = pathname;
     }
