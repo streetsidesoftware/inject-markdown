@@ -4,26 +4,13 @@ import { isURL } from './url_helper.js';
 import { fileURLToPath } from 'node:url';
 
 async function readFile(file: PathLike, encoding: BufferEncoding): Promise<string> {
-    console.warn('readFile href: %s', file.toString());
-    try {
-        if (isURL(file)) {
-            if (file.protocol === 'file:') {
-                const filePath = fileURLToPath(file);
-                console.warn('readFile file: %s', filePath);
-                return await fs.readFile(filePath, encoding);
-            }
-            console.warn('Unknown protocol: %o', {
-                protocol: file.protocol,
-                pathname: file.pathname,
-                search: file.search,
-                hash: file.hash,
-            });
+    if (isURL(file)) {
+        if (file.protocol === 'file:') {
+            const filePath = fileURLToPath(file);
+            return await fs.readFile(filePath, encoding);
         }
-        return await fs.readFile(file, encoding);
-    } catch (e) {
-        console.error('readFile failed: %o\n%s', file, e);
-        throw e;
     }
+    return await fs.readFile(file, encoding);
 }
 
 export function nodeFsa(): FileSystemAdapter {
