@@ -21,7 +21,7 @@ export function pathToUrl(path: string | URL, rel?: URL): URL {
     if (isURL(path)) return path;
     if (isUrlRegExp.test(path)) return new URL(path, rel);
 
-    const possibleUrl = new URL(path, rel || url.pathToFileURL('./'));
+    const possibleUrl = new URL(path.replace(/\\/g, '/'), rel || url.pathToFileURL('./'));
 
     if (possibleUrl.protocol !== 'file:') {
         return possibleUrl;
