@@ -46,6 +46,8 @@ interface VFileEx extends VFile {
     data: FileData;
 }
 
+const GlobalConsole = console;
+
 export interface Logger {
     log: typeof console.log;
     error: typeof console.error;
@@ -520,6 +522,7 @@ function collectInjectionNodes(root: Root): DirectiveNode[] {
 }
 
 async function readFile(fs: FileSystemAdapter, path: URL, encoding: BufferEncoding = 'utf8'): Promise<VFileEx> {
+    GlobalConsole.log(path.href);
     const value = await fs.readFile(path, encoding);
     const data: FileData = {
         encoding,
