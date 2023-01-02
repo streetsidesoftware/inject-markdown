@@ -11,10 +11,10 @@ import { visit } from 'unist-util-visit';
 import { fileURLToPath } from 'url';
 import { Data as VFileData, VFile } from 'vfile';
 import { reporter } from 'vfile-reporter';
-import { BufferEncoding, FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
-import { fileType } from './fileType.mjs';
-import { parseHash } from './hash.js';
-import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, RelURL } from './url_helper.js';
+import { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
+import { fileType } from '../util/fileType.mjs';
+import { parseHash } from '../util/hash.js';
+import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, RelURL } from '../util/url_helper.js';
 
 type Node = Root | Content;
 

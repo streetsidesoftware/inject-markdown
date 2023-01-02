@@ -2,7 +2,7 @@ import { Command, CommanderError, program as defaultCommand } from 'commander';
 import { promises as fs } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import * as path from 'path';
-import { formatSummary } from './formatSummary.mjs';
+import { formatSummary } from './reporting/formatSummary.mjs';
 import { Options, processGlobs } from './processGlobs.mjs';
 
 async function version(): Promise<string> {

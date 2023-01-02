@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import { BufferEncoding, FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
-import { isURL } from './url_helper.js';
+import { isURL } from '../util/url_helper.js';
 import fetch from 'node-fetch';
 
 async function readFile(file: PathLike, encoding: BufferEncoding): Promise<string> {
