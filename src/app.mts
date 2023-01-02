@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 import * as path from 'path';
 import { formatSummary } from './reporting/formatSummary.mjs';
 import { Options, processGlobs } from './processor/process.mjs';
+import { isUndefined } from 'node:util';
+import { isDefined } from './util/isDefined.js';
 
 async function version(): Promise<string> {
     const pathSelf = fileURLToPath(import.meta.url);
@@ -26,11 +28,14 @@ interface CliOptions extends Options {
 
 function fixOptions(options: CliOptions): Options {
     const opts: Options = options;
-    if (options.stopOnError || options.stopOnErrors) opts.stopOnErrors = true;
+
+    if (options.stopOnError !== undefined) opts.stopOnErrors = options.stopOnError;
+    if (options.stopOnErrors !== undefined) opts.stopOnErrors = options.stopOnErrors;
+    opts.stopOnErrors = opts.stopOnErrors ?? true;
     return opts;
 }
 
-async function app(program = defaultCommand, argv?: string[]) {
+export async function app(program = defaultCommand): Promise<Command> {
     program
         .name('inject-markdown')
         .description('Inject file content into markdown files.')
@@ -41,7 +46,9 @@ async function app(program = defaultCommand, argv?: string[]) {
         .option('--clean', 'Remove the injected content.')
         .option('--verbose', 'Verbose output.')
         .option('--silent', 'Only output errors.')
+        .addOption(new CommanderOption('--stop-on-errors', 'Stop if an error occurs.').hideHelp())
         .option('--no-stop-on-errors', 'Do not stop if an error occurs.')
+        .addOption(new CommanderOption('--stop-on-error', 'Stop if an error occurs.').hideHelp())
         .addOption(new CommanderOption('--no-stop-on-error', 'Do not stop if an error occurs.').hideHelp())
         .option('--write-on-error', 'write the file even if an injection error occurs.')
         .option('--color', 'Force color.')
@@ -51,7 +58,7 @@ async function app(program = defaultCommand, argv?: string[]) {
         .option('--dry-run', 'Process the files, but do not write.')
         .version(await version())
         .action(async (files: string[], optionsCli: CliOptions, _command: Command) => {
-            // console.log('Options: %o', options);
+            // console.log('Options: %o', optionsCli);
             program.showHelpAfterError(false);
             const option = fixOptions(optionsCli);
             const result = await processGlobs(files, option);
@@ -66,19 +73,10 @@ async function app(program = defaultCommand, argv?: string[]) {
         });
 
     program.showHelpAfterError();
-
-    return program.parseAsync(argv);
+    return program;
 }
 
 export async function run(program?: Command, argv?: string[]): Promise<void> {
-    try {
-        await app(program, argv);
-    } catch (e) {
-        process.exitCode = 1;
-        if (!(e instanceof CommanderError)) {
-            console.log(e);
-            return;
-        }
-        console.log(e.message);
-    }
+    const prog = await app(program);
+    await prog.parseAsync(argv);
 }

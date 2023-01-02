@@ -2,6 +2,7 @@
 
 exports[`app > compiles 1`] = `
 [
+  "app",
   "run",
 ]
 `;

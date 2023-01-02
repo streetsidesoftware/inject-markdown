@@ -13,6 +13,7 @@ import { VFile } from 'vfile';
 import { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { fileType } from '../util/fileType.mjs';
 import { parseHash } from '../util/hash.js';
+import { isDefined } from '../util/isDefined.js';
 import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, RelURL } from '../util/url_helper.js';
 import { FileData, VFileEx } from './VFileEx.js';
 
@@ -650,18 +651,6 @@ function fixContentLineEndings(content: string, lineEnding: string, fixEofNewLin
 
 function hasEofNewLine(content: string): boolean {
     return content[content.length - 1] === '\n';
-}
-
-function isDefined<T>(v: T | undefined | null): v is T {
-    return v !== undefined && v !== null;
-}
-
-export function normalizePath(p: string): string;
-export function normalizePath(p: URL): URL;
-export function normalizePath(p: PathLike): PathLike;
-export function normalizePath(p: PathLike): PathLike {
-    if (typeof p !== 'string') return p;
-    return path.sep === '\\' ? p.replace(/\\/g, '/') : p;
 }
 
 function toError(e: unknown): Error {
