@@ -20,10 +20,12 @@ It is also possible to inject markdown:
 
 <!--- @@inject: chapters.md#Chapter 3: Directives --->
 
-## Import from lines from
+## Import from lines from GitHub
+
+<img width="711" alt="image" src="https://user-images.githubusercontent.com/3740137/210188786-28704fe3-cc2f-447c-97fc-d27715dabbdc.png">
 
 ```
-<!--- @@inject: https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe5f894df712c71d05eb3450ead944e73/src/app.mts#L22-L25 --->
+<!--- @@inject: https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe/src/app.mts#L15-L19 --->
 ```
 
-<!--- @@inject: https://raw.githubusercontent.com/streetsidesoftware/inject-markdown/d7de2f5f/src/app.mts#L22-L25 --->
+<!--- @@inject: https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe/src/app.mts#L15-L19 --->
