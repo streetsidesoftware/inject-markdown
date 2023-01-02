@@ -38,6 +38,7 @@ describe('FileInjector', () => {
         ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_', silent: true }}                  | ${true}        | ${'_out_/fixtures/vacations/vacations.md'}
         ${'vacations.md'}                    | ${{ cwd: 'fixtures/vacations/', outputDir: '_out_' }}    | ${true}        | ${'_out_/vacations.md'}
         ${'README.md'}                       | ${{ cwd: 'fixtures/no-injections', outputDir: '_out_' }} | ${false}       | ${'_out_/README.md'}
+        ${'fixtures/code/README.md'}         | ${{}}                                                    | ${true}        | ${'fixtures/code/README.md'}
     `('processFile $file $options', async ({ file, options, expectedResult, expectedFile }) => {
         const logger = createLogger();
         options.cwd = options.cwd || __root__;

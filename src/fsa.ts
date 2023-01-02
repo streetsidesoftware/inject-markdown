@@ -8,8 +8,7 @@ async function readFile(file: PathLike, encoding: BufferEncoding): Promise<strin
         if (file.protocol === 'file:') {
             return await fs.readFile(file, encoding);
         }
-        const response = await fetch(file.href);
-        return await response.text();
+        return await fetchUrl(file);
     }
     return await fs.readFile(file, encoding);
 }
@@ -22,4 +21,18 @@ export function nodeFsa(): FileSystemAdapter {
     };
 
     return fsa;
+}
+
+async function fetchUrl(url: URL): Promise<string> {
+    const response = await fetch(mapUrl(url));
+    return await response.text();
+}
+
+function mapUrl(url: URL): string {
+    let href = url.href;
+
+    // Remap GitHub blobs
+    href = href.replace(/^https?:\/\/github.com\/([^/]+\/[^/]+)\/blob\//, 'https://raw.githubusercontent.com/$1/');
+
+    return href;
 }
