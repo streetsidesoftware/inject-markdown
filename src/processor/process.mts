@@ -1,7 +1,8 @@
 import { globby, type Options as GlobbyOptions } from 'globby';
 import * as path from 'path';
-import { FileInjector, FileInjectorOptions } from './FileInjector/FileInjector.js';
-import { nodeFsa } from './FileSystemAdapter/fsa.js';
+import { FileInjector, FileInjectorOptions } from '../FileInjector/FileInjector.js';
+import { nodeFsa } from '../FileSystemAdapter/fsa.js';
+import { reportFileErrors } from './reportFileErrors.mjs';
 
 const fs = nodeFsa();
 
@@ -33,10 +34,12 @@ export async function processGlobs(globs: string[], options: Options): Promise<R
         result.numberOfFilesWithInjections += r.injectionsFound ? 1 : 0;
         result.numberOfFilesWritten += r.written ? 1 : 0;
         result.numberOfFilesUpdated += r.hasChanged ? 1 : 0;
+        result.numberOfFilesSkipped += r.skipped ? 1 : 0;
         if (r.hasErrors) {
             result.errorCount += 1;
             result.filesWithErrors.push(file);
-            if (options.stopOnError ?? true) break;
+            console.error(reportFileErrors(r.file));
+            if (options.stopOnErrors ?? true) break;
         }
     }
 

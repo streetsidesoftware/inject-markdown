@@ -10,11 +10,11 @@ import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
 import { fileURLToPath } from 'url';
 import { Data as VFileData, VFile } from 'vfile';
-import { reporter } from 'vfile-reporter';
 import { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { fileType } from '../util/fileType.mjs';
 import { parseHash } from '../util/hash.js';
 import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, RelURL } from '../util/url_helper.js';
+import { VFileEx } from './VFileEx';
 
 type Node = Root | Content;
 
@@ -37,15 +37,11 @@ const outputOptions = {
     strong: '*',
 } as const;
 
-interface FileData extends VFileData {
+export interface FileData extends VFileData {
     encoding: BufferEncoding;
     fileUrl: URL;
     cwdUrl?: URL;
     hasInjections?: boolean;
-}
-
-interface VFileEx extends VFile {
-    data: FileData;
 }
 
 export interface Logger {
@@ -99,7 +95,7 @@ export interface FileInjectorOptions {
      * `false` - keep going even if errors occur.
      * @default true
      */
-    stopOnError?: boolean;
+    stopOnErrors?: boolean;
 
     logger?: Logger;
 }
@@ -135,7 +131,7 @@ export class FileInjector {
             verbose: (!this.options.silent && this.options.verbose) || false,
             outputDir: this.options.outputDir ? dirToUrl(this.options.outputDir) : undefined,
             writeOnError: this.options.writeOnError ?? false,
-            stopOnError: this.options.stopOnError ?? true,
+            stopOnErrors: this.options.stopOnErrors ?? true,
         });
     }
 }
@@ -146,7 +142,7 @@ interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outpu
     logger: Logger;
     outputDir: URL | undefined;
     writeOnError: boolean;
-    stopOnError: boolean;
+    stopOnErrors: boolean;
 }
 
 export interface ProcessFileResult {
@@ -220,7 +216,6 @@ async function processFileInjections(
             return processFileResult;
         }
         const hasErrors = result.messages.length > 0;
-        hasErrors && logger.error('\n' + reporter(result));
         const resultAsString = extractContent(result);
         const resultContent = fixContentLineEndings(resultAsString, lineEnding, hasEofNewLine(content));
         const hasChanged = content !== resultContent;
