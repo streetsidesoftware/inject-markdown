@@ -1,0 +1,12 @@
+// Vitest Snapshot v1
+
+exports[`formatSummary > formatSummary 1`] = `
+"Summary:
+    Number of files:                    0
+    Number of files processed:          0
+    Number of files with injections:    0
+    Number of files written:            0
+    Number of files skipped:            0
+    Errors:                             0
+"
+`;

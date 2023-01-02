@@ -1,7 +1,7 @@
+import { VFile } from 'vfile';
 import { reporter } from 'vfile-reporter';
-import { VFileEx } from '../FileInjector/VFileEx.js';
 
-export function reportFileErrors(file: VFileEx): string {
+export function reportFileErrors(file: VFile): string {
     const hasErrors = file.messages.length > 0;
 
     return (hasErrors && reporter(file)) || '';

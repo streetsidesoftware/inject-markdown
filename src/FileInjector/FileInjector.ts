@@ -9,12 +9,12 @@ import { is } from 'unist-util-is';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
 import { fileURLToPath } from 'url';
-import { Data as VFileData, VFile } from 'vfile';
+import { VFile } from 'vfile';
 import { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { fileType } from '../util/fileType.mjs';
 import { parseHash } from '../util/hash.js';
 import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, RelURL } from '../util/url_helper.js';
-import { VFileEx } from './VFileEx';
+import { FileData, VFileEx } from './VFileEx.js';
 
 type Node = Root | Content;
 
@@ -36,13 +36,6 @@ const outputOptions = {
     incrementListMarker: false,
     strong: '*',
 } as const;
-
-export interface FileData extends VFileData {
-    encoding: BufferEncoding;
-    fileUrl: URL;
-    cwdUrl?: URL;
-    hasInjections?: boolean;
-}
 
 export interface Logger {
     log: typeof console.log;
