@@ -1,61 +1,15 @@
 import { Command, CommanderError, program as defaultCommand } from 'commander';
-import { globby, type Options as GlobbyOptions } from 'globby';
+import { promises as fs } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import * as path from 'path';
-import { FileInjector, FileInjectorOptions } from './FileInjector.js';
-import { nodeFsa } from './fsa.js';
-
-const fs = nodeFsa();
-
-const excludes = ['node_modules'];
-const allowedFileExtensions: Record<string, boolean | undefined> = {
-    '.md': true,
-};
+import { formatSummary } from './formatSummary.mjs';
+import { Options, processGlobs } from './processGlobs.mjs';
 
 async function version(): Promise<string> {
     const pathSelf = fileURLToPath(import.meta.url);
     const pathPackageJson = path.join(path.dirname(pathSelf), '../package.json');
     const packageJson = JSON.parse(await fs.readFile(pathPackageJson, 'utf8'));
     return (typeof packageJson === 'object' && packageJson?.version) || '0.0.0';
-}
-
-interface Options extends FileInjectorOptions {
-    mustFindFiles: boolean;
-    cwd?: string;
-}
-
-async function findFiles(globs: string[], cwd: string | undefined) {
-    const _cwd = process.cwd();
-    cwd && process.chdir(cwd);
-    const options: GlobbyOptions = {
-        ignore: excludes,
-        onlyFiles: true,
-    };
-    const files = await globby(
-        globs.map((a) => a.trim()).filter((a) => !!a),
-        options
-    );
-    process.chdir(_cwd);
-    // console.log('%o', files);
-    return files.filter((f) => path.extname(f) in allowedFileExtensions);
-}
-
-async function processGlobs(globs: string[], options: Options): Promise<boolean> {
-    if (!globs.length) return false;
-
-    const files = await findFiles(globs, options.cwd);
-
-    if (!files.length) {
-        return !options.mustFindFiles;
-    }
-
-    const injector = new FileInjector(fs, options);
-
-    for (const file of files) {
-        const r = await injector.processFile(file);
-    }
-
-    return true;
 }
 
 async function app(program = defaultCommand, argv?: string[]) {
@@ -69,13 +23,19 @@ async function app(program = defaultCommand, argv?: string[]) {
         .option('--clean', 'Remove the injected content.')
         .option('--verbose', 'Verbose output.')
         .option('--silent', 'Only output errors.')
+        .option('--no-stop-on-error', 'Do not stop if an error occurs.')
+        .option('--write-on-error', 'write the file even if an injection error occurs.')
         .option('--color', 'Force color.')
         .option('--no-color', 'Do not use color.')
         .version(await version())
         .action(async (files: string[], options: Options, _command: Command) => {
             // console.log('Options: %o', options);
             const result = await processGlobs(files, options);
-            if (!result) {
+            console.log(formatSummary(result));
+            if (result.errorCount) {
+                process.exitCode = 1;
+            }
+            if (!result.numberOfFiles && options.mustFindFiles) {
                 throw new CommanderError(1, 'Not Found', 'No files found.');
             }
         });

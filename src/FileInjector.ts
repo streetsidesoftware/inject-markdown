@@ -1,5 +1,6 @@
 import assert from 'assert';
-import type { Content, Heading, HTML, Parent, Root, Code } from 'mdast';
+import chalk, { supportsColor } from 'chalk';
+import type { Code, Content, Heading, HTML, Parent, Root } from 'mdast';
 import * as path from 'node:path';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
@@ -7,14 +8,13 @@ import { unified } from 'unified';
 import { is } from 'unist-util-is';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
-import { VFile, Data as VFileData } from 'vfile';
+import { fileURLToPath } from 'url';
+import { Data as VFileData, VFile } from 'vfile';
 import { reporter } from 'vfile-reporter';
 import { BufferEncoding, FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
-import chalk, { supportsColor } from 'chalk';
 import { fileType } from './fileType.mjs';
-import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, RelURL } from './url_helper.js';
-import { fileURLToPath } from 'url';
 import { parseHash } from './hash.js';
+import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, RelURL } from './url_helper.js';
 
 type Node = Root | Content;
 
@@ -41,6 +41,7 @@ interface FileData extends VFileData {
     encoding: BufferEncoding;
     fileUrl: URL;
     cwdUrl?: URL;
+    hasInjections?: boolean;
 }
 
 interface VFileEx extends VFile {
@@ -83,6 +84,23 @@ export interface FileInjectorOptions {
      */
     verbose?: number | boolean;
 
+    /**
+     * If an error occurs, the file is skipped and not written.
+     * This options will write the file.
+     * `false` - the file will skipped
+     * `true` - the file will be written
+     * @default false
+     */
+    writeOnError?: boolean;
+
+    /**
+     * Stop processing if there is an error in any file.
+     * `true` - stop processing on any error.
+     * `false` - keep going even if errors occur.
+     * @default true
+     */
+    stopOnError?: boolean;
+
     logger?: Logger;
 }
 
@@ -98,7 +116,7 @@ export class FileInjector {
      * @param encoding - file encoding
      * @returns true if changed, otherwise false.
      */
-    async processFile(filePath: PathLike, encoding: BufferEncoding = 'utf8'): Promise<boolean> {
+    async processFile(filePath: PathLike, encoding: BufferEncoding = 'utf8'): Promise<ProcessFileResult> {
         const fileUrl = pathToUrl(filePath, this.cwd);
         const file = await readFile(this.fs, fileUrl, encoding);
         const logger: Logger = {
@@ -116,6 +134,8 @@ export class FileInjector {
             logger: this.options.logger || logger,
             verbose: (!this.options.silent && this.options.verbose) || false,
             outputDir: this.options.outputDir ? dirToUrl(this.options.outputDir) : undefined,
+            writeOnError: this.options.writeOnError ?? false,
+            stopOnError: this.options.stopOnError ?? true,
         });
     }
 }
@@ -125,13 +145,34 @@ interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outpu
     fileUrl: URL;
     logger: Logger;
     outputDir: URL | undefined;
+    writeOnError: boolean;
+    stopOnError: boolean;
+}
+
+export interface ProcessFileResult {
+    /** Were any injections found? */
+    injectionsFound: boolean;
+    /** The resulting file */
+    file: VFileEx;
+    /** had injection errors? */
+    hasErrors: boolean;
+    /** file was written */
+    written: boolean;
+    /**
+     * The content was updated.
+     */
+    hasChanged: boolean;
+    /**
+     * File was skipped due to errors.
+     */
+    skipped: boolean;
 }
 
 async function processFileInjections(
     vFile: VFileEx | VFile,
     fs: FileSystemAdapter,
     options: ProcessFileInjections
-): Promise<boolean> {
+): Promise<ProcessFileResult> {
     assert(isVFileEx(vFile));
     const file = vFile;
     const fileUrl = file.data.fileUrl;
@@ -156,24 +197,46 @@ async function processFileInjections(
         }
     }
 
-    async function __processFile(): Promise<boolean> {
+    async function __processFile(): Promise<ProcessFileResult> {
         const fileValue = file.value;
         const content = extractContent(file);
         const lineEnding = detectLineEnding(content);
+        const processFileResult: ProcessFileResult = {
+            file,
+            injectionsFound: false,
+            hasErrors: false,
+            written: false,
+            hasChanged: false,
+            skipped: false,
+        };
         const result = await processFileContent();
-        if (result.value === fileValue) {
-            options.outputDir && (await writeResult(result));
-            return false;
+        const injectionsFound = result.data.hasInjections || false;
+        processFileResult.injectionsFound = injectionsFound;
+        if (!injectionsFound && result.value === fileValue) {
+            if (options.outputDir) {
+                await writeResult(result);
+                processFileResult.written = true;
+            }
+            return processFileResult;
         }
-        result.messages.length && logger.error('\n' + reporter(result));
+        const hasErrors = result.messages.length > 0;
+        hasErrors && logger.error('\n' + reporter(result));
         const resultAsString = extractContent(result);
         const resultContent = fixContentLineEndings(resultAsString, lineEnding, hasEofNewLine(content));
-        if (content === resultContent) {
-            options.outputDir && (await writeResult(result));
-            return false;
+        const hasChanged = content !== resultContent;
+        processFileResult.hasChanged = hasChanged;
+        processFileResult.hasErrors = hasErrors;
+        const stale = hasChanged || !!options.outputDir;
+        if (stale) {
+            if (!hasErrors || options.writeOnError) {
+                await writeResult(result);
+                processFileResult.written = true;
+            } else {
+                processFileResult.skipped = true;
+            }
         }
-        await writeResult(result);
-        return true;
+        // console.log('Result: %o', { hasErrors, hasChanged, stale, injectionsFound });
+        return processFileResult;
     }
 
     async function writeResult(file: VFileEx): Promise<void> {
@@ -196,15 +259,26 @@ async function processFileInjections(
 
     async function processFileContent(): Promise<VFileEx> {
         if (!extractContent(file).includes(directivePrefix)) {
+            file.data.hasInjections = false;
             return file;
         }
         const result = await unified()
             .use(remarkParse)
+            .use(processHasInjections)
             .use(processInjections)
             .use(remarkStringify, outputOptions)
             .process(file);
         assert(isVFileEx(result));
         return result;
+    }
+
+    function processHasInjections() {
+        return (root: Root, file: VFile): Root => {
+            assert(isVFileEx(file));
+            const nodes = collectInjectionNodes(root);
+            file.data.hasInjections = nodes.length > 0;
+            return root;
+        };
     }
 
     function processInjections() {
@@ -218,7 +292,7 @@ async function processFileInjections(
     }
 
     async function injectFiles(root: Root): Promise<Root> {
-        const directiveNodes = collectInjectionNodes(root);
+        const directiveNodes = collectInjectionNodesAndParse(root);
 
         for (const node of directiveNodes) {
             if (!node.file) continue;
@@ -390,7 +464,7 @@ function headingString(n: Heading): string {
 }
 
 function deleteInjectedContent(root: Root, file: VFileEx): Root {
-    const directiveNodes = collectInjectionNodes(root);
+    const directiveNodes = collectInjectionNodesAndParse(root);
     const pairs = findInjectionPairs(directiveNodes, file);
 
     interface BaseNode {
@@ -481,7 +555,7 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFileEx): DirectivePa
     let last: DirectiveNode | undefined = undefined;
     for (const n of dnp.reverse()) {
         if (startTypes[n.type]) {
-            if (last?.file && last?.file.href !== n.file.href) {
+            if (last?.file && !refersToTheSameFile(last.file, n.file)) {
                 vfile.message(`Unmatched @@inject-end "${last.file || ''}"`, last.node.position);
                 pairs.push({ end: last });
                 last = undefined;
@@ -526,6 +600,11 @@ function collectInjectionNodes(root: Root): DirectiveNode[] {
     visit(root, isInjectNode, (node, _index, parent) => {
         parent && nodes.push({ node, parent });
     });
+    return nodes;
+}
+
+function collectInjectionNodesAndParse(root: Root): DirectiveNode[] {
+    const nodes: DirectiveNode[] = collectInjectionNodes(root);
 
     const dNodes = nodes.map((node) => ({ ...node, ...(parseDirectiveNode(node.node) || {}) }));
     return dNodes;
@@ -624,4 +703,8 @@ function extractLines(content: string, lines: [number, number] | undefined): str
 
     const cLines = content.split('\n');
     return cLines.slice(lines[0] - 1, lines[1]).join('\n');
+}
+
+function refersToTheSameFile(a: RelURL | URL, b: RelURL | URL): boolean {
+    return a.pathname === b.pathname && a.search === b.search;
 }

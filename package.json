@@ -22,6 +22,7 @@
     "sample:hydrate": "./bin.mjs \"*.md\" --cwd=sample-clean --output-dir=sample-hydrated",
     "test": "vitest run --threads=false",
     "test:bin": "./bin.mjs \"**\" --cwd=fixtures --output-dir=fixtures-output",
+    "test:watch": "vitest",
     "prepare": "pnpm build"
   },
   "keywords": [
