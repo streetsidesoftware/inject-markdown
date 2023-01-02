@@ -10,3 +10,14 @@ exports[`formatSummary > formatSummary 1`] = `
     Errors:                             0
 "
 `;
+
+exports[`formatSummary > formatSummary with errors 1`] = `
+"Summary:
+    Number of files:                    1
+    Number of files processed:          1
+    Number of files with injections:    1
+    Number of files written:            0
+    Number of files skipped:            1
+    Errors:                             1
+"
+`;

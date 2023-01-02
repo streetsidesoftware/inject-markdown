@@ -21,4 +21,18 @@ describe('formatSummary', () => {
         };
         expect(formatSummary(result, chalk)).toMatchSnapshot();
     });
+
+    test('formatSummary with errors', () => {
+        const result = {
+            numberOfFiles: 1,
+            numberOfFilesProcessed: 1,
+            numberOfFilesWithInjections: 1,
+            numberOfFilesUpdated: 0,
+            numberOfFilesWritten: 0,
+            numberOfFilesSkipped: 1,
+            filesWithErrors: ['README.md'],
+            errorCount: 1,
+        };
+        expect(formatSummary(result, chalk)).toMatchSnapshot();
+    });
 });
