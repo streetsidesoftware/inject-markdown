@@ -9,12 +9,13 @@ import { is } from 'unist-util-is';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
 import { fileURLToPath } from 'url';
-import { Data as VFileData, VFile } from 'vfile';
-import { reporter } from 'vfile-reporter';
+import { VFile } from 'vfile';
 import { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { fileType } from '../util/fileType.mjs';
 import { parseHash } from '../util/hash.js';
+import { isDefined } from '../util/isDefined.js';
 import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, RelURL } from '../util/url_helper.js';
+import { FileData, VFileEx } from './VFileEx.js';
 
 type Node = Root | Content;
 
@@ -36,17 +37,6 @@ const outputOptions = {
     incrementListMarker: false,
     strong: '*',
 } as const;
-
-interface FileData extends VFileData {
-    encoding: BufferEncoding;
-    fileUrl: URL;
-    cwdUrl?: URL;
-    hasInjections?: boolean;
-}
-
-interface VFileEx extends VFile {
-    data: FileData;
-}
 
 export interface Logger {
     log: typeof console.log;
@@ -99,7 +89,7 @@ export interface FileInjectorOptions {
      * `false` - keep going even if errors occur.
      * @default true
      */
-    stopOnError?: boolean;
+    stopOnErrors?: boolean;
 
     logger?: Logger;
 }
@@ -135,7 +125,7 @@ export class FileInjector {
             verbose: (!this.options.silent && this.options.verbose) || false,
             outputDir: this.options.outputDir ? dirToUrl(this.options.outputDir) : undefined,
             writeOnError: this.options.writeOnError ?? false,
-            stopOnError: this.options.stopOnError ?? true,
+            stopOnErrors: this.options.stopOnErrors ?? true,
         });
     }
 }
@@ -146,7 +136,7 @@ interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outpu
     logger: Logger;
     outputDir: URL | undefined;
     writeOnError: boolean;
-    stopOnError: boolean;
+    stopOnErrors: boolean;
 }
 
 export interface ProcessFileResult {
@@ -220,7 +210,6 @@ async function processFileInjections(
             return processFileResult;
         }
         const hasErrors = result.messages.length > 0;
-        hasErrors && logger.error('\n' + reporter(result));
         const resultAsString = extractContent(result);
         const resultContent = fixContentLineEndings(resultAsString, lineEnding, hasEofNewLine(content));
         const hasChanged = content !== resultContent;
@@ -295,7 +284,7 @@ async function processFileInjections(
         const directiveNodes = collectInjectionNodesAndParse(root);
 
         for (const node of directiveNodes) {
-            if (!node.file) continue;
+            if (!node.file?.href) continue;
             await injectFile(node);
         }
 
@@ -542,7 +531,7 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFileEx): DirectivePa
             vfile.message('Unable to parse @@inject directive.', n.node.position);
             return false;
         }
-        if (startTypes[n.type] && !n.file) {
+        if (!n.file?.href) {
             vfile.message('Missing injection filename.', n.node.position);
             return false;
         }
@@ -556,9 +545,8 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFileEx): DirectivePa
     for (const n of dnp.reverse()) {
         if (startTypes[n.type]) {
             if (last?.file && !refersToTheSameFile(last.file, n.file)) {
-                vfile.message(`Unmatched @@inject-end "${last.file || ''}"`, last.node.position);
+                vfile.message(`Unmatched @@inject-end "${last.file}" matching with "${n.file}"`, last.node.position);
                 pairs.push({ end: last });
-                last = undefined;
             }
             pairs.push({ start: n, end: last });
             last = undefined;
@@ -569,6 +557,10 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFileEx): DirectivePa
             pairs.push({ end: last });
         }
         last = n;
+    }
+    if (last) {
+        vfile.message(`Unmatched @@inject-end "${last.file || ''}"`, last.node.position);
+        pairs.push({ end: last });
     }
 
     return pairs.reverse();
@@ -662,18 +654,6 @@ function fixContentLineEndings(content: string, lineEnding: string, fixEofNewLin
 
 function hasEofNewLine(content: string): boolean {
     return content[content.length - 1] === '\n';
-}
-
-function isDefined<T>(v: T | undefined | null): v is T {
-    return v !== undefined && v !== null;
-}
-
-export function normalizePath(p: string): string;
-export function normalizePath(p: URL): URL;
-export function normalizePath(p: PathLike): PathLike;
-export function normalizePath(p: PathLike): PathLike {
-    if (typeof p !== 'string') return p;
-    return path.sep === '\\' ? p.replace(/\\/g, '/') : p;
 }
 
 function toError(e: unknown): Error {

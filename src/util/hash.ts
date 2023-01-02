@@ -36,8 +36,10 @@ export function parseHashString(hash: string): InjectInfo {
     function addParam(key: string, value: string) {
         const v = p.get(key);
         if (v !== undefined) {
-            const a = Array.isArray(v) ? v : [v];
+            const isArray = Array.isArray(v);
+            const a = isArray ? v : [v];
             a.push(value);
+            !isArray && p.set(key, a);
             return;
         }
         p.set(key, value);
@@ -89,16 +91,12 @@ function parseLineNumbers(ref: string): [number, number] | undefined {
     const match = ref.match(regExLineNumExpression);
     if (!match) return undefined;
 
-    try {
-        const start = match[1];
-        const end = match[2] || start;
-        const startNum = parseInt(start.slice(1));
-        const endNum = parseInt(end.slice(1));
-        if (startNum && endNum) {
-            return [startNum, endNum];
-        }
-        return undefined;
-    } catch (e) {
-        return undefined;
+    const start = match[1];
+    const end = match[2] || start;
+    const startNum = parseInt(start.slice(1));
+    const endNum = parseInt(end.slice(1));
+    if (startNum && endNum) {
+        return [startNum, endNum];
     }
+    return undefined;
 }
