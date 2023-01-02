@@ -12,6 +12,8 @@ const __root__ = path.join(__dirname__, '..');
 
 const appFsa = nodeFsa();
 
+const oc = (e: unknown) => expect.objectContaining(e);
+
 describe('FileInjector', () => {
     test('FileInjector', () => {
         const fi = new FileInjector(createFSA(), {});
@@ -20,25 +22,25 @@ describe('FileInjector', () => {
 
     test.each`
         file           | options                              | expectedResult
-        ${'README.md'} | ${{ cwd: 'fixtures/no-injections' }} | ${false}
+        ${'README.md'} | ${{ cwd: 'fixtures/no-injections' }} | ${oc({ hasChanged: false })}
     `('processFile no change', async ({ file, options, expectedResult }) => {
         options.cwd = options.cwd || __root__;
         const fsa = createFSA();
         const fi = new FileInjector(fsa, options);
         const r = await fi.processFile(file);
-        expect(r).toBe(expectedResult);
+        expect(r).toEqual(expectedResult);
         expect(fsa.mkdir).not.toBeCalled();
     });
 
     test.each`
-        file                                 | options                                                  | expectedResult | expectedFile
-        ${'fixtures/vacations/vacations.md'} | ${{}}                                                    | ${true}        | ${'fixtures/vacations/vacations.md'}
-        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_' }}                                | ${true}        | ${'_out_/fixtures/vacations/vacations.md'}
-        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_', verbose: true }}                 | ${true}        | ${'_out_/fixtures/vacations/vacations.md'}
-        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_', silent: true }}                  | ${true}        | ${'_out_/fixtures/vacations/vacations.md'}
-        ${'vacations.md'}                    | ${{ cwd: 'fixtures/vacations/', outputDir: '_out_' }}    | ${true}        | ${'_out_/vacations.md'}
-        ${'README.md'}                       | ${{ cwd: 'fixtures/no-injections', outputDir: '_out_' }} | ${false}       | ${'_out_/README.md'}
-        ${'fixtures/code/README.md'}         | ${{}}                                                    | ${true}        | ${'fixtures/code/README.md'}
+        file                                 | options                                                  | expectedResult               | expectedFile
+        ${'fixtures/vacations/vacations.md'} | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/vacations/vacations.md'}
+        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_' }}                                | ${oc({ hasChanged: true })}  | ${'_out_/fixtures/vacations/vacations.md'}
+        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_', verbose: true }}                 | ${oc({ hasChanged: true })}  | ${'_out_/fixtures/vacations/vacations.md'}
+        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_', silent: true }}                  | ${oc({ hasChanged: true })}  | ${'_out_/fixtures/vacations/vacations.md'}
+        ${'vacations.md'}                    | ${{ cwd: 'fixtures/vacations/', outputDir: '_out_' }}    | ${oc({ hasChanged: true })}  | ${'_out_/vacations.md'}
+        ${'README.md'}                       | ${{ cwd: 'fixtures/no-injections', outputDir: '_out_' }} | ${oc({ hasChanged: false })} | ${'_out_/README.md'}
+        ${'fixtures/code/README.md'}         | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/code/README.md'}
     `('processFile $file $options', async ({ file, options, expectedResult, expectedFile }) => {
         const logger = createLogger();
         options.cwd = options.cwd || __root__;
@@ -48,7 +50,7 @@ describe('FileInjector', () => {
         const fsa = createFSA();
         const fi = new FileInjector(fsa, options);
         const r = await fi.processFile(file);
-        expect(r).toBe(expectedResult);
+        expect(r).toEqual(expectedResult);
         expect(fsa.mkdir).toHaveBeenCalledWith(path.dirname(expectedFile), { recursive: true });
         expect(normalizeWriteFileCalls(fsa.writeFile)).toMatchSnapshot();
         expect(logger.history).toMatchSnapshot();
