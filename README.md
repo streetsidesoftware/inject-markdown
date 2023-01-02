@@ -70,11 +70,18 @@ export function sayHello(name: string): string {
 
 ## Import `json` as `jsonc`
 
+### Syntax
+
 ```markdown
-<!--- @@inject-code: content/sample.json#jsonc --->
+<!--- @@inject-code: sample.json#lang=jsonc --->
 ```
 
-<!--- @@inject-code: content/sample.json#jsonc --->
+### Example
+
+<!--- @@inject-code: content/import-sample-json.md --->
+
+````markdown
+<!--- @@inject-code: sample.json#lang=jsonc --->
 
 ```jsonc
 {
@@ -82,7 +89,22 @@ export function sayHello(name: string): string {
 }
 ```
 
-<!--- @@inject-end: content/sample.json#jsonc --->
+<!--- @@inject-end: sample.json#lang=jsonc --->
+````
+
+<!--- @@inject-end: content/import-sample-json.md --->
+
+### Actual Result
+
+<!--- @@inject: content/import-sample-json.md --->
+
+```jsonc
+{
+  "name": "Sample"
+}
+```
+
+<!--- @@inject-end: content/import-sample-json.md --->
 
 ## Import Markdown as Code
 
