@@ -6,9 +6,15 @@ This file had references to files that do not exist.
 
 # Too bad it is missing
 
-<!--- @@inject-end: missing-code.md --->
+<!---
+  Failed to read "with-errors/answer-to-everything.universe#lang=clojure"
+--->
+
+<!--- @@inject-end: missing-code-again.md --->
 
 Another unmatched directive:
+
+<!--- @@inject-end: we-forgot-this-one.md --->
 
 No file given
 

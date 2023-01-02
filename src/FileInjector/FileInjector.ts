@@ -284,7 +284,7 @@ async function processFileInjections(
         const directiveNodes = collectInjectionNodesAndParse(root);
 
         for (const node of directiveNodes) {
-            if (!node.file) continue;
+            if (!node.file?.href) continue;
             await injectFile(node);
         }
 
@@ -531,7 +531,7 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFileEx): DirectivePa
             vfile.message('Unable to parse @@inject directive.', n.node.position);
             return false;
         }
-        if (startTypes[n.type] && !n.file) {
+        if (!n.file?.href) {
             vfile.message('Missing injection filename.', n.node.position);
             return false;
         }
@@ -545,9 +545,8 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFileEx): DirectivePa
     for (const n of dnp.reverse()) {
         if (startTypes[n.type]) {
             if (last?.file && !refersToTheSameFile(last.file, n.file)) {
-                vfile.message(`Unmatched @@inject-end "${last.file || ''}"`, last.node.position);
+                vfile.message(`Unmatched @@inject-end "${last.file}" matching with "${n.file}"`, last.node.position);
                 pairs.push({ end: last });
-                last = undefined;
             }
             pairs.push({ start: n, end: last });
             last = undefined;
@@ -558,6 +557,10 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFileEx): DirectivePa
             pairs.push({ end: last });
         }
         last = n;
+    }
+    if (last) {
+        vfile.message(`Unmatched @@inject-end "${last.file || ''}"`, last.node.position);
+        pairs.push({ end: last });
     }
 
     return pairs.reverse();
