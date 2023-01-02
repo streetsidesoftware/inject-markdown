@@ -3,8 +3,7 @@ import * as path from 'path';
 import { FileInjector, FileInjectorOptions } from '../FileInjector/FileInjector.js';
 import { nodeFsa } from '../FileSystemAdapter/fsa.js';
 import { reportFileErrors } from './reportFileErrors.mjs';
-
-const fs = nodeFsa();
+import { isMainThread } from 'node:worker_threads';
 
 const excludes = ['node_modules'];
 const allowedFileExtensions: Record<string, boolean | undefined> = {
@@ -12,6 +11,8 @@ const allowedFileExtensions: Record<string, boolean | undefined> = {
 };
 
 export async function processGlobs(globs: string[], options: Options): Promise<Result> {
+    const fs = nodeFsa();
+
     const result: Result = {
         numberOfFiles: 0,
         numberOfFilesProcessed: 0,
@@ -49,20 +50,23 @@ export async function processGlobs(globs: string[], options: Options): Promise<R
 export interface Options extends FileInjectorOptions {
     mustFindFiles: boolean;
     cwd?: string;
+    dryRun?: boolean;
 }
 
 async function findFiles(globs: string[], cwd: string | undefined) {
     const _cwd = process.cwd();
-    cwd && process.chdir(cwd);
-    const options: GlobbyOptions = {
+    const cwdToUse = path.resolve(cwd || '.');
+    cwd && isMainThread && process.chdir(cwdToUse);
+    const options: Mutable<GlobbyOptions> = {
         ignore: excludes,
         onlyFiles: true,
+        cwd: cwdToUse,
     };
     const files = await globby(
         globs.map((a) => a.trim()).filter((a) => !!a),
         options
     );
-    process.chdir(_cwd);
+    isMainThread && process.chdir(_cwd);
     // console.log('%o', files);
     return files.filter((f) => path.extname(f) in allowedFileExtensions);
 }
@@ -77,3 +81,7 @@ export interface Result {
     filesWithErrors: string[];
     errorCount: number;
 }
+
+type Mutable<Type> = {
+    -readonly [Key in keyof Type]: Type[Key];
+};

@@ -1,10 +1,12 @@
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as path from 'path';
 import { format } from 'util';
 import { describe, expect, MockedFunction, test, vi } from 'vitest';
 import { FileInjector, Logger } from './FileInjector.js';
 import type { FileSystemAdapter, PathLike, BufferEncoding } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { nodeFsa } from '../FileSystemAdapter/fsa.js';
+import { createStore, normalizePath, type Store } from '../FileSystemAdapter/fsStore.mjs';
+import { relativePath } from '../util/url_helper.js';
 
 const __file__ = fileURLToPath(import.meta.url);
 const __dirname__ = path.dirname(__file__);
@@ -62,56 +64,26 @@ function normalizeWriteFileCalls(
     writeFile: MockedFileSystemAdapter['writeFile']
 ): MockedFileSystemAdapter['writeFile']['mock']['calls'] {
     const calls = writeFile.mock.calls;
+    const cwd = pathToFileURL('.');
     const normalized = calls.map(
         ([pathLike, data, encoding]) =>
-            [normalizePath(pathLike), data, encoding] as Parameters<FileSystemAdapter['writeFile']>
+            [relativePath(cwd, normalizePath(pathLike)).toString(), data, encoding] as Parameters<
+                FileSystemAdapter['writeFile']
+            >
     );
     return normalized;
-}
-
-function normalizePath(pathLike: PathLike): PathLike {
-    if (typeof pathLike !== 'string') return pathLike;
-
-    const p = path.relative(__root__, pathLike);
-    return p.replace(/\\/g, '/');
 }
 
 type MockedFileSystemAdapter<T extends FileSystemAdapter = FileSystemAdapter> = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [K in keyof T]: T[K] extends (...args: any) => any ? MockedFunction<T[K]> : T[K];
 };
-
-interface Store {
-    get(file: PathLike): string | undefined;
-    set(file: PathLike, data: string | undefined): void;
-}
-
-function createStore(): Store {
-    const store = new Map<string, string>();
-
-    function get(file: PathLike) {
-        const p = normalizePath(file).toString();
-        return store.get(p);
-    }
-
-    function set(file: PathLike, data: string | undefined) {
-        const p = normalizePath(file).toString();
-        if (typeof data !== 'string') {
-            store.delete(p);
-            return;
-        }
-        store.set(p, data);
-    }
-
-    return { get, set };
-}
-
 interface FSA extends MockedFileSystemAdapter {
-    store: Store;
+    store: Store<string>;
 }
 
 function createFSA(): FSA {
-    const store = createStore();
+    const store = createStore<string>();
 
     async function readFile(p: PathLike, e: BufferEncoding): Promise<string> {
         const found = store.get(p);

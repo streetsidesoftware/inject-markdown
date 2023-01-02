@@ -48,18 +48,20 @@ async function app(program = defaultCommand, argv?: string[]) {
         .option('--no-color', 'Do not use color.')
         .addOption(new CommanderOption('--summary', 'Show summary even when silent.').hideHelp())
         .option('--no-summary', 'Do not show the summary')
+        .option('--dry-run', 'Process the files, but do not write.')
         .version(await version())
         .action(async (files: string[], optionsCli: CliOptions, _command: Command) => {
             // console.log('Options: %o', options);
+            program.showHelpAfterError(false);
             const option = fixOptions(optionsCli);
-            const showSummary = !optionsCli.silent || optionsCli.summary === true;
             const result = await processGlobs(files, option);
+            const showSummary = (!optionsCli.silent && !!result.numberOfFiles) || optionsCli.summary === true;
             showSummary && console.error(formatSummary(result));
-            if (result.errorCount) {
-                process.exitCode = 1;
-            }
             if (!result.numberOfFiles && optionsCli.mustFindFiles) {
-                throw new CommanderError(1, 'Not Found', 'No files found.');
+                program.error('No Markdown files found.');
+            }
+            if (result.errorCount) {
+                program.error('Encountered errors while processing.');
             }
         });
 
@@ -68,9 +70,9 @@ async function app(program = defaultCommand, argv?: string[]) {
     return program.parseAsync(argv);
 }
 
-export async function run(program?: Command): Promise<void> {
+export async function run(program?: Command, argv?: string[]): Promise<void> {
     try {
-        await app(program);
+        await app(program, argv);
     } catch (e) {
         process.exitCode = 1;
         if (!(e instanceof CommanderError)) {
