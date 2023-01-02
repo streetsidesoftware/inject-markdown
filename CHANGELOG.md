@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/streetsidesoftware/inject-markdown/compare/v1.1.1...v1.2.0) (2023-01-02)
+
+
+### Features
+
+* inject https urls and content from GitHub blobs. ([#14](https://github.com/streetsidesoftware/inject-markdown/issues/14)) ([7bfa896](https://github.com/streetsidesoftware/inject-markdown/commit/7bfa8966520813aa4673c41ce2beab4512c8d8b0))
+
+
+### Bug Fixes
+
+* improve handling of injections and add README.md examples ([#12](https://github.com/streetsidesoftware/inject-markdown/issues/12)) ([d7de2f5](https://github.com/streetsidesoftware/inject-markdown/commit/d7de2f5fe5f894df712c71d05eb3450ead944e73))
+
 ## [1.1.1](https://github.com/streetsidesoftware/inject-markdown/compare/v1.1.0...v1.1.1) (2022-12-31)
 
 
