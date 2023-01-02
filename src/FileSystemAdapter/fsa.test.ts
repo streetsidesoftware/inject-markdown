@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import * as fsa from './fsa.js';
-import { pathToUrl } from './url_helper.js';
+import { pathToUrl } from '../util/url_helper.js';
 
 describe('fsa', () => {
     test.each`

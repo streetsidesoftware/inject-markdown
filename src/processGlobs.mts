@@ -1,7 +1,7 @@
 import { globby, type Options as GlobbyOptions } from 'globby';
 import * as path from 'path';
-import { FileInjector, FileInjectorOptions } from './FileInjector.js';
-import { nodeFsa } from './fsa.js';
+import { FileInjector, FileInjectorOptions } from './FileInjector/FileInjector.js';
+import { nodeFsa } from './FileSystemAdapter/fsa.js';
 
 const fs = nodeFsa();
 

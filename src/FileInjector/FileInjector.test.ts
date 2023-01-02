@@ -3,12 +3,12 @@ import * as path from 'path';
 import { format } from 'util';
 import { describe, expect, MockedFunction, test, vi } from 'vitest';
 import { FileInjector, Logger } from './FileInjector.js';
-import type { FileSystemAdapter, PathLike, BufferEncoding } from './FileSystemAdapter.js';
-import { nodeFsa } from './fsa.js';
+import type { FileSystemAdapter, PathLike, BufferEncoding } from '../FileSystemAdapter/FileSystemAdapter.js';
+import { nodeFsa } from '../FileSystemAdapter/fsa.js';
 
 const __file__ = fileURLToPath(import.meta.url);
 const __dirname__ = path.dirname(__file__);
-const __root__ = path.join(__dirname__, '..');
+const __root__ = path.join(__dirname__, '../..');
 
 const appFsa = nodeFsa();
 
@@ -25,6 +25,7 @@ describe('FileInjector', () => {
         ${'README.md'} | ${{ cwd: 'fixtures/no-injections' }} | ${oc({ hasChanged: false })}
     `('processFile no change', async ({ file, options, expectedResult }) => {
         options.cwd = options.cwd || __root__;
+        options.logger = createLogger();
         const fsa = createFSA();
         const fi = new FileInjector(fsa, options);
         const r = await fi.processFile(file);

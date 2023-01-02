@@ -1,5 +1,5 @@
 import chalkDefault from 'chalk';
-import { Result } from './processGlobs.mjs';
+import { Result } from '../processGlobs.mjs';
 
 export function formatSummary(r: Result, chalk = chalkDefault): string {
     return `\
