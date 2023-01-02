@@ -14,6 +14,7 @@ import chalk, { supportsColor } from 'chalk';
 import { fileType } from './fileType.mjs';
 import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, RelURL } from './url_helper.js';
 import { fileURLToPath } from 'url';
+import { parseHash } from './hash.js';
 
 type Node = Root | Content;
 
@@ -135,12 +136,12 @@ async function processFileInjections(
     const file = vFile;
     const fileUrl = file.data.fileUrl;
     setColor();
-    const console = options.logger;
+    const logger = options.logger;
     // console.log('File: %s\nOptions: %o', file.path, options);
     const yellow = chalk.yellow;
     const green = chalk.green;
     const gray = chalk.gray;
-    const stderr = options.silent ? { write: () => undefined } : { write: (s: string) => console.writeStderr(s) };
+    const stderr = options.silent ? { write: () => undefined } : { write: (s: string) => logger.writeStderr(s) };
     stderr.write(yellow(relativePathNormalized(file.data.fileUrl, options.cwd)) + ' ...');
     const r = await __processFile();
     stderr.write((options.verbose ? '\n  ' : ' ') + green('done.') + '\n');
@@ -164,7 +165,7 @@ async function processFileInjections(
             options.outputDir && (await writeResult(result));
             return false;
         }
-        result.messages.length && console.error('\n' + reporter(result));
+        result.messages.length && logger.error('\n' + reporter(result));
         const resultAsString = extractContent(result);
         const resultContent = fixContentLineEndings(resultAsString, lineEnding, hasEofNewLine(content));
         if (content === resultContent) {
@@ -277,10 +278,12 @@ async function processFileInjections(
     }
 
     async function readAndParseCodeFile(fileName: URL): Promise<Root> {
-        const lang = fileName.hash.slice(1);
+        const info = parseHash(fileName);
+        const lang = info.lang;
+        const lines = info.lines;
         try {
             const vFile = await resolveAndReadFile(fileName);
-            const content = extractContent(vFile);
+            const content = extractLines(extractContent(vFile), lines);
             const code: Code = {
                 type: 'code',
                 lang: lang || fileType(fileName.pathname),
@@ -298,11 +301,17 @@ async function processFileInjections(
     }
 
     async function readAndParseMarkdownFile(fileUrl: URL): Promise<Root> {
+        const info = parseHash(fileUrl);
+        const lines = info.lines;
+        const heading = lines ? '' : info.heading || '';
         try {
             const vFile = await resolveAndReadFile(fileUrl);
+            if (lines) {
+                vFile.value = extractLines(extractContent(vFile), lines);
+            }
             const root = parseMarkdownFile(vFile);
             sanitizeImport(root);
-            return extractHeader(root, decodeURIComponent(fileUrl.hash.slice(1)));
+            return extractHeader(root, heading);
         } catch (e) {
             const err = toError(e);
             file.message(err.message);
@@ -314,6 +323,7 @@ async function processFileInjections(
         try {
             return await readFile(fs, file);
         } catch (e) {
+            // console.log('resolveAndReadFile: (%s) %o', file.href, e);
             throw new Error(`Failed to read "${relativePathNormalized(file)}"`);
         }
     }
@@ -499,8 +509,10 @@ function parseDirective(html: string): Directive | undefined {
     if (!m || !m.groups) return undefined;
 
     const file = parseRelativeUrl(m.groups['file']);
+    const params = parseHash(file);
     const isEnd = m.groups['type'] === '-end';
-    const isCode = (!isEnd && !file.pathname.toLowerCase().endsWith('.md')) || m.groups['type'] === '-code';
+    const isCode =
+        (!isEnd && !file.pathname.toLowerCase().endsWith('.md')) || m.groups['type'] === '-code' || !!params.lang;
 
     const d: Directive = {
         type: isEnd ? 'end' : isCode ? 'code' : 'start',
@@ -525,7 +537,8 @@ async function readFile(fs: FileSystemAdapter, path: URL, encoding: BufferEncodi
         encoding,
         fileUrl: path,
     };
-    const file = new VFile({ path, value, data });
+    // use path.pathname because Vfile blows up if it isn't a file: url.
+    const file = new VFile({ path: path.pathname, value, data });
     assert(isVFileEx(file));
     return file;
 }
@@ -604,4 +617,11 @@ function isVFileEx(file: VFile | VFileEx): file is VFileEx {
 
 function normalizeHref(href: string): string {
     return href.replace(/%20/g, ' ');
+}
+
+function extractLines(content: string, lines: [number, number] | undefined): string {
+    if (!lines) return content;
+
+    const cLines = content.split('\n');
+    return cLines.slice(lines[0] - 1, lines[1]).join('\n');
 }

@@ -3,6 +3,10 @@ import * as path from 'node:path';
 const specialExtensions: Record<string, string | undefined> = {
     '.md': 'markdown',
     '.txt': '',
+    '.mts': 'typescript',
+    '.cts': 'typescript',
+    '.mjs': 'javascript',
+    '.cjs': 'javascript',
 };
 
 export function fileType(filename: string): string {

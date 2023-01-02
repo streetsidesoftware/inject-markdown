@@ -1,0 +1,161 @@
+// Vitest Snapshot v1
+
+exports[`fsa > readFile [Function toString]() 1`] = `
+"# Inject Markdown
+
+Inject files into a Markdown file.
+
+## Justification
+
+Sometimes it is necessary to assemble content into a static markdown file like \`README.md\`.
+Manually copying and pasting content leads to duplication making it difficult to keep things in sync.
+
+## Usage
+
+Use HTML comments to mark where content will be injected.
+
+\`\`\`markdown
+<!--- @@inject: fixtures/sample-src.md --->
+\`\`\`
+
+\`\`\`sh
+npx inject-markdown README.md
+\`\`\`
+
+## \`--help\`
+
+\`\`\`sh
+npx inject-markdown --help
+\`\`\`
+
+**Result**
+
+<!--- @@inject: content/help.txt --->
+
+\`\`\`
+Usage: inject-markdown [options] <files...>
+
+Inject file content into markdown files.
+
+Arguments:
+  files                 Files to scan for injected content.
+
+Options:
+  --no-must-find-files  No error if files are not found.
+  --output-dir <dir>    Output Directory
+  --cwd <dir>           Current Directory
+  --clean               Remove the injected content.
+  --verbose             Verbose output.
+  --silent              Only output errors.
+  --color               Force color.
+  --no-color            Do not use color.
+  -V, --version         output the version number
+  -h, --help            display help for command
+\`\`\`
+
+<!--- @@inject-end: content/help.txt --->
+"
+`;
+
+exports[`fsa > readFile [Function toString]() 2`] = `
+"import { Command, CommanderError, program as defaultCommand } from 'commander';
+import { globby, type Options as GlobbyOptions } from 'globby';
+import { fileURLToPath } from 'node:url';
+import * as path from 'path';
+import { FileInjector, FileInjectorOptions } from './FileInjector.js';
+import { nodeFsa } from './fsa.js';
+
+const fs = nodeFsa();
+
+const excludes = ['node_modules'];
+const allowedFileExtensions: Record<string, boolean | undefined> = {
+    '.md': true,
+};
+
+async function version(): Promise<string> {
+    const pathSelf = fileURLToPath(import.meta.url);
+    const pathPackageJson = path.join(path.dirname(pathSelf), '../package.json');
+    const packageJson = JSON.parse(await fs.readFile(pathPackageJson, 'utf8'));
+    return (typeof packageJson === 'object' && packageJson?.version) || '0.0.0';
+}
+
+interface Options extends FileInjectorOptions {
+    mustFindFiles: boolean;
+    cwd?: string;
+}
+
+async function findFiles(globs: string[], cwd: string | undefined) {
+    const _cwd = process.cwd();
+    cwd && process.chdir(cwd);
+    const options: GlobbyOptions = {
+        ignore: excludes,
+        onlyFiles: true,
+    };
+    const files = await globby(
+        globs.map((a) => a.trim()).filter((a) => !!a),
+        options
+    );
+    process.chdir(_cwd);
+    // console.log('%o', files);
+    return files.filter((f) => path.extname(f) in allowedFileExtensions);
+}
+
+async function processGlobs(globs: string[], options: Options): Promise<boolean> {
+    if (!globs.length) return false;
+
+    const files = await findFiles(globs, options.cwd);
+
+    if (!files.length) {
+        return !options.mustFindFiles;
+    }
+
+    const injector = new FileInjector(fs, options);
+
+    for (const file of files) {
+        const r = await injector.processFile(file);
+    }
+
+    return true;
+}
+
+async function app(program = defaultCommand, argv?: string[]) {
+    program
+        .name('inject-markdown')
+        .description('Inject file content into markdown files.')
+        .argument('<files...>', 'Files to scan for injected content.')
+        .option('--no-must-find-files', 'No error if files are not found.')
+        .option('--output-dir <dir>', 'Output Directory')
+        .option('--cwd <dir>', 'Current Directory')
+        .option('--clean', 'Remove the injected content.')
+        .option('--verbose', 'Verbose output.')
+        .option('--silent', 'Only output errors.')
+        .option('--color', 'Force color.')
+        .option('--no-color', 'Do not use color.')
+        .version(await version())
+        .action(async (files: string[], options: Options, _command: Command) => {
+            // console.log('Options: %o', options);
+            const result = await processGlobs(files, options);
+            if (!result) {
+                throw new CommanderError(1, 'Not Found', 'No files found.');
+            }
+        });
+
+    program.showHelpAfterError();
+
+    return program.parseAsync(argv);
+}
+
+export async function run(program?: Command): Promise<void> {
+    try {
+        await app(program);
+    } catch (e) {
+        process.exitCode = 1;
+        if (!(e instanceof CommanderError)) {
+            console.log(e);
+            return;
+        }
+        console.log(e.message);
+    }
+}
+"
+`;

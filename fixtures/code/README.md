@@ -8,7 +8,7 @@ It contains some code:
 
 ## Import `json` as `jsonc`
 
-<!--- @@inject-code: sample.json#jsonc --->
+<!--- @@inject-code: sample.json#lang=jsonc --->
 
 ## Import Markdown as Code
 
@@ -19,3 +19,13 @@ It is also possible to inject markdown:
 ## Import a section from a Markdown file
 
 <!--- @@inject: chapters.md#Chapter 3: Directives --->
+
+## Import from lines from GitHub
+
+<img width="711" alt="image" src="https://user-images.githubusercontent.com/3740137/210188786-28704fe3-cc2f-447c-97fc-d27715dabbdc.png">
+
+```
+<!--- @@inject: https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe/src/app.mts#L15-L19 --->
+```
+
+<!--- @@inject: https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe/src/app.mts#L15-L19 --->

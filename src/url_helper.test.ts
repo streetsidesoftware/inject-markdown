@@ -89,12 +89,16 @@ describe('url_helper', () => {
         expect(parseRelativeUrl(url).toString()).toBe(expected.toString());
     });
 
+    const urlGitHubRaw =
+        'https://raw.githubusercontent.com/streetsidesoftware/inject-markdown/d7de2f5fe5f894df712c71d05eb3450ead944e73/src/app.mts#L22-L25';
+
     test.each`
         url                            | baseUrl              | expected
         ${'https://g.com/images'}      | ${pathToFileURL('')} | ${'https://g.com/images'}
         ${'README.md?lang=en#L40-L44'} | ${pathToFileURL('')} | ${u('README.md?lang=en#L40-L44', pathToFileURL(''))}
         ${'./README.md#Chapter 1'}     | ${pathToFileURL('')} | ${u('README.md#Chapter%201', pathToFileURL(''))}
         ${'../src/file.ts#offset=333'} | ${pathToFileURL('')} | ${u('src/file.ts#offset=333', pathToFileURL('..'))}
+        ${urlGitHubRaw}                | ${pathToFileURL('')} | ${urlGitHubRaw}
     `('parseRelativeUrl($url).toUrl($baseUrl.href)', ({ url, baseUrl, expected }) => {
         expect(parseRelativeUrl(url).toUrl(baseUrl).toString()).toBe(expected.toString());
     });
