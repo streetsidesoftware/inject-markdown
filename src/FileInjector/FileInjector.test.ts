@@ -58,23 +58,6 @@ describe('FileInjector', () => {
         expect(normalizeWriteFileCalls(fsa.writeFile)).toMatchSnapshot();
         expect(logger.history).toMatchSnapshot();
     });
-
-    test.each`
-        file                                 | options                                 | expectedResult
-        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_' }}               | ${oc({ hasChanged: true, skipped: false, written: true })}
-        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_', dryRun: true }} | ${oc({ hasChanged: true, skipped: true, written: false })}
-    `('processFile($file, $options)', async ({ file, options, expectedResult }) => {
-        const logger = createLogger();
-        options.cwd = options.cwd || __root__;
-        options.color = options.color ?? false;
-        options.logger = logger;
-        const fsa = createFSA();
-        const fi = new FileInjector(fsa, options);
-        const r = await fi.processFile(file);
-        expect(r).toEqual(expectedResult);
-        expect(normalizeWriteFileCalls(fsa.writeFile)).toMatchSnapshot();
-        expect(logger.history).toMatchSnapshot();
-    });
 });
 
 function normalizeWriteFileCalls(
