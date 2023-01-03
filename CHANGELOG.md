@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0](https://github.com/streetsidesoftware/inject-markdown/compare/v1.2.0...v1.3.0) (2023-01-03)
+
+
+### Features
+
+* `--dry-run` ([1effd32](https://github.com/streetsidesoftware/inject-markdown/commit/1effd32370bcd07e65e66b5dbdce27a3bcae16e2))
+* `--dry-run` ([#20](https://github.com/streetsidesoftware/inject-markdown/issues/20)) ([15ad5f4](https://github.com/streetsidesoftware/inject-markdown/commit/15ad5f4a4a4538c2c14d467dc65393fb493e3ba2))
+
+
+### Bug Fixes
+
+* Output a summary ([#16](https://github.com/streetsidesoftware/inject-markdown/issues/16)) ([3bdae41](https://github.com/streetsidesoftware/inject-markdown/commit/3bdae41968ce04796e4b3be25dd876430202fcd1))
+
 ## [1.2.0](https://github.com/streetsidesoftware/inject-markdown/compare/v1.1.1...v1.2.0) (2023-01-02)
 
 
