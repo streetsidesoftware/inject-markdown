@@ -5,8 +5,11 @@ dictionaries: []
 words:
   - autobuild
   - buildscript
+  - codecov
   - codeql
+  - coverallsapp
   - globby
+  - lcov
   - mdast
   - pnpm
   - unist
