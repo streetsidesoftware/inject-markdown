@@ -5,7 +5,9 @@ dictionaries: []
 words:
   - autobuild
   - buildscript
+  - codecov
   - codeql
+  - coverallsapp
   - globby
   - mdast
   - pnpm

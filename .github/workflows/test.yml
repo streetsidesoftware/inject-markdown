@@ -45,3 +45,36 @@ jobs:
         uses: ./.github/actions/install-build-test
         with:
           node-version: ${{ matrix.node-version }}
+
+  coverage:
+    permissions:
+      checks: write # for coverallsapp/github-action to create new checks
+      contents: read # for actions/checkout to fetch code
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [18.x]
+        os:
+          - ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - run: pnpm i
+      - run: pnpm run build
+      - run: pnpm run coverage
+
+      - name: Upload coverage Coveralls
+        uses: coverallsapp/github-action@9ba913c152ae4be1327bfb9085dc806cedb44057 # 1.1.3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70 # v3
