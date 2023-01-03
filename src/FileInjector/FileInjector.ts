@@ -92,6 +92,11 @@ export interface FileInjectorOptions {
     stopOnErrors?: boolean;
 
     logger?: Logger;
+
+    /**
+     * Dry Run mode, do not write files.
+     */
+    dryRun?: boolean;
 }
 
 export class FileInjector {
@@ -204,8 +209,12 @@ async function processFileInjections(
         processFileResult.injectionsFound = injectionsFound;
         if (!injectionsFound && result.value === fileValue) {
             if (options.outputDir) {
-                await writeResult(result);
-                processFileResult.written = true;
+                if (!options.dryRun) {
+                    await writeResult(result);
+                    processFileResult.written = true;
+                } else {
+                    processFileResult.skipped = true;
+                }
             }
             return processFileResult;
         }
@@ -217,7 +226,7 @@ async function processFileInjections(
         processFileResult.hasErrors = hasErrors;
         const stale = hasChanged || !!options.outputDir;
         if (stale) {
-            if (!hasErrors || options.writeOnError) {
+            if ((!hasErrors || options.writeOnError) && !options.dryRun) {
                 await writeResult(result);
                 processFileResult.written = true;
             } else {
