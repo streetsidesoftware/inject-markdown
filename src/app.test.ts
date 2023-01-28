@@ -1,8 +1,9 @@
-import { describe, expect, test } from 'vitest';
-import * as app from './app.mjs';
 import { Command, CommanderError } from 'commander';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { describe, expect, test } from 'vitest';
+
+import * as app from './app.mjs';
 
 const __file__ = fileURLToPath(import.meta.url);
 const __dirname__ = path.dirname(__file__);

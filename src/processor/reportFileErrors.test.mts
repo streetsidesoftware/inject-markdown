@@ -1,6 +1,7 @@
 import { pathToFileURL } from 'url';
 import { VFile } from 'vfile';
 import { describe, expect, test } from 'vitest';
+
 import { reportFileErrors } from './reportFileErrors.mjs';
 
 const sc = (s: string) => expect.stringContaining(s);

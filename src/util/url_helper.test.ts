@@ -1,7 +1,9 @@
-import { describe, expect, test } from 'vitest';
-import { isURL, pathToUrl, dirToUrl, relativePath, urlDirectory, parseRelativeUrl } from './url_helper.js';
-import { pathToFileURL } from 'node:url';
 import assert from 'node:assert';
+import { pathToFileURL } from 'node:url';
+
+import { describe, expect, test } from 'vitest';
+
+import { dirToUrl, isURL, parseRelativeUrl, pathToUrl, relativePath, urlDirectory } from './url_helper.js';
 
 describe('url_helper', () => {
     test.each`

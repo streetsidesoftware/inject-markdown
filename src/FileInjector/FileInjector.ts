@@ -1,7 +1,8 @@
+import * as path from 'node:path';
+
 import assert from 'assert';
 import chalk, { supportsColor } from 'chalk';
 import type { Code, Content, Heading, HTML, Parent, Root } from 'mdast';
-import * as path from 'node:path';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
 import { unified } from 'unified';
@@ -10,6 +11,7 @@ import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
 import { fileURLToPath } from 'url';
 import { VFile } from 'vfile';
+
 import { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { fileType } from '../util/fileType.mjs';
 import { parseHash } from '../util/hash.js';

@@ -1,5 +1,6 @@
 import { pathToFileURL } from 'url';
-import { BufferEncoding, FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
+
+import { PathLike } from './FileSystemAdapter.js';
 
 export interface Store<T> {
     get(file: PathLike): T | undefined;

@@ -16,6 +16,7 @@ specifiers:
   eslint-plugin-node: ^11.1.0
   eslint-plugin-prettier: ^4.2.1
   eslint-plugin-promise: ^6.1.1
+  eslint-plugin-simple-import-sort: ^10.0.0
   globby: ^13.1.3
   node-fetch: ^3.3.0
   prettier: ^2.8.1
@@ -63,6 +64,7 @@ devDependencies:
   eslint-plugin-node: 11.1.0_eslint@8.30.0
   eslint-plugin-prettier: 4.2.1_kl4pe43v5b43npmso5hoplpbyi
   eslint-plugin-promise: 6.1.1_eslint@8.30.0
+  eslint-plugin-simple-import-sort: 10.0.0_eslint@8.30.0
   prettier: 2.8.1
   typescript: 4.9.4
   vite: 4.0.3_@types+node@18.11.18
@@ -1161,6 +1163,14 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: ^7.0.0 || ^8.0.0
+    dependencies:
+      eslint: 8.30.0
+    dev: true
+
+  /eslint-plugin-simple-import-sort/10.0.0_eslint@8.30.0:
+    resolution: {integrity: sha512-AeTvO9UCMSNzIHRkg8S6c3RPy5YEwKWSQPx3DYghLedo2ZQxowPFLGDN1AZ2evfg6r6mjBSZSLxLFsWSu3acsw==}
+    peerDependencies:
+      eslint: '>=5.0.0'
     dependencies:
       eslint: 8.30.0
     dev: true

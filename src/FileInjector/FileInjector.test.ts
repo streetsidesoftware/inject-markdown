@@ -1,12 +1,14 @@
 import { fileURLToPath, pathToFileURL } from 'node:url';
+
 import * as path from 'path';
 import { format } from 'util';
 import { describe, expect, MockedFunction, test, vi } from 'vitest';
-import { FileInjector, Logger } from './FileInjector.js';
-import type { FileSystemAdapter, PathLike, BufferEncoding } from '../FileSystemAdapter/FileSystemAdapter.js';
+
+import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { nodeFsa } from '../FileSystemAdapter/fsa.js';
 import { createStore, normalizePath, type Store } from '../FileSystemAdapter/fsStore.mjs';
 import { relativePath } from '../util/url_helper.js';
+import { FileInjector, Logger } from './FileInjector.js';
 
 const __file__ = fileURLToPath(import.meta.url);
 const __dirname__ = path.dirname(__file__);
