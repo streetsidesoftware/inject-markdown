@@ -1,6 +1,6 @@
 import { Data as VFileData, VFile } from 'vfile';
 
-import { BufferEncoding } from '../FileSystemAdapter/FileSystemAdapter.js';
+import type { BufferEncoding } from '../FileSystemAdapter/FileSystemAdapter.js';
 
 export interface FileData extends VFileData {
     encoding: BufferEncoding;
