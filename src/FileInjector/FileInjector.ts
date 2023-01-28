@@ -3,9 +3,10 @@ import * as path from 'node:path';
 import assert from 'assert';
 import chalk, { supportsColor } from 'chalk';
 import type { Code, Content, Heading, HTML, Parent, Root } from 'mdast';
+import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
-import { unified } from 'unified';
+import { type Processor, unified } from 'unified';
 import { is } from 'unist-util-is';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
@@ -262,8 +263,7 @@ async function processFileInjections(
             file.data.hasInjections = false;
             return file;
         }
-        const result = await unified()
-            .use(remarkParse)
+        const result = await initParser()
             .use(processHasInjections)
             .use(processInjections)
             .use(remarkStringify, outputOptions)
@@ -403,7 +403,7 @@ async function processFileInjections(
     }
 
     function parseMarkdownFile(file: VFileEx): Root {
-        return unified().use(remarkParse).parse(file);
+        return initParser().parse(file);
     }
 
     function relativePathNormalized(path: URL, relDir?: URL): string {
@@ -675,7 +675,7 @@ function toError(e: unknown): Error {
 
 function errorToComment(err: Error): Root {
     const msg = (err.message || err.toString()).split('\n').join('\n  ');
-    return unified().use(remarkParse).parse(`\
+    return initParser().parse(`\
 <!---
   ${msg}
 --->`);
@@ -698,4 +698,8 @@ function extractLines(content: string, lines: [number, number] | undefined): str
 
 function refersToTheSameFile(a: RelURL | URL, b: RelURL | URL): boolean {
     return a.pathname === b.pathname && a.search === b.search;
+}
+
+function initParser(): Processor<Root, Root, Root, void> {
+    return unified().use(remarkParse).use(remarkGfm);
 }

@@ -29,3 +29,13 @@ It is also possible to inject markdown:
 ```
 
 <!--- @@inject: https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe/src/app.mts#L15-L19 --->
+
+## GitHub Footnote
+
+|        | version | Node | Support               | End-Of-Life |
+| :----- | :------ | :--- | :-------------------- | :---------- |
+| cspell | 6.x     | 14.x | In Active Development | TBD         |
+| cspell | 5.x     | 12.x | Paid support only[^1] | 2022-10-01  |
+| cspell | 4.x     | 10.x | Paid support only[^1] | 2022-05-01  |
+
+[^1]: [Support - Street Side Software](https://streetsidesoftware.com/support/#maintenance-agreements)
