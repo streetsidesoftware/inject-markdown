@@ -1,11 +1,11 @@
-import { Command, CommanderError, program as defaultCommand, Option as CommanderOption } from 'commander';
 import { promises as fs } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+
+import { Command, Option as CommanderOption, program as defaultCommand } from 'commander';
 import * as path from 'path';
-import { formatSummary } from './reporting/formatSummary.mjs';
+
 import { Options, processGlobs } from './processor/process.mjs';
-import { isUndefined } from 'node:util';
-import { isDefined } from './util/isDefined.js';
+import { formatSummary } from './reporting/formatSummary.mjs';
 
 async function version(): Promise<string> {
     const pathSelf = fileURLToPath(import.meta.url);

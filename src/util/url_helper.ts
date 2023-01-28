@@ -1,6 +1,7 @@
 import fsPath from 'node:path';
 import * as url from 'node:url';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+
 import { posix } from 'path';
 
 const isUrlRegExp = /^(https?|file):/i;

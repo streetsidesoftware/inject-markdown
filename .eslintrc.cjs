@@ -30,10 +30,10 @@ const config = {
         ecmaVersion: 2020,
         sourceType: 'module',
     },
-    plugins: ['import'],
+    plugins: ['import', 'simple-import-sort'],
     overrides: [
         {
-            files: '**/*.ts',
+            files: ['**/*.ts', '**/*.mts'],
             extends: ['plugin:@typescript-eslint/recommended', 'plugin:import/typescript'],
             parser: '@typescript-eslint/parser',
             plugins: ['@typescript-eslint'],
@@ -52,6 +52,9 @@ const config = {
                         ignores: ['modules'],
                     },
                 ],
+                // 'sort-imports': 'error',
+                'simple-import-sort/imports': 'error',
+                'simple-import-sort/exports': 'error',
             },
         },
         {
@@ -60,7 +63,7 @@ const config = {
     ],
     settings: {
         'import/parsers': {
-            '@typescript-eslint/parser': ['.ts', '.tsx'],
+            '@typescript-eslint/parser': ['.ts', '.tsx', '.mts'],
         },
         'import/resolver': {
             typescript: {

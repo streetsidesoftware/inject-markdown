@@ -1,5 +1,6 @@
 import { Chalk } from 'chalk';
-import { describe, expect, test, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
+
 import { formatSummary } from './formatSummary.mjs';
 
 const chalk = new Chalk();
