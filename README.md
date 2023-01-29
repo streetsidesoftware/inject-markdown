@@ -47,8 +47,12 @@ Options:
   --clean               Remove the injected content.
   --verbose             Verbose output.
   --silent              Only output errors.
+  --no-stop-on-errors   Do not stop if an error occurs.
+  --write-on-error      write the file even if an injection error occurs.
   --color               Force color.
   --no-color            Do not use color.
+  --no-summary          Do not show the summary
+  --dry-run             Process the files, but do not write.
   -V, --version         output the version number
   -h, --help            display help for command
 ```
@@ -159,3 +163,17 @@ async function version(): Promise<string> {
 <!--- cspell:dictionaries typescript --->
 
 <!--- @@inject-end: content/README.md --->
+
+<!--- @@inject: static/footer.md --->
+
+<br/>
+
+---
+
+<p align="center">
+Brought to you by <a href="https://streetsidesoftware.com" title="Street Side Software">
+<img width="16" alt="Street Side Software Logo" src="https://i.imgur.com/CyduuVY.png" /> Street Side Software
+</a>
+</p>
+
+<!--- @@inject-end: static/footer.md --->
