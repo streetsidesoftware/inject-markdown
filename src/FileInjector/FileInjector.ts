@@ -412,7 +412,7 @@ async function processFileInjections(
 }
 
 function sanitizeImport(root: Root): Root {
-    remove(root, (n: Node) => isHtmlNode(n) && directiveRegExp.test(n.value));
+    remove(root, (n) => isHtmlNode(n) && directiveRegExp.test(n.value));
     return root;
 }
 
