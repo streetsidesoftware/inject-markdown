@@ -135,14 +135,17 @@ or
 <!--- @@inject: chapters.md#heading=Chapter 3: Directives --->
 ```
 
-## Chapter 3: Directives
-
-- `@@inject: <markdown_file.md>[#heading]` and `@@inject-start:  <markdown_file.md>[#heading]` -- injects the contents of a markdown file.
-  - `<markdown_file.md>` -- the file to import
-  - `heading` -- optional heading to extract.
-- `@@inject: <non-markdown-file>[#lang]`, `@@inject-start:  <non-markdown-file>[#lang]`, and `@@inject-code: <file>[#lang]`
-  - `<non-markdown-file>`, `<file>` -- the file to import
-  - `lang` -- optional language to use for the code bock.
+> ## Chapter 3: Directives
+>
+> - `@@inject: <markdown_file.md>[#heading]` and `@@inject-start:  <markdown_file.md>[#heading]` -- injects the contents of a markdown file.
+>   - `<markdown_file.md>` -- the file to import
+>   - `heading` -- optional heading to extract.
+>   - `code` -- optional embed as a `markdown` code block
+>   - `quote` -- optional embed as a block quote.
+> - `@@inject: <non-markdown-file>[#lang]`, `@@inject-start:  <non-markdown-file>[#lang]`, and `@@inject-code: <file>[#lang]`
+>   - `<non-markdown-file>`, `<file>` -- the file to import
+>   - `lang` -- optional language to use for the code bock.
+>   - `quote` -- optional embed as a block quote.
 
 ## Import from lines from GitHub
 
@@ -161,6 +164,17 @@ async function version(): Promise<string> {
 ```
 
 <!--- cspell:dictionaries typescript --->
+
+## Per Injections Options
+
+The hash `#` portion of the file URL is used to set injection options. Each option is separated by a `&`.
+
+| Option    | Description                                               |
+| --------- | --------------------------------------------------------- |
+| `heading` | Used to extract a section from a markdown file.           |
+| `lang`    | Used to set the language of the code block                |
+| `quote`   | Used to inject the file as a block quote                  |
+| `L1-L10`  | Used to inject only specified lines from the source file. |
 
 <!--- @@inject-end: content/README.md --->
 

@@ -2,7 +2,7 @@ import * as path from 'node:path';
 
 import assert from 'assert';
 import chalk, { supportsColor } from 'chalk';
-import type { Code, Content, Heading, HTML, Parent, Root } from 'mdast';
+import type { BlockContent, Code, Content, DefinitionContent, Heading, HTML, Parent, Root } from 'mdast';
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
@@ -15,7 +15,7 @@ import { VFile } from 'vfile';
 
 import { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { fileType } from '../util/fileType.mjs';
-import { parseHash } from '../util/hash.js';
+import { type InjectInfo, parseHash } from '../util/hash.js';
 import { isDefined } from '../util/isDefined.js';
 import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, RelURL } from '../util/url_helper.js';
 import { FileData, VFileEx } from './VFileEx.js';
@@ -329,8 +329,10 @@ async function processFileInjections(
         return injectContent(directive, root);
     }
 
-    async function injectContent(directive: DirectiveNode, root: Root): Promise<void> {
+    async function injectContent(directive: DirectiveNode, content: ParseResult): Promise<void> {
         if (!directive.file) return;
+        const { info } = content;
+        const root = applyQuote(content.root, info.quote ?? false);
         const href = normalizeHref(directive.file.href);
         const parent = directive.parent;
         const index = parent.children.indexOf(directive.node);
@@ -351,45 +353,46 @@ async function processFileInjections(
         parent.children.splice(index, 1, start, ...root.children, end);
     }
 
-    async function readAndParseCodeFile(fileName: URL): Promise<Root> {
+    async function readAndParseCodeFile(fileName: URL): Promise<ParseResult> {
         const info = parseHash(fileName);
         const lang = info.lang;
         const lines = info.lines;
         try {
             const vFile = await resolveAndReadFile(fileName);
             const content = extractLines(extractContent(vFile), lines);
-            const code: Code = {
-                type: 'code',
-                lang: lang || fileType(fileName.pathname),
-                value: content.trim(),
-            };
+            const code = toCode(lang || fileType(fileName.pathname), content.trim());
             return {
-                type: 'root',
-                children: [code],
+                root: toRoot(code),
+                info,
             };
         } catch (e) {
             const err = toError(e);
             file.message(err.message);
-            return errorToComment(err);
+            return { root: errorToComment(err), info };
         }
     }
 
-    async function readAndParseMarkdownFile(fileUrl: URL): Promise<Root> {
+    async function readAndParseMarkdownFile(fileUrl: URL): Promise<ParseResult> {
         const info = parseHash(fileUrl);
         const lines = info.lines;
-        const heading = lines ? '' : info.heading || '';
+        const heading = info.heading || '';
         try {
             const vFile = await resolveAndReadFile(fileUrl);
             if (lines) {
                 vFile.value = extractLines(extractContent(vFile), lines);
             }
-            const root = parseMarkdownFile(vFile);
-            sanitizeImport(root);
-            return extractHeader(root, heading);
+            const fileRoot = parseMarkdownFile(vFile);
+            sanitizeImport(fileRoot);
+            const markdown = extractHeader(fileRoot, heading);
+            const root =
+                info.code !== undefined || info.lang !== undefined
+                    ? toRoot(toCode(info.lang || 'markdown', markdown))
+                    : markdown;
+            return { root, info };
         } catch (e) {
             const err = toError(e);
             file.message(err.message);
-            return errorToComment(err);
+            return { root: errorToComment(err), info };
         }
     }
 
@@ -430,15 +433,10 @@ function extractHeader(root: Root, header: string | undefined): Root {
     );
     const found = root.children[foundIdx];
     if (!found || !isHeadingNode(found)) {
-        return {
-            type: 'root',
-            children: [
-                {
-                    type: 'html',
-                    value: `<!--- header: "${header}" not found.  --->`,
-                },
-            ],
-        };
+        return toRoot({
+            type: 'html',
+            value: `<!--- header: "${header}" not found.  --->`,
+        });
     }
 
     const nodes: Content[] = [found];
@@ -453,13 +451,49 @@ function extractHeader(root: Root, header: string | undefined): Root {
         nodes.push(n);
     }
 
-    return { type: 'root', children: nodes };
+    return toRoot(nodes);
+}
+
+function toCode(lang: string, content: string | Content | Root): Code {
+    const value = contentToString(content).trim();
+
+    return {
+        type: 'code',
+        lang,
+        value,
+    };
+}
+
+function toRoot(content: Root | Content | Content[]): Root {
+    if (!Array.isArray(content) && content.type === 'root') return content;
+    const children = Array.isArray(content) ? content : [content];
+    return {
+        type: 'root',
+        children,
+    };
+}
+
+function applyQuote(root: Root, makeIntoQuote: boolean): Root {
+    if (!makeIntoQuote) return root;
+    return toRoot({ type: 'blockquote', children: filterChildren(root.children) });
+}
+
+function filterChildren(children: Content[]): (BlockContent | DefinitionContent)[] {
+    return children.filter(filterContent);
+}
+
+function filterContent(c: Content): c is BlockContent | DefinitionContent {
+    return c.type !== 'yaml';
 }
 
 function headingString(n: Heading): string {
-    const md = unified()
-        .use(remarkStringify)
-        .stringify({ type: 'root', children: [n] });
+    return contentToString(n);
+}
+
+function contentToString(content: Content | Root | string): string {
+    if (typeof content === 'string') return content;
+    const root = toRoot(content);
+    const md = unified().use(remarkStringify).stringify(root);
     return md;
 }
 
@@ -586,10 +620,8 @@ function parseDirective(html: string): Directive | undefined {
     if (!m || !m.groups) return undefined;
 
     const file = parseRelativeUrl(m.groups['file']);
-    const params = parseHash(file);
     const isEnd = m.groups['type'] === '-end';
-    const isCode =
-        (!isEnd && !file.pathname.toLowerCase().endsWith('.md')) || m.groups['type'] === '-code' || !!params.lang;
+    const isCode = (!isEnd && !file.pathname.toLowerCase().endsWith('.md')) || m.groups['type'] === '-code';
 
     const d: Directive = {
         type: isEnd ? 'end' : isCode ? 'code' : 'start',
@@ -702,4 +734,9 @@ function refersToTheSameFile(a: RelURL | URL, b: RelURL | URL): boolean {
 
 function initParser(): Processor<Root, Root, Root, void> {
     return unified().use(remarkParse).use(remarkGfm);
+}
+
+interface ParseResult {
+    root: Root;
+    info: InjectInfo;
 }

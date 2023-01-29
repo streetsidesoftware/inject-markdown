@@ -7,8 +7,11 @@
 - `@@inject: <markdown_file.md>[#heading]` and `@@inject-start:  <markdown_file.md>[#heading]` -- injects the contents of a markdown file.
   - `<markdown_file.md>` -- the file to import
   - `heading` -- optional heading to extract.
+  - `code` -- optional embed as a `markdown` code block
+  - `quote` -- optional embed as a block quote.
 - `@@inject: <non-markdown-file>[#lang]`, `@@inject-start:  <non-markdown-file>[#lang]`, and `@@inject-code: <file>[#lang]`
   - `<non-markdown-file>`, `<file>` -- the file to import
   - `lang` -- optional language to use for the code bock.
+  - `quote` -- optional embed as a block quote.
 
 ## Chapter 4

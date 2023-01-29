@@ -25,8 +25,9 @@ describe('FileInjector', () => {
     });
 
     test.each`
-        file           | options                              | expectedResult
-        ${'README.md'} | ${{ cwd: 'fixtures/no-injections' }} | ${oc({ hasChanged: false })}
+        file           | options                                                                | expectedResult
+        ${'README.md'} | ${{ cwd: 'fixtures/no-injections' }}                                   | ${oc({ hasChanged: false })}
+        ${'README.md'} | ${{ cwd: 'fixtures/no-injections', outputDir: '_out_', dryRun: true }} | ${oc({ hasChanged: false })}
     `('processFile no change', async ({ file, options, expectedResult }) => {
         options.cwd = options.cwd || __root__;
         options.logger = createLogger();
@@ -46,6 +47,8 @@ describe('FileInjector', () => {
         ${'vacations.md'}                    | ${{ cwd: 'fixtures/vacations/', outputDir: '_out_' }}    | ${oc({ hasChanged: true })}  | ${'_out_/vacations.md'}
         ${'README.md'}                       | ${{ cwd: 'fixtures/no-injections', outputDir: '_out_' }} | ${oc({ hasChanged: false })} | ${'_out_/README.md'}
         ${'fixtures/code/README.md'}         | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/code/README.md'}
+        ${'fixtures/quotes/README.md'}       | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/quotes/README.md'}
+        ${'fixtures/headers/README.md'}      | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/headers/README.md'}
     `('processFile $file $options', async ({ file, options, expectedResult, expectedFile }) => {
         const logger = createLogger();
         options.cwd = options.cwd || __root__;
