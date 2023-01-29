@@ -141,6 +141,61 @@ exports[`FileInjector > processFile 'fixtures/code/README.md' {} 2`] = `
 ]
 `;
 
+exports[`FileInjector > processFile 'fixtures/headers/README.md' {} 1`] = `
+[
+  [
+    "fixtures/headers/README.md",
+    "# Injecting Headers
+
+<!--- @@inject: content.md#Nested --->
+
+### Nested
+
+This is nested under Section 1
+
+<!--- @@inject-end: content.md#Nested --->
+
+<!--- @@inject: content.md#heading=Nested&L11-L99 --->
+
+### Nested
+
+This is nested under Section 3
+
+<!--- @@inject-end: content.md#heading=Nested&L11-L99 --->
+
+<!--- @@inject: content.md#Nested&L11-L99 --->
+
+### Nested
+
+This is nested under Section 3
+
+<!--- @@inject-end: content.md#Nested&L11-L99 --->
+
+<!--- @@inject: content.md#Missing --->
+
+<!--- header: \\"Missing\\" not found.  --->
+
+<!--- @@inject-end: content.md#Missing --->
+",
+    "utf8",
+  ],
+]
+`;
+
+exports[`FileInjector > processFile 'fixtures/headers/README.md' {} 2`] = `
+[
+  {
+    "target": "stderr",
+    "text": "fixtures/headers/README.md ...",
+  },
+  {
+    "target": "stderr",
+    "text": " done.
+",
+  },
+]
+`;
+
 exports[`FileInjector > processFile 'fixtures/quotes/README.md' {} 1`] = `
 [
   [
@@ -186,6 +241,24 @@ It is possible to Block Quote injected content.
 > \`\`\`\`
 
 <!--- @@inject-end: include.md#Section 2&quote&code --->
+
+<!--- @@inject: include.md#L13-L18&quote --->
+
+> This is section 2 and its content.
+>
+> -   One
+> -   Two
+> -   Three
+
+<!--- @@inject-end: include.md#L13-L18&quote --->
+
+<!--- @@inject: include.md#heading=Nested&L22-L31&quote --->
+
+> ### Nested
+>
+> This is nested under Section 3
+
+<!--- @@inject-end: include.md#heading=Nested&L22-L31&quote --->
 ",
     "utf8",
   ],

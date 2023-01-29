@@ -375,7 +375,7 @@ async function processFileInjections(
     async function readAndParseMarkdownFile(fileUrl: URL): Promise<ParseResult> {
         const info = parseHash(fileUrl);
         const lines = info.lines;
-        const heading = lines ? '' : info.heading || '';
+        const heading = info.heading || '';
         try {
             const vFile = await resolveAndReadFile(fileUrl);
             if (lines) {

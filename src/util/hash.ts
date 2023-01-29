@@ -1,11 +1,13 @@
 import { RelURL } from './url_helper.js';
 
+export type Range = [number, number];
+
 export interface InjectInfo {
     heading?: string | undefined;
     /** code bock language */
     lang?: string | undefined;
     /** lines to use */
-    lines?: [number, number] | undefined;
+    lines?: Range | undefined;
     tags?: string[] | undefined;
     params?: Map<string, string | string[]>;
     /** Inject the file as a quote */
@@ -16,11 +18,6 @@ export interface InjectInfo {
 
 export function parseHash(url: URL | RelURL): InjectInfo {
     const info = parseHashString(url.hash);
-
-    if (!info.heading && !info.lines && info.tags?.length) {
-        info.heading = info.tags[0];
-    }
-
     return info;
 }
 
@@ -66,7 +63,7 @@ export function parseHashString(hash: string): InjectInfo {
             case 'line':
                 {
                     const range = parseLineNumbers(value);
-                    if (range) {
+                    if (isRange(range)) {
                         info.lines = range;
                         continue;
                     }
@@ -76,8 +73,16 @@ export function parseHashString(hash: string): InjectInfo {
 
         const lineRange = parseLineNumbers(key);
         if (lineRange) {
-            info.lines = lineRange;
+            if (isRange(lineRange)) {
+                info.lines = lineRange;
+            } else {
+                tags.push(key);
+            }
             continue;
+        }
+
+        if (!value && info.heading === undefined) {
+            info.heading = key;
         }
 
         !value && tags.push(key);
@@ -94,7 +99,12 @@ export function parseHashString(hash: string): InjectInfo {
     return info;
 }
 
-function parseLineNumbers(ref: string): [number, number] | undefined {
+function isRange(a: number[] | unknown): a is Range {
+    if (!Array.isArray(a)) return false;
+    return a.length === 2 && typeof a[0] === 'number' && typeof a[1] === 'number';
+}
+
+function parseLineNumbers(ref: string): [number, number] | number[] | undefined {
     const match = ref.match(regExLineNumExpression);
     if (!match) return undefined;
 
@@ -105,7 +115,7 @@ function parseLineNumbers(ref: string): [number, number] | undefined {
     if (startNum && endNum) {
         return [startNum, endNum];
     }
-    return undefined;
+    return [];
 }
 
 const tfValues: Record<string, boolean | undefined> = {
