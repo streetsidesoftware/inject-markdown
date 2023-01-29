@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/streetsidesoftware/inject-markdown/compare/v1.3.0...v1.4.0) (2023-01-29)
+
+
+### Features
+
+* Support GitHub Flavored Markdown ([#24](https://github.com/streetsidesoftware/inject-markdown/issues/24)) ([71b9042](https://github.com/streetsidesoftware/inject-markdown/commit/71b9042148383fd8f690ff98ff56d09860d45c64))
+
 ## [1.3.0](https://github.com/streetsidesoftware/inject-markdown/compare/v1.2.0...v1.3.0) (2023-01-03)
 
 
