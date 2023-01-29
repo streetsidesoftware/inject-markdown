@@ -169,12 +169,39 @@ async function version(): Promise<string> {
 
 The hash `#` portion of the file URL is used to set injection options. Each option is separated by a `&`.
 
-| Option    | Description                                               |
-| --------- | --------------------------------------------------------- |
-| `heading` | Used to extract a section from a markdown file.           |
-| `lang`    | Used to set the language of the code block                |
-| `quote`   | Used to inject the file as a block quote                  |
-| `L1-L10`  | Used to inject only specified lines from the source file. |
+| Option    | Code | Markdown | Description                                               |
+| --------- | ---- | -------- | --------------------------------------------------------- |
+| `heading` | ❌   | ✅       | Used to extract a section from a markdown file.           |
+| `code`    | ❌   | ✅       | Convert the injected markdown into a Code Block.          |
+| `lang`    | ✅   | ✅       | Used to set the language of the code block.               |
+| `quote`   | ✅   | ✅       | Used to inject the file as a block quote.                 |
+| `L1-L10`  | ✅   | ✅       | Used to inject only specified lines from the source file. |
+
+### Example 1
+
+Extract a few lines from a Markdown files and quote them.
+
+```markdown
+<!--- @@inject: example.md#L5-L7&quote --->
+```
+
+> - first
+> - second
+> - third
+
+### Example 2
+
+Extract some lines from a code block in the source.
+
+```markdown
+<!--- @@inject-code: code.md#L24-L26&lang=js --->
+```
+
+> ```js
+> export function sayGoodbye(name) {
+>   return `Goodbye ${name}`;
+> }
+> ```
 
 <!--- @@inject-end: content/README.md --->
 
