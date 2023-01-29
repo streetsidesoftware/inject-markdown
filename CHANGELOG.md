@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/streetsidesoftware/inject-markdown/compare/v1.4.0...v1.5.0) (2023-01-29)
+
+
+### Features
+
+* Support injecting as a Block Quote ([#28](https://github.com/streetsidesoftware/inject-markdown/issues/28)) ([3717d3f](https://github.com/streetsidesoftware/inject-markdown/commit/3717d3f58dcc97a4656d5c5815350ea8b3286523))
+
 ## [1.4.0](https://github.com/streetsidesoftware/inject-markdown/compare/v1.3.0...v1.4.0) (2023-01-29)
 
 
