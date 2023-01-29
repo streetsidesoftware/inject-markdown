@@ -141,6 +141,71 @@ exports[`FileInjector > processFile 'fixtures/code/README.md' {} 2`] = `
 ]
 `;
 
+exports[`FileInjector > processFile 'fixtures/quotes/README.md' {} 1`] = `
+[
+  [
+    "fixtures/quotes/README.md",
+    "# Block Quotes
+
+It is possible to Block Quote injected content.
+
+\`\`\`markdown
+<!--- @@inject: include.md#heading=Section 2&quote --->
+\`\`\`
+
+<!--- @@inject: include.md#Section 2&quote --->
+
+> ## Section 2
+>
+> This is section 2 and its content.
+>
+> -   One
+> -   Two
+> -   Three
+>
+> \`\`\`json
+> { \\"debug\\": true }
+> \`\`\`
+
+<!--- @@inject-end: include.md#Section 2&quote --->
+
+<!--- @@inject: include.md#Section 2&quote&code --->
+
+> \`\`\`\`markdown
+> ## Section 2
+>
+> This is section 2 and its content.
+>
+> *   One
+> *   Two
+> *   Three
+>
+> \`\`\`json
+> { \\"debug\\": true }
+> \`\`\`
+> \`\`\`\`
+
+<!--- @@inject-end: include.md#Section 2&quote&code --->
+",
+    "utf8",
+  ],
+]
+`;
+
+exports[`FileInjector > processFile 'fixtures/quotes/README.md' {} 2`] = `
+[
+  {
+    "target": "stderr",
+    "text": "fixtures/quotes/README.md ...",
+  },
+  {
+    "target": "stderr",
+    "text": " done.
+",
+  },
+]
+`;
+
 exports[`FileInjector > processFile 'fixtures/vacations/vacations.md' { outputDir: '_out_' } 1`] = `
 [
   [

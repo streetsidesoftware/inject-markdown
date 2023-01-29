@@ -8,6 +8,10 @@ export interface InjectInfo {
     lines?: [number, number] | undefined;
     tags?: string[] | undefined;
     params?: Map<string, string | string[]>;
+    /** Inject the file as a quote */
+    quote?: boolean;
+    /** Indicate that markdown should be injected as code. */
+    code?: string;
 }
 
 export function parseHash(url: URL | RelURL): InjectInfo {
@@ -55,6 +59,9 @@ export function parseHashString(hash: string): InjectInfo {
             case 'heading':
                 info.heading = value;
                 continue;
+            case 'quote':
+                info.quote = parseFlagValue(value, true);
+                continue;
             case 'lines':
             case 'line':
                 {
@@ -99,4 +106,20 @@ function parseLineNumbers(ref: string): [number, number] | undefined {
         return [startNum, endNum];
     }
     return undefined;
+}
+
+const tfValues: Record<string, boolean | undefined> = {
+    true: true,
+    t: true,
+    yes: true,
+    y: true,
+    false: false,
+    f: false,
+    no: false,
+    n: false,
+};
+
+function parseFlagValue(value: string, defaultValue: boolean): boolean {
+    const r = tfValues[value];
+    return r ?? defaultValue;
 }

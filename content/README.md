@@ -88,18 +88,18 @@ or
 <!--- @@inject: chapters.md#heading=Chapter 3: Directives --->
 ```
 
-<!--- @@inject: chapters.md#Chapter 3: Directives --->
+<!--- @@inject: chapters.md#heading=Chapter 3: Directives&quote --->
 
-## Chapter 3: Directives
+> ## Chapter 3: Directives
+>
+> - `@@inject: <markdown_file.md>[#heading]` and `@@inject-start:  <markdown_file.md>[#heading]` -- injects the contents of a markdown file.
+>   - `<markdown_file.md>` -- the file to import
+>   - `heading` -- optional heading to extract.
+> - `@@inject: <non-markdown-file>[#lang]`, `@@inject-start:  <non-markdown-file>[#lang]`, and `@@inject-code: <file>[#lang]`
+>   - `<non-markdown-file>`, `<file>` -- the file to import
+>   - `lang` -- optional language to use for the code bock.
 
-- `@@inject: <markdown_file.md>[#heading]` and `@@inject-start:  <markdown_file.md>[#heading]` -- injects the contents of a markdown file.
-  - `<markdown_file.md>` -- the file to import
-  - `heading` -- optional heading to extract.
-- `@@inject: <non-markdown-file>[#lang]`, `@@inject-start:  <non-markdown-file>[#lang]`, and `@@inject-code: <file>[#lang]`
-  - `<non-markdown-file>`, `<file>` -- the file to import
-  - `lang` -- optional language to use for the code bock.
-
-<!--- @@inject-end: chapters.md#Chapter 3: Directives --->
+<!--- @@inject-end: chapters.md#heading=Chapter 3: Directives&quote --->
 
 ## Import from lines from GitHub
 
