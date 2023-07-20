@@ -9,6 +9,6 @@ export interface FileSystemAdapter {
         path: PathLike,
         options: {
             recursive: true;
-        }
+        },
     ): Promise<string | undefined>;
 }
