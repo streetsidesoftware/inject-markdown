@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/streetsidesoftware/inject-markdown/compare/v1.5.0...v2.0.0) (2023-07-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* Update to Node 16
+
+### Features
+
+* Update to Node 16 ([2cdf96d](https://github.com/streetsidesoftware/inject-markdown/commit/2cdf96dc12850064a60a55769829bcef5a71300f))
+
 ## [1.5.0](https://github.com/streetsidesoftware/inject-markdown/compare/v1.4.0...v1.5.0) (2023-01-29)
 
 
