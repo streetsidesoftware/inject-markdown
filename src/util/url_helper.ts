@@ -91,7 +91,11 @@ export interface RelURL {
 class RelUrlImpl implements RelURL {
     private url: URL;
 
-    constructor(readonly pathname: string, search: string, hash: string) {
+    constructor(
+        readonly pathname: string,
+        search: string,
+        hash: string,
+    ) {
         this.url = new URL('rel-url://');
         this.url.hash = hash;
         this.url.search = search;

@@ -37,6 +37,6 @@ function m(...entries: ([string, string | string[]] | string)[]): Map<string, st
                 return [decodeURIComponent(key), decodeURIComponent(value)];
             }
             return e;
-        })
+        }),
     );
 }

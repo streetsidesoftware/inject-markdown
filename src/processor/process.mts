@@ -66,7 +66,7 @@ async function findFiles(globs: string[], cwd: string | undefined) {
     };
     const files = await globby(
         globs.map((a) => a.trim()).filter((a) => !!a),
-        options
+        options,
     );
     isMainThread && process.chdir(_cwd);
     // console.log('%o', files);

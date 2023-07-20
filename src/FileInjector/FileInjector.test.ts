@@ -83,7 +83,7 @@ describe('FileInjector', () => {
 });
 
 function normalizeWriteFileCalls(
-    writeFile: MockedFileSystemAdapter['writeFile']
+    writeFile: MockedFileSystemAdapter['writeFile'],
 ): MockedFileSystemAdapter['writeFile']['mock']['calls'] {
     const calls = writeFile.mock.calls;
     const cwd = pathToFileURL('.');
@@ -91,7 +91,7 @@ function normalizeWriteFileCalls(
         ([pathLike, data, encoding]) =>
             [relativePath(cwd, normalizePath(pathLike)).toString(), data, encoding] as Parameters<
                 FileSystemAdapter['writeFile']
-            >
+            >,
     );
     return normalized;
 }

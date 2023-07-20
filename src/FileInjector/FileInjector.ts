@@ -104,7 +104,10 @@ export interface FileInjectorOptions {
 
 export class FileInjector {
     private cwd: URL;
-    constructor(readonly fs: FileSystemAdapter, readonly options: FileInjectorOptions) {
+    constructor(
+        readonly fs: FileSystemAdapter,
+        readonly options: FileInjectorOptions,
+    ) {
         this.cwd = dirToUrl(options?.cwd || '');
     }
 
@@ -169,7 +172,7 @@ export interface ProcessFileResult {
 async function processFileInjections(
     vFile: VFileEx | VFile,
     fs: FileSystemAdapter,
-    options: ProcessFileInjections
+    options: ProcessFileInjections,
 ): Promise<ProcessFileResult> {
     assert(isVFileEx(vFile));
     const file = vFile;
@@ -429,7 +432,7 @@ function extractHeader(root: Root, header: string | undefined): Root {
     const searchFor = normalizeHeader(header);
     const children = root.children;
     const foundIdx = children.findIndex(
-        (n: Content) => isHeadingNode(n) && normalizeHeader(headingString(n)) === searchFor
+        (n: Content) => isHeadingNode(n) && normalizeHeader(headingString(n)) === searchFor,
     );
     const found = root.children[foundIdx];
     if (!found || !isHeadingNode(found)) {
@@ -509,19 +512,19 @@ function deleteInjectedContent(root: Root, file: VFileEx): Root {
         pairs
             .map((p) => p.end && p.start)
             .filter(isDefined)
-            .map((d) => d.node)
+            .map((d) => d.node),
     );
     const ends = new Set<BaseNode>(
         pairs
             .map((p) => p.start && p.end)
             .filter(isDefined)
-            .map((d) => d.node)
+            .map((d) => d.node),
     );
     const toDelete = new Set<BaseNode>(
         pairs
             .map((p) => p.end)
             .filter(isDefined)
-            .map((d) => d.node)
+            .map((d) => d.node),
     );
 
     let deleteDepth = 0;
@@ -540,7 +543,7 @@ function deleteInjectedContent(root: Root, file: VFileEx): Root {
                 --deleteDepth;
                 assert(deleteDepth >= 0);
             }
-        }
+        },
     );
 
     remove(root, (node: BaseNode) => toDelete.has(node));
