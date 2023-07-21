@@ -43,7 +43,7 @@
     "@tsconfig/node16": "^1.0.3",
     "@types/mdast": "^3.0.10",
     "@types/node": "^18.11.18",
-    "@typescript-eslint/eslint-plugin": "^5.49.0",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.49.0",
     "@vitest/coverage-c8": "^0.26.3",
     "eslint": "^8.33.0",
