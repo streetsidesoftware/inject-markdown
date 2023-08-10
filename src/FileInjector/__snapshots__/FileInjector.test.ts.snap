@@ -1,6 +1,6 @@
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`FileInjector > processFile 'README.md' { cwd: 'fixtures/no-injections', …(1) } 1`] = `
+exports[`FileInjector > processFile 'README.md' { Object (cwd, outputDir) } 1`] = `
 [
   [
     "_out_/README.md",
@@ -13,7 +13,7 @@ This file does not have any injections.
 ]
 `;
 
-exports[`FileInjector > processFile 'README.md' { cwd: 'fixtures/no-injections', …(1) } 2`] = `
+exports[`FileInjector > processFile 'README.md' { Object (cwd, outputDir) } 2`] = `
 [
   {
     "target": "stderr",
@@ -636,7 +636,7 @@ exports[`FileInjector > processFile 'fixtures/vacations/vacations.md' {} 2`] = `
 ]
 `;
 
-exports[`FileInjector > processFile 'vacations.md' { cwd: 'fixtures/vacations/', …(1) } 1`] = `
+exports[`FileInjector > processFile 'vacations.md' { Object (cwd, outputDir) } 1`] = `
 [
   [
     "_out_/vacations.md",
@@ -709,7 +709,7 @@ import * as path from 'path';
 ]
 `;
 
-exports[`FileInjector > processFile 'vacations.md' { cwd: 'fixtures/vacations/', …(1) } 2`] = `
+exports[`FileInjector > processFile 'vacations.md' { Object (cwd, outputDir) } 2`] = `
 [
   {
     "target": "stderr",
