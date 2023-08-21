@@ -17,7 +17,7 @@ export function createStore<T>(): Store<T> {
 
     function set(file: PathLike, data: T | undefined) {
         const p = normalizePath(file).href;
-        if (typeof data === undefined) {
+        if (typeof data === 'undefined') {
             store.delete(p);
             return;
         }
