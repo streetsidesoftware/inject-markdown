@@ -74,7 +74,7 @@
     "unist-util-remove": "^4.0.0",
     "unist-util-visit": "^5.0.0",
     "vfile": "^5.3.7",
-    "vfile-reporter": "^7.0.5"
+    "vfile-reporter": "^8.1.0"
   },
   "files": [
     "bin.mjs",
