@@ -19,8 +19,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     env:
-      NEW_BRANCH: lint-${{ inputs.base ||  github.ref || 'main' }}
-      REF_BRANCH: ${{ inputs.base || github.ref || 'main' }}
+      NEW_BRANCH: lint-${{ inputs.base ||  github.ref_name || 'main' }}
+      REF_BRANCH: ${{ inputs.base || github.ref_name || 'main' }}
       PR_TYPE: ci
     steps:
       - uses: actions/checkout@v4
