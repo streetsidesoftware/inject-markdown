@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/streetsidesoftware/inject-markdown/compare/v2.0.0...v2.1.0) (2023-10-16)
+
+
+### Features
+
+* Update `remark` to 15 ([#82](https://github.com/streetsidesoftware/inject-markdown/issues/82)) ([b623925](https://github.com/streetsidesoftware/inject-markdown/commit/b623925f0662f123476bb845c6568a48e43dbfa8))
+
 ## [2.0.0](https://github.com/streetsidesoftware/inject-markdown/compare/v1.5.0...v2.0.0) (2023-07-20)
 
 
