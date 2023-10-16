@@ -64,7 +64,7 @@
     "commander": "^11.1.0",
     "globby": "^13.2.2",
     "node-fetch": "^3.3.2",
-    "remark": "^14.0.3",
+    "remark": "^15.0.1",
     "remark-gfm": "^3.0.1",
     "remark-mdx": "^2.3.0",
     "remark-parse": "^10.0.2",
