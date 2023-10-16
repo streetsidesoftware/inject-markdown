@@ -8,6 +8,12 @@ on:
         required: false
         default: 'main'
 
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/**"
+
   schedule:
     - cron: '0 12 * * *'
 
@@ -28,7 +34,7 @@ jobs:
           ref: ${{ env.REF_BRANCH }}
 
       - name: Setup
-        uses: ./.github/actions/quick-setup
+        uses: ./.github/actions/setup
 
       - name: Run Action
         id: dependabot
