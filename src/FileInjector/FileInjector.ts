@@ -2,11 +2,11 @@ import * as path from 'node:path';
 
 import assert from 'assert';
 import chalk, { supportsColor } from 'chalk';
-import type { BlockContent, Code, Content, DefinitionContent, Heading, HTML, Parent, Root } from 'mdast';
+import type { BlockContent, Code, DefinitionContent, Heading, Html, Parent, Root, RootContent } from 'mdast';
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
-import { type Processor, unified } from 'unified';
+import { unified } from 'unified';
 import { is } from 'unist-util-is';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
@@ -18,9 +18,9 @@ import { fileType } from '../util/fileType.mjs';
 import { type InjectInfo, parseHash } from '../util/hash.js';
 import { isDefined } from '../util/isDefined.js';
 import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, RelURL } from '../util/url_helper.js';
-import { FileData, VFileEx } from './VFileEx.js';
+import { FileData, isVFileEx, VFileEx } from './VFileEx.js';
 
-type Node = Root | Content;
+type Node = Root | RootContent;
 
 const injectDirectiveRegExp = /^[ \t]*<!---?\s*@@inject(?<type>|-start|-end|-code):\s*(?<file>.*?)-?-->$/;
 
@@ -345,11 +345,11 @@ async function processFileInjections(
             : directive.node.value.includes(directiveStartCode)
             ? directiveStartCode
             : directiveStart;
-        const start: HTML = {
+        const start: Html = {
             type: 'html',
             value: `<!--- ${startDirective} ${href} --->`,
         };
-        const end: HTML = {
+        const end: Html = {
             type: 'html',
             value: `<!--- ${directiveEnd} ${href} --->`,
         };
@@ -432,7 +432,7 @@ function extractHeader(root: Root, header: string | undefined): Root {
     const searchFor = normalizeHeader(header);
     const children = root.children;
     const foundIdx = children.findIndex(
-        (n: Content) => isHeadingNode(n) && normalizeHeader(headingString(n)) === searchFor,
+        (n: RootContent) => isHeadingNode(n) && normalizeHeader(headingString(n)) === searchFor,
     );
     const found = root.children[foundIdx];
     if (!found || !isHeadingNode(found)) {
@@ -442,7 +442,7 @@ function extractHeader(root: Root, header: string | undefined): Root {
         });
     }
 
-    const nodes: Content[] = [found];
+    const nodes: RootContent[] = [found];
 
     const depth = found.depth;
 
@@ -457,7 +457,7 @@ function extractHeader(root: Root, header: string | undefined): Root {
     return toRoot(nodes);
 }
 
-function toCode(lang: string, content: string | Content | Root): Code {
+function toCode(lang: string, content: string | RootContent | Root): Code {
     const value = contentToString(content).trim();
 
     return {
@@ -467,7 +467,7 @@ function toCode(lang: string, content: string | Content | Root): Code {
     };
 }
 
-function toRoot(content: Root | Content | Content[]): Root {
+function toRoot(content: Root | RootContent | RootContent[]): Root {
     if (!Array.isArray(content) && content.type === 'root') return content;
     const children = Array.isArray(content) ? content : [content];
     return {
@@ -481,11 +481,11 @@ function applyQuote(root: Root, makeIntoQuote: boolean): Root {
     return toRoot({ type: 'blockquote', children: filterChildren(root.children) });
 }
 
-function filterChildren(children: Content[]): (BlockContent | DefinitionContent)[] {
+function filterChildren(children: RootContent[]): (BlockContent | DefinitionContent)[] {
     return children.filter(filterContent);
 }
 
-function filterContent(c: Content): c is BlockContent | DefinitionContent {
+function filterContent(c: RootContent): c is BlockContent | DefinitionContent {
     return c.type !== 'yaml';
 }
 
@@ -493,7 +493,7 @@ function headingString(n: Heading): string {
     return contentToString(n);
 }
 
-function contentToString(content: Content | Root | string): string {
+function contentToString(content: RootContent | Root | string): string {
     if (typeof content === 'string') return content;
     const root = toRoot(content);
     const md = unified().use(remarkStringify).stringify(root);
@@ -563,7 +563,7 @@ interface Directive {
 }
 
 interface DirectiveNode extends Partial<Directive> {
-    node: HTML;
+    node: Html;
     parent: Parent;
 }
 
@@ -614,7 +614,7 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFileEx): DirectivePa
     return pairs.reverse();
 }
 
-function parseDirectiveNode(node: HTML): Directive | undefined {
+function parseDirectiveNode(node: Html): Directive | undefined {
     return parseDirective(node.value);
 }
 
@@ -665,7 +665,7 @@ function detectLineEnding(content: string): string {
     return content[pos - 1] === '\r' ? '\r\n' : '\n';
 }
 
-function isHtmlNode(n: Node | unknown): n is HTML {
+function isHtmlNode(n: Node | unknown): n is Html {
     return is(n, 'html');
 }
 
@@ -673,7 +673,7 @@ function isHeadingNode(n: Node | unknown): n is Heading {
     return is(n, 'heading');
 }
 
-function isInjectNode(n: Node | unknown): n is HTML {
+function isInjectNode(n: Node | unknown): n is Html {
     if (!isHtmlNode(n)) {
         return false;
     }
@@ -689,8 +689,14 @@ function getEncoding(file: VFileEx, defaultEncoding: BufferEncoding = 'utf8'): B
     return data.encoding || defaultEncoding;
 }
 
-function toString(content: string | Buffer, encoding: BufferEncoding): string {
-    return typeof content === 'string' ? content : content.toString(encoding);
+function toString(content: string | Buffer | Uint8Array, encoding: BufferEncoding): string {
+    if (typeof content === 'string') return content;
+
+    if (content instanceof Buffer) {
+        return content.toString(encoding);
+    }
+
+    return Buffer.from(content).toString(encoding);
 }
 
 function fixContentLineEndings(content: string, lineEnding: string, fixEofNewLine: boolean): string {
@@ -716,10 +722,6 @@ function errorToComment(err: Error): Root {
 --->`);
 }
 
-function isVFileEx(file: VFile | VFileEx): file is VFileEx {
-    return !!file.data.fileUrl;
-}
-
 function normalizeHref(href: string): string {
     return href.replace(/%20/g, ' ');
 }
@@ -735,7 +737,7 @@ function refersToTheSameFile(a: RelURL | URL, b: RelURL | URL): boolean {
     return a.pathname === b.pathname && a.search === b.search;
 }
 
-function initParser(): Processor<Root, Root, Root, void> {
+function initParser() {
     return unified().use(remarkParse).use(remarkGfm);
 }
 

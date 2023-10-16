@@ -12,3 +12,7 @@ export interface FileData extends VFileData {
 export interface VFileEx extends VFile {
     data: FileData;
 }
+
+export function isVFileEx(file: VFile | VFileEx): file is VFileEx {
+    return !!file.data.fileUrl;
+}
