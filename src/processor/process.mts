@@ -3,7 +3,7 @@ import { isMainThread } from 'node:worker_threads';
 import { globby, type Options as GlobbyOptions } from 'globby';
 import * as path from 'path';
 
-import { FileInjector, FileInjectorOptions } from '../FileInjector/FileInjector.js';
+import { FileInjector, type FileInjectorOptions } from '../FileInjector/FileInjector.js';
 import { nodeFsa } from '../FileSystemAdapter/fsa.js';
 import { reportFileErrors } from './reportFileErrors.mjs';
 

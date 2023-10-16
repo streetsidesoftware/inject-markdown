@@ -8,6 +8,7 @@ export default defineConfig({
             clean: true,
             all: true,
             reporter: ['html', 'text', 'lcov', 'json'],
+            provider: 'istanbul',
             exclude: [
                 'content/**',
                 'fixtures/**',

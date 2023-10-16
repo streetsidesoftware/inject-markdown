@@ -83,12 +83,12 @@ This is an example bit of markdown.
 
 ## Chapter 3: Directives
 
--   \`@@inject: <markdown_file.md>[#heading]\` and \`@@inject-start:  <markdown_file.md>[#heading]\` -- injects the contents of a markdown file.
-    -   \`<markdown_file.md>\` -- the file to import
-    -   \`heading\` -- optional heading to extract.
--   \`@@inject: <non-markdown-file>[#lang]\`, \`@@inject-start:  <non-markdown-file>[#lang]\`, and \`@@inject-code: <file>[#lang]\`
-    -   \`<non-markdown-file>\`, \`<file>\` -- the file to import
-    -   \`lang\` -- optional language to use for the code bock.
+- \`@@inject: <markdown_file.md>[#heading]\` and \`@@inject-start:  <markdown_file.md>[#heading]\` -- injects the contents of a markdown file.
+  - \`<markdown_file.md>\` -- the file to import
+  - \`heading\` -- optional heading to extract.
+- \`@@inject: <non-markdown-file>[#lang]\`, \`@@inject-start:  <non-markdown-file>[#lang]\`, and \`@@inject-code: <file>[#lang]\`
+  - \`<non-markdown-file>\`, \`<file>\` -- the file to import
+  - \`lang\` -- optional language to use for the code bock.
 
 <!--- @@inject-end: chapters.md#Chapter 3: Directives --->
 
@@ -214,9 +214,9 @@ It is possible to Block Quote injected content.
 >
 > This is section 2 and its content.
 >
-> -   One
-> -   Two
-> -   Three
+> - One
+> - Two
+> - Three
 >
 > \`\`\`json
 > { \\"debug\\": true }
@@ -231,9 +231,9 @@ It is possible to Block Quote injected content.
 >
 > This is section 2 and its content.
 >
-> *   One
-> *   Two
-> *   Three
+> * One
+> * Two
+> * Three
 >
 > \`\`\`json
 > { \\"debug\\": true }
@@ -246,9 +246,9 @@ It is possible to Block Quote injected content.
 
 > This is section 2 and its content.
 >
-> -   One
-> -   Two
-> -   Three
+> - One
+> - Two
+> - Three
 
 <!--- @@inject-end: include.md#L13-L18&quote --->
 
@@ -307,14 +307,14 @@ Do not miss out on the Golden Gate Bridge.
 
 <!--- @@inject-end: parts/destinations.md --->
 
--   Prices
-    <!--- @@inject: parts/prices.md --->
-    ## Data
-    | Name             | City      | Cost   |
-    | ---------------- | --------- | ------ |
-    | Parade of Lights | Amsterdam | €100/p |
-    | Disney World     | Orlando   | $200/p |
-    <!--- @@inject-end: parts/prices.md --->
+- Prices
+  <!--- @@inject: parts/prices.md --->
+  ## Data
+  | Name             | City      | Cost   |
+  | ---------------- | --------- | ------ |
+  | Parade of Lights | Amsterdam | €100/p |
+  | Disney World     | Orlando   | $200/p |
+  <!--- @@inject-end: parts/prices.md --->
 
 # Highlight Destination (Amsterdam)
 
@@ -394,14 +394,14 @@ Do not miss out on the Golden Gate Bridge.
 
 <!--- @@inject-end: parts/destinations.md --->
 
--   Prices
-    <!--- @@inject: parts/prices.md --->
-    ## Data
-    | Name             | City      | Cost   |
-    | ---------------- | --------- | ------ |
-    | Parade of Lights | Amsterdam | €100/p |
-    | Disney World     | Orlando   | $200/p |
-    <!--- @@inject-end: parts/prices.md --->
+- Prices
+  <!--- @@inject: parts/prices.md --->
+  ## Data
+  | Name             | City      | Cost   |
+  | ---------------- | --------- | ------ |
+  | Parade of Lights | Amsterdam | €100/p |
+  | Disney World     | Orlando   | $200/p |
+  <!--- @@inject-end: parts/prices.md --->
 
 # Highlight Destination (Amsterdam)
 
@@ -469,14 +469,14 @@ Do not miss out on the Golden Gate Bridge.
 
 <!--- @@inject-end: parts/destinations.md --->
 
--   Prices
-    <!--- @@inject: parts/prices.md --->
-    ## Data
-    | Name             | City      | Cost   |
-    | ---------------- | --------- | ------ |
-    | Parade of Lights | Amsterdam | €100/p |
-    | Disney World     | Orlando   | $200/p |
-    <!--- @@inject-end: parts/prices.md --->
+- Prices
+  <!--- @@inject: parts/prices.md --->
+  ## Data
+  | Name             | City      | Cost   |
+  | ---------------- | --------- | ------ |
+  | Parade of Lights | Amsterdam | €100/p |
+  | Disney World     | Orlando   | $200/p |
+  <!--- @@inject-end: parts/prices.md --->
 
 # Highlight Destination (Amsterdam)
 
@@ -577,14 +577,14 @@ Do not miss out on the Golden Gate Bridge.
 
 <!--- @@inject-end: parts/destinations.md --->
 
--   Prices
-    <!--- @@inject: parts/prices.md --->
-    ## Data
-    | Name             | City      | Cost   |
-    | ---------------- | --------- | ------ |
-    | Parade of Lights | Amsterdam | €100/p |
-    | Disney World     | Orlando   | $200/p |
-    <!--- @@inject-end: parts/prices.md --->
+- Prices
+  <!--- @@inject: parts/prices.md --->
+  ## Data
+  | Name             | City      | Cost   |
+  | ---------------- | --------- | ------ |
+  | Parade of Lights | Amsterdam | €100/p |
+  | Disney World     | Orlando   | $200/p |
+  <!--- @@inject-end: parts/prices.md --->
 
 # Highlight Destination (Amsterdam)
 
@@ -664,14 +664,14 @@ Do not miss out on the Golden Gate Bridge.
 
 <!--- @@inject-end: parts/destinations.md --->
 
--   Prices
-    <!--- @@inject: parts/prices.md --->
-    ## Data
-    | Name             | City      | Cost   |
-    | ---------------- | --------- | ------ |
-    | Parade of Lights | Amsterdam | €100/p |
-    | Disney World     | Orlando   | $200/p |
-    <!--- @@inject-end: parts/prices.md --->
+- Prices
+  <!--- @@inject: parts/prices.md --->
+  ## Data
+  | Name             | City      | Cost   |
+  | ---------------- | --------- | ------ |
+  | Parade of Lights | Amsterdam | €100/p |
+  | Disney World     | Orlando   | $200/p |
+  <!--- @@inject-end: parts/prices.md --->
 
 # Highlight Destination (Amsterdam)
 
@@ -751,14 +751,14 @@ Do not miss out on the Golden Gate Bridge.
 
 <!--- @@inject-end: parts/destinations.md --->
 
--   Prices
-    <!--- @@inject: parts/prices.md --->
-    ## Data
-    | Name             | City      | Cost   |
-    | ---------------- | --------- | ------ |
-    | Parade of Lights | Amsterdam | €100/p |
-    | Disney World     | Orlando   | $200/p |
-    <!--- @@inject-end: parts/prices.md --->
+- Prices
+  <!--- @@inject: parts/prices.md --->
+  ## Data
+  | Name             | City      | Cost   |
+  | ---------------- | --------- | ------ |
+  | Parade of Lights | Amsterdam | €100/p |
+  | Disney World     | Orlando   | $200/p |
+  <!--- @@inject-end: parts/prices.md --->
 
 # Highlight Destination (Amsterdam)
 
