@@ -1,4 +1,4 @@
-name: ' 🧽 Lint'
+name: ' 🧽 Auto Fix Lint'
 
 on:
   workflow_dispatch:
