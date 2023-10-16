@@ -1,6 +1,6 @@
 import chalkDefault from 'chalk';
 
-import { Result } from '../processor/process.mjs';
+import type { Result } from '../processor/process.mjs';
 
 export function formatSummary(r: Result, chalk = chalkDefault): string {
     return `\

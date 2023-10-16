@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { Command, Option as CommanderOption, program as defaultCommand } from 'commander';
 import * as path from 'path';
 
-import { Options, processGlobs } from './processor/process.mjs';
+import { type Options, processGlobs } from './processor/process.mjs';
 import { formatSummary } from './reporting/formatSummary.mjs';
 
 async function version(): Promise<string> {

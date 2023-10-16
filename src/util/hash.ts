@@ -1,4 +1,4 @@
-import { RelURL } from './url_helper.js';
+import type { RelURL } from './url_helper.js';
 
 export type Range = [number, number];
 

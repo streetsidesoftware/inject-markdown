@@ -13,12 +13,13 @@ import { visit } from 'unist-util-visit';
 import { fileURLToPath } from 'url';
 import { VFile } from 'vfile';
 
-import { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
+import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { fileType } from '../util/fileType.mjs';
 import { type InjectInfo, parseHash } from '../util/hash.js';
 import { isDefined } from '../util/isDefined.js';
-import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, RelURL } from '../util/url_helper.js';
-import { FileData, isVFileEx, VFileEx } from './VFileEx.js';
+import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
+import { toError, toString } from './utils.js';
+import { type FileData, isVFileEx, type VFileEx } from './VFileEx.js';
 
 type Node = Root | RootContent;
 
@@ -689,16 +690,6 @@ function getEncoding(file: VFileEx, defaultEncoding: BufferEncoding = 'utf8'): B
     return data.encoding || defaultEncoding;
 }
 
-function toString(content: string | Buffer | Uint8Array, encoding: BufferEncoding): string {
-    if (typeof content === 'string') return content;
-
-    if (content instanceof Buffer) {
-        return content.toString(encoding);
-    }
-
-    return Buffer.from(content).toString(encoding);
-}
-
 function fixContentLineEndings(content: string, lineEnding: string, fixEofNewLine: boolean): string {
     const fixed = content.replace(/\r?\n/g, lineEnding);
     return fixEofNewLine && !hasEofNewLine(fixed) ? fixed + lineEnding : fixed;
@@ -706,12 +697,6 @@ function fixContentLineEndings(content: string, lineEnding: string, fixEofNewLin
 
 function hasEofNewLine(content: string): boolean {
     return content[content.length - 1] === '\n';
-}
-
-function toError(e: unknown): Error {
-    if (e && typeof e === 'object') return e as Error;
-    if (typeof e === 'string') return new Error(e);
-    return new Error('Unknown');
 }
 
 function errorToComment(err: Error): Root {

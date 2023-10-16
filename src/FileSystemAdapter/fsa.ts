@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import { pathToFileURL } from 'url';
 
 import { isURL } from '../util/url_helper.js';
-import { BufferEncoding, FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
+import type { BufferEncoding, FileSystemAdapter, PathLike } from './FileSystemAdapter.js';
 
 export function nodeFsa(): FileSystemAdapter {
     const fsa: FileSystemAdapter = {

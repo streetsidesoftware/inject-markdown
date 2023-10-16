@@ -1,4 +1,4 @@
-import { Data as VFileData, VFile } from 'vfile';
+import { type Data as VFileData, VFile } from 'vfile';
 
 import type { BufferEncoding } from '../FileSystemAdapter/FileSystemAdapter.js';
 

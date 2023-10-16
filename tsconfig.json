@@ -19,6 +19,7 @@
         "strictFunctionTypes": true,
         "strict": true,
         "types": ["node"],
+        "verbatimModuleSyntax": true,
         "outDir": "dist"
     },
     "include": ["src/**/*.ts", "src/**/*.test.ts", "src/**/*.mts", "src/**/*.test.mts", "bin.mjs"]
