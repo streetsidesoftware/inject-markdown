@@ -1,0 +1,46 @@
+name: Lint
+
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: The Base Ref to apply the diff
+        required: false
+        default: 'main'
+  push:
+    branches: ['main']
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    env:
+      NEW_BRANCH: lint-${{ inputs.base  || 'main' }}
+      REF_BRANCH: ${{ inputs.base || 'main' }}
+      PR_TYPE: ci
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.REF_BRANCH }}
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Lint
+        run: |
+          pnpm build
+          pnpm lint:fix
+
+      - name: Gen Body
+        run: |
+          echo 'git_body<<DIFF' >> $GITHUB_ENV
+          git --no-pager diff --compact-summary >> $GITHUB_ENV
+          echo 'DIFF' >> $GITHUB_ENV
+
+      - name: PR
+        uses: streetsidesoftware/actions/.github/actions/pr@v1
+        with:
+          commit-message: '${{ env.PR_TYPE }}: Workflow Bot -- Update ALL Dependencies'
+          branch: ${{ env.NEW_BRANCH }}
+          base: ${{ env.REF_BRANCH }}
+          title: '${{ env.PR_TYPE }}: Workflow Bot -- Update ALL Dependencies (${{ env.REF_BRANCH }})'
+          body: ${{ env.git_body }}
+          app_id: ${{ secrets.AUTOMATION_APP_ID }}
+          app_private_key: ${{ secrets.AUTOMATION_PRIVATE_KEY }}
