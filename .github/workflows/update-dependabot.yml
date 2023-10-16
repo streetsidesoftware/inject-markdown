@@ -12,7 +12,7 @@ on:
     branches:
       - main
     paths:
-      - ".github/**"
+      - '.github/**'
 
   schedule:
     - cron: '0 12 * * *'
