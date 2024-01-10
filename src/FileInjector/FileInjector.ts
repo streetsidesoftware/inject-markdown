@@ -344,8 +344,8 @@ async function processFileInjections(
         const startDirective = directive.node.value.includes(directiveStartVerbose)
             ? directiveStartVerbose
             : directive.node.value.includes(directiveStartCode)
-            ? directiveStartCode
-            : directiveStart;
+              ? directiveStartCode
+              : directiveStart;
         const start: Html = {
             type: 'html',
             value: `<!--- ${startDirective} ${href} --->`,
