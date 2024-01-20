@@ -35,7 +35,7 @@ export function sayHello(name: string): string {
 
 ```jsonc
 {
-  "name": "Sample"
+  "name": "Sample",
 }
 ```
 
@@ -50,7 +50,7 @@ export function sayHello(name: string): string {
 
 ```jsonc
 {
-  "name": "Sample"
+  "name": "Sample",
 }
 ```
 
