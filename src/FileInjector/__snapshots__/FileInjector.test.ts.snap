@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`FileInjector > processFile 'README.md' { Object (cwd, outputDir) } 1`] = `
+exports[`FileInjector > processFile 'README.md' { cwd: 'fixtures/no-injections', …(1) } 1`] = `
 [
   [
     "_out_/README.md",
@@ -13,7 +13,7 @@ This file does not have any injections.
 ]
 `;
 
-exports[`FileInjector > processFile 'README.md' { Object (cwd, outputDir) } 2`] = `
+exports[`FileInjector > processFile 'README.md' { cwd: 'fixtures/no-injections', …(1) } 2`] = `
 [
   {
     "target": "stderr",
@@ -53,7 +53,7 @@ export function sayHello(name: string): string {
 
 \`\`\`jsonc
 {
-    \\"name\\": \\"Sample\\"
+    "name": "Sample"
 }
 \`\`\`
 
@@ -94,7 +94,7 @@ This is an example bit of markdown.
 
 ## Import from lines from GitHub
 
-<img width=\\"711\\" alt=\\"image\\" src=\\"https://user-images.githubusercontent.com/3740137/210188786-28704fe3-cc2f-447c-97fc-d27715dabbdc.png\\">
+<img width="711" alt="image" src="https://user-images.githubusercontent.com/3740137/210188786-28704fe3-cc2f-447c-97fc-d27715dabbdc.png">
 
 \`\`\`
 <!--- @@inject: https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe/src/app.mts#L15-L19 --->
@@ -173,7 +173,7 @@ This is nested under Section 3
 
 <!--- @@inject: content.md#Missing --->
 
-<!--- header: \\"Missing\\" not found.  --->
+<!--- header: "Missing" not found.  --->
 
 <!--- @@inject-end: content.md#Missing --->
 ",
@@ -219,7 +219,7 @@ It is possible to Block Quote injected content.
 > - Three
 >
 > \`\`\`json
-> { \\"debug\\": true }
+> { "debug": true }
 > \`\`\`
 
 <!--- @@inject-end: include.md#Section 2&quote --->
@@ -236,7 +236,7 @@ It is possible to Block Quote injected content.
 > * Three
 >
 > \`\`\`json
-> { \\"debug\\": true }
+> { "debug": true }
 > \`\`\`
 > \`\`\`\`
 
@@ -636,7 +636,7 @@ exports[`FileInjector > processFile 'fixtures/vacations/vacations.md' {} 2`] = `
 ]
 `;
 
-exports[`FileInjector > processFile 'vacations.md' { Object (cwd, outputDir) } 1`] = `
+exports[`FileInjector > processFile 'vacations.md' { cwd: 'fixtures/vacations/', …(1) } 1`] = `
 [
   [
     "_out_/vacations.md",
@@ -709,7 +709,7 @@ import * as path from 'path';
 ]
 `;
 
-exports[`FileInjector > processFile 'vacations.md' { Object (cwd, outputDir) } 2`] = `
+exports[`FileInjector > processFile 'vacations.md' { cwd: 'fixtures/vacations/', …(1) } 2`] = `
 [
   {
     "target": "stderr",
