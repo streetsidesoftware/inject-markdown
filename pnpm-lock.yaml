@@ -52,9 +52,9 @@ dependencies:
     version: 8.1.0
 
 devDependencies:
-  '@tsconfig/node16':
-    specifier: ^16.1.1
-    version: 16.1.1
+  '@tsconfig/node18':
+    specifier: ^18.2.2
+    version: 18.2.2
   '@types/mdast':
     specifier: ^4.0.3
     version: 4.0.3
@@ -750,8 +750,8 @@ packages:
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
     dev: true
 
-  /@tsconfig/node16@16.1.1:
-    resolution: {integrity: sha512-+pio93ejHN4nINX4pXqfnR/fPLRtJBaT4ORaa5RH0Oc1zoYmo2B2koG+M328CQhHKn1Wj6FcOxCDFXAot9NhvA==}
+  /@tsconfig/node18@18.2.2:
+    resolution: {integrity: sha512-d6McJeGsuoRlwWZmVIeE8CUA27lu6jLjvv1JzqmpsytOYYbVi1tHZEnwCNVOXnj4pyLvneZlFlpXUK+X9wBWyw==}
     dev: true
 
   /@types/acorn@4.0.6:
