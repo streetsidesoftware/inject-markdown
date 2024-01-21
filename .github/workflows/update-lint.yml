@@ -37,10 +37,10 @@ jobs:
       - name: PR
         uses: streetsidesoftware/actions/.github/actions/pr@v1
         with:
-          commit-message: '${{ env.PR_TYPE }}: Workflow Bot -- Update ALL Dependencies'
+          commit-message: '${{ env.PR_TYPE }}: Workflow Bot -- Fix Lint'
           branch: ${{ env.NEW_BRANCH }}
           base: ${{ env.REF_BRANCH }}
-          title: '${{ env.PR_TYPE }}: Workflow Bot -- Update ALL Dependencies (${{ env.REF_BRANCH }})'
+          title: '${{ env.PR_TYPE }}: Workflow Bot -- Fix Lint (${{ env.REF_BRANCH }})'
           body: ${{ env.git_body }}
           app_id: ${{ secrets.AUTOMATION_APP_ID }}
           app_private_key: ${{ secrets.AUTOMATION_PRIVATE_KEY }}
