@@ -21,7 +21,7 @@
     "eslint:fix": "eslint . --fix",
     "sample:clean": "./bin.mjs --clean \"sample-clean/**/*.md\"",
     "sample:hydrate": "./bin.mjs \"*.md\" --cwd=sample-clean --output-dir=sample-hydrated",
-    "test": "vitest run --threads=false",
+    "test": "vitest run --pool=forks",
     "test:bin": "./bin.mjs \"**\" --cwd=fixtures --output-dir=fixtures-output --no-stop-on-error --write-on-error || echo done.",
     "test:watch": "vitest",
     "prepareOnly": "pnpm build"
@@ -46,7 +46,7 @@
     "@types/node": "^18.19.8",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
-    "@vitest/coverage-istanbul": "^0.34.6",
+    "@vitest/coverage-istanbul": "^1.2.1",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
@@ -58,7 +58,7 @@
     "prettier": "3.2.2",
     "typescript": "^5.3.3",
     "vite": "^5.0.12",
-    "vitest": "^0.34.6"
+    "vitest": "^1.2.1"
   },
   "dependencies": {
     "chalk": "^5.3.0",
