@@ -2,7 +2,7 @@
 
 ```jsonc
 {
-  "name": "Sample"
+  "name": "Sample",
 }
 ```
 
