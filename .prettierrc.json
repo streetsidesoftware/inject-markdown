@@ -1,5 +1,12 @@
 {
     "printWidth": 120,
     "singleQuote": true,
-    "overrides": []
+    "overrides": [
+        {
+            "files": "**/*.{jsonc,json,md}",
+            "options": {
+                "trailingComma": "none"
+            }
+        }
+    ]
 }
