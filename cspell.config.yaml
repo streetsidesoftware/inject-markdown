@@ -1,7 +1,12 @@
 version: '0.2'
-ignorePaths: []
+ignorePaths:
+  - node_modules
+  - pnpm-*
+  - temp
+  - coverage
+  - '*.snap'
 dictionaryDefinitions: []
-dictionaries: []
+dictionaries: ['typescript']
 words:
   - autobuild
   - buildscript
