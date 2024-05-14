@@ -45,7 +45,7 @@
     "@tsconfig/node18": "^18.2.2",
     "@types/mdast": "^4.0.3",
     "@types/node": "^18.19.24",
-    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/eslint-plugin": "^7.9.0",
     "@typescript-eslint/parser": "^7.2.0",
     "@vitest/coverage-istanbul": "^1.4.0",
     "cspell": "^8.6.0",
