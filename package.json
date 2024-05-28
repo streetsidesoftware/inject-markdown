@@ -46,7 +46,7 @@
     "@types/mdast": "^4.0.4",
     "@types/node": "^18.19.33",
     "@typescript-eslint/eslint-plugin": "^7.10.0",
-    "@typescript-eslint/parser": "^7.10.0",
+    "@typescript-eslint/parser": "^7.11.0",
     "@vitest/coverage-istanbul": "^1.6.0",
     "cspell": "^8.8.3",
     "eslint": "^8.57.0",
