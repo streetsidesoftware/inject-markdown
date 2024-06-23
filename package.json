@@ -72,7 +72,7 @@
     "remark-mdx": "^3.0.1",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
-    "unified": "^11.0.4",
+    "unified": "^11.0.5",
     "unist-util-is": "^6.0.0",
     "unist-util-remove": "^4.0.0",
     "unist-util-visit": "^5.0.0",
