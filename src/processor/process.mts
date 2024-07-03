@@ -38,11 +38,11 @@ export async function processGlobs(globs: string[], options: Options): Promise<R
         result.numberOfFilesWritten += r.written ? 1 : 0;
         result.numberOfFilesUpdated += r.hasChanged ? 1 : 0;
         result.numberOfFilesSkipped += r.skipped ? 1 : 0;
-        if (r.hasErrors) {
-            result.errorCount += 1;
-            result.filesWithErrors.push(file);
+        if (r.hasErrors || r.hasMessages) {
+            result.errorCount += r.hasErrors ? 1 : 0;
+            r.hasErrors && result.filesWithErrors.push(file);
             console.error(reportFileErrors(r.file));
-            if (options.stopOnErrors ?? true) break;
+            if (r.hasErrors && (options.stopOnErrors ?? true)) break;
         }
     }
 
