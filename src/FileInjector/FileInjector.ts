@@ -11,7 +11,7 @@ import { is } from 'unist-util-is';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
 import { fileURLToPath } from 'url';
-import { VFile } from 'vfile';
+import type { VFile } from 'vfile';
 
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { fileType } from '../util/fileType.mjs';
@@ -19,11 +19,11 @@ import { type InjectInfo, parseHash } from '../util/hash.js';
 import { isDefined } from '../util/isDefined.js';
 import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
 import { toError, toString } from './utils.js';
-import { type FileData, isVFileEx, type VFileEx } from './VFileEx.js';
+import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
 
 type Node = Root | RootContent;
 
-const injectDirectiveRegExp = /^[ \t]*<!---?\s*@@inject(?<type>|-start|-end|-code):\s*(?<file>.*?)-?-->$/;
+const injectDirectiveRegExp = /^[ \t]*<!--+\s*@@inject(?<type>|-start|-end|-code)[:\s]\s*(?<file>.*?)-+->$/;
 
 const directiveRegExp = /^[ \t]*<!---?\s*@@inject(\b|-)/;
 
@@ -158,6 +158,8 @@ export interface ProcessFileResult {
     file: VFileEx;
     /** had injection errors? */
     hasErrors: boolean;
+    /** had injection warnings? */
+    hasMessages: boolean;
     /** file was written */
     written: boolean;
     /**
@@ -207,6 +209,7 @@ async function processFileInjections(
             file,
             injectionsFound: false,
             hasErrors: false,
+            hasMessages: false,
             written: false,
             hasChanged: false,
             skipped: false,
@@ -225,12 +228,14 @@ async function processFileInjections(
             }
             return processFileResult;
         }
-        const hasErrors = result.messages.length > 0;
+        const hasErrors = result.messages.filter((m) => m.fatal).length > 0;
+        const hasMessages = result.messages.filter((m) => !m.fatal).length > 0;
         const resultAsString = extractContent(result);
         const resultContent = fixContentLineEndings(resultAsString, lineEnding, hasEofNewLine(content));
         const hasChanged = content !== resultContent;
         processFileResult.hasChanged = hasChanged;
         processFileResult.hasErrors = hasErrors;
+        processFileResult.hasMessages = hasMessages;
         const stale = hasChanged || !!options.outputDir;
         if (stale) {
             if ((!hasErrors || options.writeOnError) && !options.dryRun) {
@@ -329,7 +334,7 @@ async function processFileInjections(
         const dFile = directive.file;
         const directiveFileUrl = dFile.toUrl(fileUrl);
         options.verbose && stderr.write(`\n  ${gray(dFile.href)}`);
-        const root = await readAndParseCodeFile(directiveFileUrl);
+        const root = await readAndParseCodeFile(directiveFileUrl, directive);
         return injectContent(directive, root);
     }
 
@@ -357,7 +362,7 @@ async function processFileInjections(
         parent.children.splice(index, 1, start, ...root.children, end);
     }
 
-    async function readAndParseCodeFile(fileName: URL): Promise<ParseResult> {
+    async function readAndParseCodeFile(fileName: URL, directive: DirectiveNode): Promise<ParseResult> {
         const info = parseHash(fileName);
         const lang = info.lang;
         const lines = info.lines;
@@ -371,7 +376,7 @@ async function processFileInjections(
             };
         } catch (e) {
             const err = toError(e);
-            file.message(err.message);
+            file.error(err.message, directive.node.position);
             return { root: errorToComment(err), info };
         }
     }
@@ -560,7 +565,7 @@ interface DirectivePair {
 type DirectiveType = 'start' | 'end' | 'code';
 interface Directive {
     type: DirectiveType;
-    file: RelURL;
+    file: RelURL | undefined;
 }
 
 interface DirectiveNode extends Partial<Directive> {
@@ -577,11 +582,11 @@ const startTypes: Record<DirectiveType, boolean> = {
 function findInjectionPairs(nodes: DirectiveNode[], vfile: VFileEx): DirectivePair[] {
     function validate(n: DirectiveNode): n is Required<DirectiveNode> {
         if (!n.type) {
-            vfile.message('Unable to parse @@inject directive.', n.node.position);
+            vfile.error('Unable to parse @@inject directive.', n.node.position);
             return false;
         }
-        if (!n.file?.href) {
-            vfile.message('Missing injection filename.', n.node.position);
+        if (!n.file?.href && n.type !== 'end') {
+            vfile.error('Missing injection filename.', n.node.position);
             return false;
         }
         return true;
@@ -591,28 +596,32 @@ function findInjectionPairs(nodes: DirectiveNode[], vfile: VFileEx): DirectivePa
 
     const pairs: DirectivePair[] = [];
     let last: DirectiveNode | undefined = undefined;
-    for (const n of dnp.reverse()) {
+
+    for (const n of dnp) {
         if (startTypes[n.type]) {
-            if (last?.file && !refersToTheSameFile(last.file, n.file)) {
-                vfile.message(`Unmatched @@inject-end "${last.file}" matching with "${n.file}"`, last.node.position);
-                pairs.push({ end: last });
+            if (last) {
+                pairs.push({ start: last });
             }
-            pairs.push({ start: n, end: last });
-            last = undefined;
+            last = n;
             continue;
         }
-        if (last) {
-            vfile.message(`Unmatched @@inject-end "${last.file || ''}"`, last.node.position);
+        if (!last) {
+            vfile.error(`Unmatched @@inject-end${n.file ? ` "${n.file}"` : ''}`, n.node.position);
             pairs.push({ end: last });
+            continue;
         }
-        last = n;
-    }
-    if (last) {
-        vfile.message(`Unmatched @@inject-end "${last.file || ''}"`, last.node.position);
-        pairs.push({ end: last });
+        if (!refersToTheSameFile(last.file, n.file)) {
+            vfile.info(`@@inject-end${n.file ? ` "${n.file}"` : ''} matching with "${last.file}"`, n.node.position);
+        }
+        pairs.push({ start: last, end: n });
+        last = undefined;
     }
 
-    return pairs.reverse();
+    if (last) {
+        pairs.push({ start: last });
+    }
+
+    return pairs;
 }
 
 function parseDirectiveNode(node: Html): Directive | undefined {
@@ -623,9 +632,10 @@ function parseDirective(html: string): Directive | undefined {
     const m = html.match(injectDirectiveRegExp);
     if (!m || !m.groups) return undefined;
 
-    const file = parseRelativeUrl(m.groups['file']);
+    const filePath = m.groups['file'].trim();
+    const file = (filePath && parseRelativeUrl(filePath)) || undefined;
     const isEnd = m.groups['type'] === '-end';
-    const isCode = (!isEnd && !file.pathname.toLowerCase().endsWith('.md')) || m.groups['type'] === '-code';
+    const isCode = (!isEnd && !file?.pathname.toLowerCase().endsWith('.md')) || m.groups['type'] === '-code';
 
     const d: Directive = {
         type: isEnd ? 'end' : isCode ? 'code' : 'start',
@@ -656,7 +666,7 @@ async function readFile(fs: FileSystemAdapter, path: URL, encoding: BufferEncodi
         fileUrl: path,
     };
     // use path.pathname because Vfile blows up if it isn't a file: url.
-    const file = new VFile({ path: path.pathname, value, data });
+    const file = new VFileEx(value, data);
     assert(isVFileEx(file));
     return file;
 }
@@ -718,8 +728,8 @@ function extractLines(content: string, lines: [number, number] | undefined): str
     return cLines.slice(lines[0] - 1, lines[1]).join('\n');
 }
 
-function refersToTheSameFile(a: RelURL | URL, b: RelURL | URL): boolean {
-    return a.pathname === b.pathname && a.search === b.search;
+function refersToTheSameFile(a: RelURL | URL | undefined, b: RelURL | URL | undefined): boolean {
+    return a === b || (a && !b) || a?.pathname === b?.pathname;
 }
 
 function initParser() {

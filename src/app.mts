@@ -1,6 +1,7 @@
 import { promises as fs } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+import chalk from 'chalk';
 import { Command, Option as CommanderOption, program as defaultCommand } from 'commander';
 import * as path from 'path';
 
@@ -63,7 +64,7 @@ export async function app(program = defaultCommand): Promise<Command> {
             const option = fixOptions(optionsCli);
             const result = await processGlobs(files, option);
             const showSummary = (!optionsCli.silent && !!result.numberOfFiles) || optionsCli.summary === true;
-            showSummary && console.error(formatSummary(result));
+            showSummary && console.error(chalk.white(formatSummary(result)));
             if (!result.numberOfFiles && optionsCli.mustFindFiles) {
                 program.error('No Markdown files found.');
             }
