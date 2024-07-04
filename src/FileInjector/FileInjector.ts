@@ -17,13 +17,12 @@ import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemA
 import { fileType } from '../util/fileType.mjs';
 import { type InjectInfo, parseHash } from '../util/hash.js';
 import { isDefined } from '../util/isDefined.js';
-import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
+import { dirToUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
+import { type Directive, type DirectiveType, parseDirective } from './Directive.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
 
 type Node = Root | RootContent;
-
-const injectDirectiveRegExp = /^[ \t]*<!--+\s*@@inject(?<type>|-start|-end|-code)[:\s]\s*(?<file>.*?)-+->$/;
 
 const directiveRegExp = /^[ \t]*<!---?\s*@@inject(\b|-)/;
 
@@ -304,51 +303,54 @@ async function processFileInjections(
         const directiveNodes = collectInjectionNodesAndParse(root);
 
         for (const node of directiveNodes) {
-            if (!node.file?.href) continue;
+            if (!isDirectiveNode(node) || !node.directive.file?.href) continue;
             await injectFile(node);
         }
 
         return root;
     }
 
-    async function injectFile(directive: DirectiveNode): Promise<void> {
-        switch (directive.type) {
+    async function injectFile(dn: DirectiveNode): Promise<void> {
+        switch (dn.directive.type) {
             case 'start':
-                return injectMarkdownFile(directive);
+                return injectMarkdownFile(dn);
             case 'code':
-                return injectCodeFile(directive);
+                return injectCodeFile(dn);
         }
     }
 
-    async function injectMarkdownFile(directive: DirectiveNode): Promise<void> {
+    async function injectMarkdownFile(dn: DirectiveNode): Promise<void> {
+        const directive = dn.directive;
         if (!directive.file || directive.type !== 'start') return;
         const dFile = directive.file;
         const directiveFileUrl = dFile.toUrl(fileUrl);
         options.verbose && stderr.write(`\n  ${gray(dFile.href)}`);
         const root = await readAndParseMarkdownFile(directiveFileUrl);
-        return injectContent(directive, root);
+        return injectContent(dn, root);
     }
 
-    async function injectCodeFile(directive: DirectiveNode): Promise<void> {
+    async function injectCodeFile(dn: DirectiveNode): Promise<void> {
+        const directive = dn.directive;
         if (!directive.file || directive.type !== 'code') return;
         const dFile = directive.file;
         const directiveFileUrl = dFile.toUrl(fileUrl);
         options.verbose && stderr.write(`\n  ${gray(dFile.href)}`);
-        const root = await readAndParseCodeFile(directiveFileUrl, directive);
-        return injectContent(directive, root);
+        const root = await readAndParseCodeFile(directiveFileUrl, dn);
+        return injectContent(dn, root);
     }
 
-    async function injectContent(directive: DirectiveNode, content: ParseResult): Promise<void> {
+    async function injectContent(dn: DirectiveNode, content: ParseResult): Promise<void> {
+        const directive = dn.directive;
         if (!directive.file) return;
         const { info } = content;
         const root = applyQuote(content.root, info.quote ?? false);
         const href = normalizeHref(directive.file.href);
-        const parent = directive.parent;
-        const index = parent.children.indexOf(directive.node);
+        const parent = dn.parent;
+        const index = parent.children.indexOf(dn.node);
         assert(index >= 0);
-        const startDirective = directive.node.value.includes(directiveStartVerbose)
+        const startDirective = dn.node.value.includes(directiveStartVerbose)
             ? directiveStartVerbose
-            : directive.node.value.includes(directiveStartCode)
+            : dn.node.value.includes(directiveStartCode)
               ? directiveStartCode
               : directiveStart;
         const start: Html = {
@@ -562,15 +564,14 @@ interface DirectivePair {
     end?: DirectiveNode | undefined;
 }
 
-type DirectiveType = 'start' | 'end' | 'code';
-interface Directive {
-    type: DirectiveType;
-    file: RelURL | undefined;
-}
-
-interface DirectiveNode extends Partial<Directive> {
+interface DirectiveNodeBase {
     node: Html;
     parent: Parent;
+    directive: Directive | undefined;
+}
+
+interface DirectiveNode extends DirectiveNodeBase {
+    directive: Directive;
 }
 
 const startTypes: Record<DirectiveType, boolean> = {
@@ -579,41 +580,51 @@ const startTypes: Record<DirectiveType, boolean> = {
     end: false,
 } as const;
 
-function findInjectionPairs(nodes: DirectiveNode[], vfile: VFileEx): DirectivePair[] {
-    function validate(n: DirectiveNode): n is Required<DirectiveNode> {
-        if (!n.type) {
-            vfile.error('Unable to parse @@inject directive.', n.node.position);
+function isDirectiveNode(n: DirectiveNodeBase): n is DirectiveNode {
+    return n.directive !== undefined;
+}
+
+function findInjectionPairs(nodes: DirectiveNodeBase[], vfile: VFileEx): DirectivePair[] {
+    function validate(dn: DirectiveNodeBase): dn is DirectiveNode {
+        if (!dn.directive) return false;
+        const d = dn.directive;
+        if (!d.type) {
+            vfile.error('Unable to parse @@inject directive.', dn.node.position);
             return false;
         }
-        if (!n.file?.href && n.type !== 'end') {
-            vfile.error('Missing injection filename.', n.node.position);
+        if (!d.file?.href && d.type !== 'end') {
+            vfile.error('Missing injection filename.', dn.node.position);
             return false;
         }
         return true;
     }
 
-    const dnp = nodes.filter(validate);
+    const dNodes = nodes.filter(validate);
 
     const pairs: DirectivePair[] = [];
     let last: DirectiveNode | undefined = undefined;
 
-    for (const n of dnp) {
+    for (const dn of dNodes) {
+        const n = dn.directive;
         if (startTypes[n.type]) {
             if (last) {
                 pairs.push({ start: last });
             }
-            last = n;
+            last = dn;
             continue;
         }
         if (!last) {
-            vfile.error(`Unmatched @@inject-end${n.file ? ` "${n.file}"` : ''}`, n.node.position);
+            vfile.error(`Unmatched @@inject-end${n.file ? ` "${n.file}"` : ''}`, dn.node.position);
             pairs.push({ end: last });
             continue;
         }
-        if (!refersToTheSameFile(last.file, n.file)) {
-            vfile.info(`@@inject-end${n.file ? ` "${n.file}"` : ''} matching with "${last.file}"`, n.node.position);
+        if (!refersToTheSameFile(last.directive.file, n.file)) {
+            vfile.info(
+                `@@inject-end${n.file ? ` "${n.file}"` : ''} matching with "${last.directive.file}"`,
+                dn.node.position,
+            );
         }
-        pairs.push({ start: last, end: n });
+        pairs.push({ start: last, end: dn });
         last = undefined;
     }
 
@@ -628,34 +639,21 @@ function parseDirectiveNode(node: Html): Directive | undefined {
     return parseDirective(node.value);
 }
 
-function parseDirective(html: string): Directive | undefined {
-    const m = html.match(injectDirectiveRegExp);
-    if (!m || !m.groups) return undefined;
-
-    const filePath = m.groups['file'].trim();
-    const file = (filePath && parseRelativeUrl(filePath)) || undefined;
-    const isEnd = m.groups['type'] === '-end';
-    const isCode = (!isEnd && !file?.pathname.toLowerCase().endsWith('.md')) || m.groups['type'] === '-code';
-
-    const d: Directive = {
-        type: isEnd ? 'end' : isCode ? 'code' : 'start',
-        file,
-    };
-    return d;
-}
-
-function collectInjectionNodes(root: Root): DirectiveNode[] {
-    const nodes: DirectiveNode[] = [];
+function collectInjectionNodes(root: Root): DirectiveNodeBase[] {
+    const nodes: DirectiveNodeBase[] = [];
     visit(root, isInjectNode, (node, _index, parent) => {
-        parent && nodes.push({ node, parent });
+        parent && nodes.push({ node, parent, directive: undefined });
     });
     return nodes;
 }
 
-function collectInjectionNodesAndParse(root: Root): DirectiveNode[] {
-    const nodes: DirectiveNode[] = collectInjectionNodes(root);
+function collectInjectionNodesAndParse(root: Root): DirectiveNodeBase[] {
+    const nodes: DirectiveNodeBase[] = collectInjectionNodes(root);
 
-    const dNodes = nodes.map((node) => ({ ...node, ...(parseDirectiveNode(node.node) || {}) }));
+    const dNodes = nodes.map((node) => {
+        const directive = parseDirectiveNode(node.node);
+        return { ...node, directive };
+    });
     return dNodes;
 }
 
