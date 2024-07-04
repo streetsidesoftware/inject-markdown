@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.0](https://github.com/streetsidesoftware/inject-markdown/compare/v3.0.0...v3.1.0) (2024-07-04)
+
+
+### Features
+
+* Make the end file name optional ([#312](https://github.com/streetsidesoftware/inject-markdown/issues/312)) ([8456bf2](https://github.com/streetsidesoftware/inject-markdown/commit/8456bf28a8b8b2694a52a956cb2da70f4671e2b1))
+
 ## [3.0.0](https://github.com/streetsidesoftware/inject-markdown/compare/v2.1.0...v3.0.0) (2024-01-21)
 
 
