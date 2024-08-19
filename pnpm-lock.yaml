@@ -73,8 +73,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(vitest@2.0.5(@types/node@18.19.44))
       cspell:
-        specifier: ^8.13.2
-        version: 8.13.2
+        specifier: ^8.14.1
+        version: 8.14.1
       eslint:
         specifier: ^8.57.0
         version: 8.57.0
@@ -106,8 +106,8 @@ importers:
         specifier: ^5.5.4
         version: 5.5.4
       vite:
-        specifier: ^5.4.0
-        version: 5.4.0(@types/node@18.19.44)
+        specifier: ^5.4.1
+        version: 5.4.1(@types/node@18.19.44)
       vitest:
         specifier: ^2.0.5
         version: 2.0.5(@types/node@18.19.44)
@@ -189,28 +189,28 @@ packages:
     resolution: {integrity: sha512-YTnYtra7W9e6/oAZEHj0bJehPRUlLH9/fbpT5LfB0NhQXyALCRkRs3zH9v07IYhkgpqX6Z78FnuccZr/l4Fs4Q==}
     engines: {node: '>=6.9.0'}
 
-  '@cspell/cspell-bundled-dicts@8.13.2':
-    resolution: {integrity: sha512-BLXah6gUvPeZM8bj1I0F5YJ0CzDZ3d3xpbDCrDB0NfHIsF9zn0la+ie0O15VcVWNBrNIToc6enjxWg1JSF3E5g==}
+  '@cspell/cspell-bundled-dicts@8.14.1':
+    resolution: {integrity: sha512-yM5cDCbkGttCWBQuSseECHGFF2h1RpX/ZI1I+evuFBW+eYMJm2JeNLDFyuAu7TzCsNtA+PZMs3ctqIP9xg9hHg==}
     engines: {node: '>=18'}
 
-  '@cspell/cspell-json-reporter@8.13.2':
-    resolution: {integrity: sha512-UOINJikJs9tRWc2RrFmXK4s3hpasAIbSq+6ed7NojY/2kYv6u0bHNhh4D+4DAroHcFsU24vl/PeTa9V4Z5CelA==}
+  '@cspell/cspell-json-reporter@8.14.1':
+    resolution: {integrity: sha512-eJpgmocT+DY+uy9+sHCz6Ir8YVg7b/hnf5N7dITHlI8dnzgoScTZG2nZhVhJozrgb44B1dZuJzVR1DBLKgZY8A==}
     engines: {node: '>=18'}
 
-  '@cspell/cspell-pipe@8.13.2':
-    resolution: {integrity: sha512-67N6UHaHRc3H9Nl5TKO/r1lCMgnMPQH+scR6aJxHjcwlKLSoNpGF9LiURhmYaItIhfTH4TDfB2hVPzsslRzaWg==}
+  '@cspell/cspell-pipe@8.14.1':
+    resolution: {integrity: sha512-KSFu/yyoJekezT9Ex5vgyI0a9tpRVXV4KEfOfL1gH/xbWBTiYx+RyEWEefebMxlMp7tdJiNI7HI0vvJ6YdUdsA==}
     engines: {node: '>=18'}
 
-  '@cspell/cspell-resolver@8.13.2':
-    resolution: {integrity: sha512-SCAH4LbV0uFP9ldXB49mRGnAnPCKZV8W96EMHv9Tdh7Fp3btF5FFaVf0h3/ms1g3quzWJq1+EZvJCKCpm9JY5g==}
+  '@cspell/cspell-resolver@8.14.1':
+    resolution: {integrity: sha512-MMr3L1yrhITH8eG0fvXNEMo94g4MGSIeHzKKvq40fr39Oox/1MBxYAbWiI2NQ/Bxnbq854SY8pfwTSKjyNEGig==}
     engines: {node: '>=18'}
 
-  '@cspell/cspell-service-bus@8.13.2':
-    resolution: {integrity: sha512-lKgRzJlCPc4BLlqDjWQgIo0ikX4nQ04M1vu0H3CQjfcwr2PVEGLSlXXyJnA6S3A80WxVXhGehyMBhXzItmpKIQ==}
+  '@cspell/cspell-service-bus@8.14.1':
+    resolution: {integrity: sha512-uKrrCLvEkmAPB4vjUw9GM+B3TV2VsWpV6L3wkcQ9+zn9iPYgYk2WkvSHlOunnZ4u1TzcTdd88ZQtMjati3DLCg==}
     engines: {node: '>=18'}
 
-  '@cspell/cspell-types@8.13.2':
-    resolution: {integrity: sha512-0QFLcerzBapst1A729VTegeEcsHFK/YfDvOYWUwsZcmPrpacJ8qHmRPVyyFLvN5punXWwB7pIdtbrVRPDQT49w==}
+  '@cspell/cspell-types@8.14.1':
+    resolution: {integrity: sha512-E7tgF6867gsjttITAXF+8nS4BjZ4JQW4Gbrse1RP7jdW7y1biXipBfZxngsEbnR209MrZAnSobS40m9ih7gWfQ==}
     engines: {node: '>=18'}
 
   '@cspell/dict-ada@4.0.2':
@@ -234,8 +234,8 @@ packages:
   '@cspell/dict-csharp@4.0.2':
     resolution: {integrity: sha512-1JMofhLK+4p4KairF75D3A924m5ERMgd1GvzhwK2geuYgd2ZKuGW72gvXpIV7aGf52E3Uu1kDXxxGAiZ5uVG7g==}
 
-  '@cspell/dict-css@4.0.12':
-    resolution: {integrity: sha512-vGBgPM92MkHQF5/2jsWcnaahOZ+C6OE/fPvd5ScBP72oFY9tn5GLuomcyO0z8vWCr2e0nUSX1OGimPtcQAlvSw==}
+  '@cspell/dict-css@4.0.13':
+    resolution: {integrity: sha512-WfOQkqlAJTo8eIQeztaH0N0P+iF5hsJVKFuhy4jmARPISy8Efcv8QXk2/IVbmjJH0/ZV7dKRdnY5JFVXuVz37g==}
 
   '@cspell/dict-dart@2.0.3':
     resolution: {integrity: sha512-cLkwo1KT5CJY5N5RJVHks2genFkNCl/WLfj+0fFjqNR+tk3tBI1LY7ldr9piCtSFSm4x9pO1x6IV3kRUY1lLiw==}
@@ -372,16 +372,20 @@ packages:
   '@cspell/dict-vue@3.0.0':
     resolution: {integrity: sha512-niiEMPWPV9IeRBRzZ0TBZmNnkK3olkOPYxC1Ny2AX4TGlYRajcW0WUtoSHmvvjZNfWLSg2L6ruiBeuPSbjnG6A==}
 
-  '@cspell/dynamic-import@8.13.2':
-    resolution: {integrity: sha512-ckn9k7kW9Wv1kw8WltUGByQQzFFR9YITtnDQHHFI8yi9IQkSle4+KHLr9Y8uL6U8rtwP70edX4ese++yfnJr+Q==}
+  '@cspell/dynamic-import@8.14.1':
+    resolution: {integrity: sha512-zGnymwieuFigqz839cKCF9JB90nUm50SMqopWClMl4LFOpqpuCucn/Slh4CLGu2vri4iqCvRweDxZCsi/5qYiw==}
     engines: {node: '>=18.0'}
 
-  '@cspell/strong-weak-map@8.13.2':
-    resolution: {integrity: sha512-jVwlZnef8Q/x3MEg5ixRYYfV3BoI5ZOw0UZRianaM1GwsLCIW/mJ7ZIlIQF6N/exE1YWCpyRlCNgvTgUf7fc7w==}
+  '@cspell/filetypes@8.14.1':
+    resolution: {integrity: sha512-jOcTFzHJ3c1uTZLm3BvLrZ8TakXLIimsFGwvk/qTA1EYgUPC2a0TypGCxR0NCHmpMlZvfAT5iAksDIiCHq1yjg==}
     engines: {node: '>=18'}
 
-  '@cspell/url@8.13.2':
-    resolution: {integrity: sha512-IFtiADDLGCp4QXPhsQ0F5/jbVQb0Loeum36wzGLiqXWYDjIA25W8miy0hyy/S8aZhzdEq2aUZjz9dTvkl+5ISQ==}
+  '@cspell/strong-weak-map@8.14.1':
+    resolution: {integrity: sha512-idQVm12vzQHLMpV4ETDFBPpSP7TTf0hRrdsY5i/La6uzZE05b5QxadfInNtbKV/Tf2OpjV3dygALOo2932xChw==}
+    engines: {node: '>=18'}
+
+  '@cspell/url@8.14.1':
+    resolution: {integrity: sha512-K8TSiDti+mhuITezwr0fpmD756Y52cbJdxAgoXioL3Ri6ZoyQyhyhsJFeE6kNZLq24KwddZa8WJaY7hHKylygg==}
     engines: {node: '>=18.0'}
 
   '@esbuild/aix-ppc64@0.21.5':
@@ -599,83 +603,83 @@ packages:
     resolution: {integrity: sha512-cq8o4cWH0ibXh9VGi5P20Tu9XF/0fFXl9EUinr9QfTM7a7p0oTA4iJRCQWppXR1Pg8dSM0UCItCkPwsk9qWWYA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@rollup/rollup-android-arm-eabi@4.20.0':
-    resolution: {integrity: sha512-TSpWzflCc4VGAUJZlPpgAJE1+V60MePDQnBd7PPkpuEmOy8i87aL6tinFGKBFKuEDikYpig72QzdT3QPYIi+oA==}
+  '@rollup/rollup-android-arm-eabi@4.21.0':
+    resolution: {integrity: sha512-WTWD8PfoSAJ+qL87lE7votj3syLavxunWhzCnx3XFxFiI/BA/r3X7MUM8dVrH8rb2r4AiO8jJsr3ZjdaftmnfA==}
     cpu: [arm]
     os: [android]
 
-  '@rollup/rollup-android-arm64@4.20.0':
-    resolution: {integrity: sha512-u00Ro/nok7oGzVuh/FMYfNoGqxU5CPWz1mxV85S2w9LxHR8OoMQBuSk+3BKVIDYgkpeOET5yXkx90OYFc+ytpQ==}
+  '@rollup/rollup-android-arm64@4.21.0':
+    resolution: {integrity: sha512-a1sR2zSK1B4eYkiZu17ZUZhmUQcKjk2/j9Me2IDjk1GHW7LB5Z35LEzj9iJch6gtUfsnvZs1ZNyDW2oZSThrkA==}
     cpu: [arm64]
     os: [android]
 
-  '@rollup/rollup-darwin-arm64@4.20.0':
-    resolution: {integrity: sha512-uFVfvzvsdGtlSLuL0ZlvPJvl6ZmrH4CBwLGEFPe7hUmf7htGAN+aXo43R/V6LATyxlKVC/m6UsLb7jbG+LG39Q==}
+  '@rollup/rollup-darwin-arm64@4.21.0':
+    resolution: {integrity: sha512-zOnKWLgDld/svhKO5PD9ozmL6roy5OQ5T4ThvdYZLpiOhEGY+dp2NwUmxK0Ld91LrbjrvtNAE0ERBwjqhZTRAA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@rollup/rollup-darwin-x64@4.20.0':
-    resolution: {integrity: sha512-xbrMDdlev53vNXexEa6l0LffojxhqDTBeL+VUxuuIXys4x6xyvbKq5XqTXBCEUA8ty8iEJblHvFaWRJTk/icAQ==}
+  '@rollup/rollup-darwin-x64@4.21.0':
+    resolution: {integrity: sha512-7doS8br0xAkg48SKE2QNtMSFPFUlRdw9+votl27MvT46vo44ATBmdZdGysOevNELmZlfd+NEa0UYOA8f01WSrg==}
     cpu: [x64]
     os: [darwin]
 
-  '@rollup/rollup-linux-arm-gnueabihf@4.20.0':
-    resolution: {integrity: sha512-jMYvxZwGmoHFBTbr12Xc6wOdc2xA5tF5F2q6t7Rcfab68TT0n+r7dgawD4qhPEvasDsVpQi+MgDzj2faOLsZjA==}
+  '@rollup/rollup-linux-arm-gnueabihf@4.21.0':
+    resolution: {integrity: sha512-pWJsfQjNWNGsoCq53KjMtwdJDmh/6NubwQcz52aEwLEuvx08bzcy6tOUuawAOncPnxz/3siRtd8hiQ32G1y8VA==}
     cpu: [arm]
     os: [linux]
 
-  '@rollup/rollup-linux-arm-musleabihf@4.20.0':
-    resolution: {integrity: sha512-1asSTl4HKuIHIB1GcdFHNNZhxAYEdqML/MW4QmPS4G0ivbEcBr1JKlFLKsIRqjSwOBkdItn3/ZDlyvZ/N6KPlw==}
+  '@rollup/rollup-linux-arm-musleabihf@4.21.0':
+    resolution: {integrity: sha512-efRIANsz3UHZrnZXuEvxS9LoCOWMGD1rweciD6uJQIx2myN3a8Im1FafZBzh7zk1RJ6oKcR16dU3UPldaKd83w==}
     cpu: [arm]
     os: [linux]
 
-  '@rollup/rollup-linux-arm64-gnu@4.20.0':
-    resolution: {integrity: sha512-COBb8Bkx56KldOYJfMf6wKeYJrtJ9vEgBRAOkfw6Ens0tnmzPqvlpjZiLgkhg6cA3DGzCmLmmd319pmHvKWWlQ==}
+  '@rollup/rollup-linux-arm64-gnu@4.21.0':
+    resolution: {integrity: sha512-ZrPhydkTVhyeGTW94WJ8pnl1uroqVHM3j3hjdquwAcWnmivjAwOYjTEAuEDeJvGX7xv3Z9GAvrBkEzCgHq9U1w==}
     cpu: [arm64]
     os: [linux]
 
-  '@rollup/rollup-linux-arm64-musl@4.20.0':
-    resolution: {integrity: sha512-+it+mBSyMslVQa8wSPvBx53fYuZK/oLTu5RJoXogjk6x7Q7sz1GNRsXWjn6SwyJm8E/oMjNVwPhmNdIjwP135Q==}
+  '@rollup/rollup-linux-arm64-musl@4.21.0':
+    resolution: {integrity: sha512-cfaupqd+UEFeURmqNP2eEvXqgbSox/LHOyN9/d2pSdV8xTrjdg3NgOFJCtc1vQ/jEke1qD0IejbBfxleBPHnPw==}
     cpu: [arm64]
     os: [linux]
 
-  '@rollup/rollup-linux-powerpc64le-gnu@4.20.0':
-    resolution: {integrity: sha512-yAMvqhPfGKsAxHN8I4+jE0CpLWD8cv4z7CK7BMmhjDuz606Q2tFKkWRY8bHR9JQXYcoLfopo5TTqzxgPUjUMfw==}
+  '@rollup/rollup-linux-powerpc64le-gnu@4.21.0':
+    resolution: {integrity: sha512-ZKPan1/RvAhrUylwBXC9t7B2hXdpb/ufeu22pG2psV7RN8roOfGurEghw1ySmX/CmDDHNTDDjY3lo9hRlgtaHg==}
     cpu: [ppc64]
     os: [linux]
 
-  '@rollup/rollup-linux-riscv64-gnu@4.20.0':
-    resolution: {integrity: sha512-qmuxFpfmi/2SUkAw95TtNq/w/I7Gpjurx609OOOV7U4vhvUhBcftcmXwl3rqAek+ADBwSjIC4IVNLiszoj3dPA==}
+  '@rollup/rollup-linux-riscv64-gnu@4.21.0':
+    resolution: {integrity: sha512-H1eRaCwd5E8eS8leiS+o/NqMdljkcb1d6r2h4fKSsCXQilLKArq6WS7XBLDu80Yz+nMqHVFDquwcVrQmGr28rg==}
     cpu: [riscv64]
     os: [linux]
 
-  '@rollup/rollup-linux-s390x-gnu@4.20.0':
-    resolution: {integrity: sha512-I0BtGXddHSHjV1mqTNkgUZLnS3WtsqebAXv11D5BZE/gfw5KoyXSAXVqyJximQXNvNzUo4GKlCK/dIwXlz+jlg==}
+  '@rollup/rollup-linux-s390x-gnu@4.21.0':
+    resolution: {integrity: sha512-zJ4hA+3b5tu8u7L58CCSI0A9N1vkfwPhWd/puGXwtZlsB5bTkwDNW/+JCU84+3QYmKpLi+XvHdmrlwUwDA6kqw==}
     cpu: [s390x]
     os: [linux]
 
-  '@rollup/rollup-linux-x64-gnu@4.20.0':
-    resolution: {integrity: sha512-y+eoL2I3iphUg9tN9GB6ku1FA8kOfmF4oUEWhztDJ4KXJy1agk/9+pejOuZkNFhRwHAOxMsBPLbXPd6mJiCwew==}
+  '@rollup/rollup-linux-x64-gnu@4.21.0':
+    resolution: {integrity: sha512-e2hrvElFIh6kW/UNBQK/kzqMNY5mO+67YtEh9OA65RM5IJXYTWiXjX6fjIiPaqOkBthYF1EqgiZ6OXKcQsM0hg==}
     cpu: [x64]
     os: [linux]
 
-  '@rollup/rollup-linux-x64-musl@4.20.0':
-    resolution: {integrity: sha512-hM3nhW40kBNYUkZb/r9k2FKK+/MnKglX7UYd4ZUy5DJs8/sMsIbqWK2piZtVGE3kcXVNj3B2IrUYROJMMCikNg==}
+  '@rollup/rollup-linux-x64-musl@4.21.0':
+    resolution: {integrity: sha512-1vvmgDdUSebVGXWX2lIcgRebqfQSff0hMEkLJyakQ9JQUbLDkEaMsPTLOmyccyC6IJ/l3FZuJbmrBw/u0A0uCQ==}
     cpu: [x64]
     os: [linux]
 
-  '@rollup/rollup-win32-arm64-msvc@4.20.0':
-    resolution: {integrity: sha512-psegMvP+Ik/Bg7QRJbv8w8PAytPA7Uo8fpFjXyCRHWm6Nt42L+JtoqH8eDQ5hRP7/XW2UiIriy1Z46jf0Oa1kA==}
+  '@rollup/rollup-win32-arm64-msvc@4.21.0':
+    resolution: {integrity: sha512-s5oFkZ/hFcrlAyBTONFY1TWndfyre1wOMwU+6KCpm/iatybvrRgmZVM+vCFwxmC5ZhdlgfE0N4XorsDpi7/4XQ==}
     cpu: [arm64]
     os: [win32]
 
-  '@rollup/rollup-win32-ia32-msvc@4.20.0':
-    resolution: {integrity: sha512-GabekH3w4lgAJpVxkk7hUzUf2hICSQO0a/BLFA11/RMxQT92MabKAqyubzDZmMOC/hcJNlc+rrypzNzYl4Dx7A==}
+  '@rollup/rollup-win32-ia32-msvc@4.21.0':
+    resolution: {integrity: sha512-G9+TEqRnAA6nbpqyUqgTiopmnfgnMkR3kMukFBDsiyy23LZvUCpiUwjTRx6ezYCjJODXrh52rBR9oXvm+Fp5wg==}
     cpu: [ia32]
     os: [win32]
 
-  '@rollup/rollup-win32-x64-msvc@4.20.0':
-    resolution: {integrity: sha512-aJ1EJSuTdGnM6qbVC4B5DSmozPTqIag9fSzXRNNo+humQLG89XpPgdt16Ia56ORD7s+H8Pmyx44uczDQ0yDzpg==}
+  '@rollup/rollup-win32-x64-msvc@4.21.0':
+    resolution: {integrity: sha512-2jsCDZwtQvRhejHLfZ1JY6w6kEuEtfF9nzYsZxzSlNVKDX+DpsDJ+Rbjkm74nvg2rdx0gwBS+IMdvwJuq3S9pQ==}
     cpu: [x64]
     os: [win32]
 
@@ -716,11 +720,11 @@ packages:
   '@types/supports-color@8.1.3':
     resolution: {integrity: sha512-Hy6UMpxhE3j1tLpl27exp1XqHD7n8chAiNPzWfz16LPZoMMoSc4dzLl6w9qijkEb/r5O1ozdu1CWGA2L83ZeZg==}
 
-  '@types/unist@2.0.10':
-    resolution: {integrity: sha512-IfYcSBWE3hLpBg8+X2SEa8LVkJdJEkT2Ese2aaLs3ptGdVtABxndrMaxuFlQ1qdFf9Q5rDvDpxI3WwgvKFAsQA==}
+  '@types/unist@2.0.11':
+    resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
 
-  '@types/unist@3.0.2':
-    resolution: {integrity: sha512-dqId9J8K/vGi5Zr7oo212BGii5m3q5Hxlkwy3WpYuKPklmBEvsbMYYyLxAQpSffdLl/gdW0XUpKWFvYmyoWCoQ==}
+  '@types/unist@3.0.3':
+    resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
 
   '@typescript-eslint/eslint-plugin@7.18.0':
     resolution: {integrity: sha512-94EQTWZ40mzBc42ATNIBimBEDltSJ9RQHCC8vc/PDbxi4k8dVwUAv4o98dk50M1zB+JGFxp43FP7f8+FP8R6Sw==}
@@ -977,8 +981,8 @@ packages:
     resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
     engines: {node: '>=18'}
 
-  comment-json@4.2.4:
-    resolution: {integrity: sha512-E5AjpSW+O+N5T2GsOQMHLLsJvrYw6G/AFt9GvU6NguEAfzKShh7hRiLtVo6S9KbRpFMGqE5ojo0/hE+sdteWvQ==}
+  comment-json@4.2.5:
+    resolution: {integrity: sha512-bKw/r35jR3HGt5PEPm1ljsQQGyCrR8sFGNiN5L+ykDHdpO8Smxkrkla9Yi6NkQyUrb8V54PGhfMs6NrIwtxtdw==}
     engines: {node: '>= 6'}
 
   concat-map@0.0.1:
@@ -994,42 +998,42 @@ packages:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
     engines: {node: '>= 8'}
 
-  cspell-config-lib@8.13.2:
-    resolution: {integrity: sha512-AkG5qWnmHxwEJqyLsraVVzEWGShICn533GdcbSHYYrLxEd9UromEjmFrMlgNomwj8SnJq4L9xq1LoWgRXa5jjg==}
+  cspell-config-lib@8.14.1:
+    resolution: {integrity: sha512-660v4G+3AikdGfSri09YGx7enR4RWPIPLiFKA+3F+CY2lj16l4bh7B/aNfU9oYRDvCcWBCik53AyOne/bSuPVg==}
     engines: {node: '>=18'}
 
-  cspell-dictionary@8.13.2:
-    resolution: {integrity: sha512-dvtb9fDHw3jEa5mGBmrDTRxlaXVccQ5LMYkosPcS+J5/iLrV0E3iQu3njFHBFXKsLqOwnd6GV9pd6fXkPEFdeQ==}
+  cspell-dictionary@8.14.1:
+    resolution: {integrity: sha512-+QI3RLzfA4bkKEa5H9OQx2cPN+f5mXx8zbmccoJXxgjUi3fWmNGz4LPHnNQQ7pWXxQ2V81UXDwd7qRN9qkzISQ==}
     engines: {node: '>=18'}
 
-  cspell-gitignore@8.13.2:
-    resolution: {integrity: sha512-eEDR0g2VQHVRg9mLXi6PUnjZzD1DYa2jkmiuj61ZEN9yEKZ3GKXlUTxlewIiMGN/fxIn5kHyjeMo+hbCHoYkGw==}
-    engines: {node: '>=18'}
-    hasBin: true
-
-  cspell-glob@8.13.2:
-    resolution: {integrity: sha512-zhWcfE4k1BVErVd36AMle9DE5W0bxI4OcM7/q3YxPQUdbsox/DihGXGQu+jld2LkUpDl0llIPVJ8OibKg9stcQ==}
-    engines: {node: '>=18'}
-
-  cspell-grammar@8.13.2:
-    resolution: {integrity: sha512-mdRNahGfY7BXg36PQcmeB8WQZETYB6W0A/+yMDgFg+YQX7UdJr8M5GVDFmIFRWyc7/cnv6GMiqdI64gmfCU8ww==}
+  cspell-gitignore@8.14.1:
+    resolution: {integrity: sha512-f/3rZqHKTFOB37Ey8b7eIQwom4w+wKKzr1sEsoEdLsWyRAd7HdSXkDG6O0S3RYvUYoiXZM9HQsQY695CVhq2wQ==}
     engines: {node: '>=18'}
     hasBin: true
 
-  cspell-io@8.13.2:
-    resolution: {integrity: sha512-Jf5LL1TEXPvKH0iabIr8BLK/Hc6crPCdsWM3CbZydp/fDU6rpbaApzSVQ376JlAaLMLpEP7s5oVh9WC4wIE5Bw==}
+  cspell-glob@8.14.1:
+    resolution: {integrity: sha512-562ZbkBikXlB3JEGlGsi+3Xa4aghc2nqW1DLhcyXId/eunuJuUIqDGeexHkRwb0yBkq1we8O67hJtC3W0ih5GQ==}
     engines: {node: '>=18'}
 
-  cspell-lib@8.13.2:
-    resolution: {integrity: sha512-qWX4B0Nwo6Souoi8/hLEohSLQEeeh1mWIiQDDJ43w+zmzzzmHZ8+tAeJJ2eAGgOKVqfjcyefH5y7Py2TQrn3xg==}
+  cspell-grammar@8.14.1:
+    resolution: {integrity: sha512-q4soR+FDU7Z3Z2gxl9dYP8qtrunH32aozhIGx6kkLWKWSy/jk2HaWdDp2MkpsQUURXLKMJ6PBZfpzR9Mxz3KqA==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  cspell-io@8.14.1:
+    resolution: {integrity: sha512-BQvFFzlPXu0RrBecjryZI6EwegpCeph7CnNoWlBUlO/T6kJiB6uG674n/LyenOImnLRrLUbRt1yZcPxziFHNlA==}
     engines: {node: '>=18'}
 
-  cspell-trie-lib@8.13.2:
-    resolution: {integrity: sha512-JYpxU6mN0W9cp5g6QN4TXz0S3zzcmGpVJf1fka7tuWHY1e62Gs0qIIL2LjTHYW9wlRFYyrqPnN5opfwuEZCCMg==}
+  cspell-lib@8.14.1:
+    resolution: {integrity: sha512-wVZVVezge8ubq+zOED1V6EEtrJQZPNJcpNPDnc7ZXwnWiQxREWvQkuBa60EvAezPImxYdVDr8Y0dIS8yLd9WJg==}
     engines: {node: '>=18'}
 
-  cspell@8.13.2:
-    resolution: {integrity: sha512-m+aA54r95QteZBPzZBR4bdld92TDV47/qoKhYt7+M8umcLZR3C2dfktEbVQGoAJokRgSQo9L4/fRF0skk+g5Mg==}
+  cspell-trie-lib@8.14.1:
+    resolution: {integrity: sha512-2B5pnRHgYHFtdE4N1a0oWCYI1pZVeD1kvcst77ySe520Rg/U18aIET3UzsvN97EDwQ6Y23tHoVsXha0PxD1xfw==}
+    engines: {node: '>=18'}
+
+  cspell@8.14.1:
+    resolution: {integrity: sha512-UwjSLwt3RR8sP1dtjVbLimc8CpziOlVXH0yXb7/nWyMi3wEPWaV3o0VSTtRHRoaYHAjVzNlXDT6kiSr6RqyPog==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -1106,8 +1110,8 @@ packages:
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
-  electron-to-chromium@1.5.6:
-    resolution: {integrity: sha512-jwXWsM5RPf6j9dPYzaorcBSUg6AiqocPEyMpkchkvntaH9HGfOOMZwxMJjDY/XEs3T5dM7uyH1VhRMkqUU9qVw==}
+  electron-to-chromium@1.5.11:
+    resolution: {integrity: sha512-R1CccCDYqndR25CaXFd6hp/u9RaaMcftMkphmvuepXr5b1vfLkRml6aWVeBhXJ7rbevHkKEMJtz8XqPf7ffmew==}
 
   emoji-regex@10.3.0:
     resolution: {integrity: sha512-QpLs9D9v9kArv4lfDEgg1X/gN5XLnf/A6l9cs8SPZLRZR3ZkY9+kwIQTxm+fsSej5UMYGE8fdoaZVIBlqG0XTw==}
@@ -1527,8 +1531,8 @@ packages:
     resolution: {integrity: sha512-AXcZb6vzzrFAUE61HnN4mpLqd/cSIwNQjtNWR0euPm6y0iqx3G4gOXaIDdtdDwZmhwe82LA6+zinmW4UBWVePQ==}
     engines: {node: '>=16.17.0'}
 
-  ignore@5.3.1:
-    resolution: {integrity: sha512-5Fytz/IraMjqpwfd34ke28PTVMjZjJG2MPn5t7OE4eUCUNf8BAa7b5WUS9/Qvr6mwOQS7Mk6vdsMno5he+T8Xw==}
+  ignore@5.3.2:
+    resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
 
   import-fresh@3.3.0:
@@ -2142,8 +2146,8 @@ packages:
     deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
 
-  rollup@4.20.0:
-    resolution: {integrity: sha512-6rbWBChcnSGzIlXeIdNIZTopKYad8ZG8ajhl78lGRLsI2rX8IkaotQhVas2Ma+GPxJav19wrSzvRvuiv0YKzWw==}
+  rollup@4.21.0:
+    resolution: {integrity: sha512-vo+S/lfA2lMS7rZ2Qoubi6I5hwZwzXeUIctILZLbHI+laNtvhhOIon2S1JksA5UEDQ7l3vberd0fxK44lTYjbQ==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -2419,8 +2423,8 @@ packages:
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
 
-  vite@5.4.0:
-    resolution: {integrity: sha512-5xokfMX0PIiwCMCMb9ZJcMyh5wbBun0zUzKib+L65vAZ8GY9ePZMXxFrHbr/Kyll2+LSCY7xtERPpxkBDKngwg==}
+  vite@5.4.1:
+    resolution: {integrity: sha512-1oE6yuNXssjrZdblI9AfBbHCC41nnyoVoEZxQnID6yvQZAFBzxxkqoFLtHUMkYunL8hwOLEjgTuxpkRxvba3kA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
@@ -2655,7 +2659,7 @@ snapshots:
       '@babel/helper-validator-identifier': 7.24.7
       to-fast-properties: 2.0.0
 
-  '@cspell/cspell-bundled-dicts@8.13.2':
+  '@cspell/cspell-bundled-dicts@8.14.1':
     dependencies:
       '@cspell/dict-ada': 4.0.2
       '@cspell/dict-aws': 4.0.3
@@ -2664,7 +2668,7 @@ snapshots:
       '@cspell/dict-cpp': 5.1.12
       '@cspell/dict-cryptocurrencies': 5.0.0
       '@cspell/dict-csharp': 4.0.2
-      '@cspell/dict-css': 4.0.12
+      '@cspell/dict-css': 4.0.13
       '@cspell/dict-dart': 2.0.3
       '@cspell/dict-django': 4.1.0
       '@cspell/dict-docker': 1.1.7
@@ -2710,19 +2714,19 @@ snapshots:
       '@cspell/dict-typescript': 3.1.6
       '@cspell/dict-vue': 3.0.0
 
-  '@cspell/cspell-json-reporter@8.13.2':
+  '@cspell/cspell-json-reporter@8.14.1':
     dependencies:
-      '@cspell/cspell-types': 8.13.2
+      '@cspell/cspell-types': 8.14.1
 
-  '@cspell/cspell-pipe@8.13.2': {}
+  '@cspell/cspell-pipe@8.14.1': {}
 
-  '@cspell/cspell-resolver@8.13.2':
+  '@cspell/cspell-resolver@8.14.1':
     dependencies:
       global-directory: 4.0.1
 
-  '@cspell/cspell-service-bus@8.13.2': {}
+  '@cspell/cspell-service-bus@8.14.1': {}
 
-  '@cspell/cspell-types@8.13.2': {}
+  '@cspell/cspell-types@8.14.1': {}
 
   '@cspell/dict-ada@4.0.2': {}
 
@@ -2738,7 +2742,7 @@ snapshots:
 
   '@cspell/dict-csharp@4.0.2': {}
 
-  '@cspell/dict-css@4.0.12': {}
+  '@cspell/dict-css@4.0.13': {}
 
   '@cspell/dict-dart@2.0.3': {}
 
@@ -2832,13 +2836,15 @@ snapshots:
 
   '@cspell/dict-vue@3.0.0': {}
 
-  '@cspell/dynamic-import@8.13.2':
+  '@cspell/dynamic-import@8.14.1':
     dependencies:
       import-meta-resolve: 4.1.0
 
-  '@cspell/strong-weak-map@8.13.2': {}
+  '@cspell/filetypes@8.14.1': {}
 
-  '@cspell/url@8.13.2': {}
+  '@cspell/strong-weak-map@8.14.1': {}
+
+  '@cspell/url@8.14.1': {}
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
@@ -2922,7 +2928,7 @@ snapshots:
       debug: 4.3.6
       espree: 9.6.1
       globals: 13.24.0
-      ignore: 5.3.1
+      ignore: 5.3.2
       import-fresh: 3.3.0
       js-yaml: 4.1.0
       minimatch: 3.1.2
@@ -2989,52 +2995,52 @@ snapshots:
 
   '@pkgr/core@0.1.1': {}
 
-  '@rollup/rollup-android-arm-eabi@4.20.0':
+  '@rollup/rollup-android-arm-eabi@4.21.0':
     optional: true
 
-  '@rollup/rollup-android-arm64@4.20.0':
+  '@rollup/rollup-android-arm64@4.21.0':
     optional: true
 
-  '@rollup/rollup-darwin-arm64@4.20.0':
+  '@rollup/rollup-darwin-arm64@4.21.0':
     optional: true
 
-  '@rollup/rollup-darwin-x64@4.20.0':
+  '@rollup/rollup-darwin-x64@4.21.0':
     optional: true
 
-  '@rollup/rollup-linux-arm-gnueabihf@4.20.0':
+  '@rollup/rollup-linux-arm-gnueabihf@4.21.0':
     optional: true
 
-  '@rollup/rollup-linux-arm-musleabihf@4.20.0':
+  '@rollup/rollup-linux-arm-musleabihf@4.21.0':
     optional: true
 
-  '@rollup/rollup-linux-arm64-gnu@4.20.0':
+  '@rollup/rollup-linux-arm64-gnu@4.21.0':
     optional: true
 
-  '@rollup/rollup-linux-arm64-musl@4.20.0':
+  '@rollup/rollup-linux-arm64-musl@4.21.0':
     optional: true
 
-  '@rollup/rollup-linux-powerpc64le-gnu@4.20.0':
+  '@rollup/rollup-linux-powerpc64le-gnu@4.21.0':
     optional: true
 
-  '@rollup/rollup-linux-riscv64-gnu@4.20.0':
+  '@rollup/rollup-linux-riscv64-gnu@4.21.0':
     optional: true
 
-  '@rollup/rollup-linux-s390x-gnu@4.20.0':
+  '@rollup/rollup-linux-s390x-gnu@4.21.0':
     optional: true
 
-  '@rollup/rollup-linux-x64-gnu@4.20.0':
+  '@rollup/rollup-linux-x64-gnu@4.21.0':
     optional: true
 
-  '@rollup/rollup-linux-x64-musl@4.20.0':
+  '@rollup/rollup-linux-x64-musl@4.21.0':
     optional: true
 
-  '@rollup/rollup-win32-arm64-msvc@4.20.0':
+  '@rollup/rollup-win32-arm64-msvc@4.21.0':
     optional: true
 
-  '@rollup/rollup-win32-ia32-msvc@4.20.0':
+  '@rollup/rollup-win32-ia32-msvc@4.21.0':
     optional: true
 
-  '@rollup/rollup-win32-x64-msvc@4.20.0':
+  '@rollup/rollup-win32-x64-msvc@4.21.0':
     optional: true
 
   '@sindresorhus/merge-streams@2.3.0': {}
@@ -3057,13 +3063,13 @@ snapshots:
 
   '@types/hast@3.0.4':
     dependencies:
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
 
   '@types/json5@0.0.29': {}
 
   '@types/mdast@4.0.4':
     dependencies:
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
 
   '@types/ms@0.7.34': {}
 
@@ -3073,9 +3079,9 @@ snapshots:
 
   '@types/supports-color@8.1.3': {}
 
-  '@types/unist@2.0.10': {}
+  '@types/unist@2.0.11': {}
 
-  '@types/unist@3.0.2': {}
+  '@types/unist@3.0.3': {}
 
   '@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.0)(typescript@5.5.4))(eslint@8.57.0)(typescript@5.5.4)':
     dependencies:
@@ -3087,7 +3093,7 @@ snapshots:
       '@typescript-eslint/visitor-keys': 7.18.0
       eslint: 8.57.0
       graphemer: 1.4.0
-      ignore: 5.3.1
+      ignore: 5.3.2
       natural-compare: 1.4.0
       ts-api-utils: 1.3.0(typescript@5.5.4)
     optionalDependencies:
@@ -3316,7 +3322,7 @@ snapshots:
   browserslist@4.23.3:
     dependencies:
       caniuse-lite: 1.0.30001651
-      electron-to-chromium: 1.5.6
+      electron-to-chromium: 1.5.11
       node-releases: 2.0.18
       update-browserslist-db: 1.1.0(browserslist@4.23.3)
 
@@ -3390,7 +3396,7 @@ snapshots:
 
   commander@12.1.0: {}
 
-  comment-json@4.2.4:
+  comment-json@4.2.5:
     dependencies:
       array-timsort: 1.0.3
       core-util-is: 1.0.3
@@ -3410,58 +3416,59 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  cspell-config-lib@8.13.2:
+  cspell-config-lib@8.14.1:
     dependencies:
-      '@cspell/cspell-types': 8.13.2
-      comment-json: 4.2.4
+      '@cspell/cspell-types': 8.14.1
+      comment-json: 4.2.5
       yaml: 2.5.0
 
-  cspell-dictionary@8.13.2:
+  cspell-dictionary@8.14.1:
     dependencies:
-      '@cspell/cspell-pipe': 8.13.2
-      '@cspell/cspell-types': 8.13.2
-      cspell-trie-lib: 8.13.2
+      '@cspell/cspell-pipe': 8.14.1
+      '@cspell/cspell-types': 8.14.1
+      cspell-trie-lib: 8.14.1
       fast-equals: 5.0.1
 
-  cspell-gitignore@8.13.2:
+  cspell-gitignore@8.14.1:
     dependencies:
-      '@cspell/url': 8.13.2
-      cspell-glob: 8.13.2
-      cspell-io: 8.13.2
+      '@cspell/url': 8.14.1
+      cspell-glob: 8.14.1
+      cspell-io: 8.14.1
       find-up-simple: 1.0.0
 
-  cspell-glob@8.13.2:
+  cspell-glob@8.14.1:
     dependencies:
-      '@cspell/url': 8.13.2
+      '@cspell/url': 8.14.1
       micromatch: 4.0.7
 
-  cspell-grammar@8.13.2:
+  cspell-grammar@8.14.1:
     dependencies:
-      '@cspell/cspell-pipe': 8.13.2
-      '@cspell/cspell-types': 8.13.2
+      '@cspell/cspell-pipe': 8.14.1
+      '@cspell/cspell-types': 8.14.1
 
-  cspell-io@8.13.2:
+  cspell-io@8.14.1:
     dependencies:
-      '@cspell/cspell-service-bus': 8.13.2
-      '@cspell/url': 8.13.2
+      '@cspell/cspell-service-bus': 8.14.1
+      '@cspell/url': 8.14.1
 
-  cspell-lib@8.13.2:
+  cspell-lib@8.14.1:
     dependencies:
-      '@cspell/cspell-bundled-dicts': 8.13.2
-      '@cspell/cspell-pipe': 8.13.2
-      '@cspell/cspell-resolver': 8.13.2
-      '@cspell/cspell-types': 8.13.2
-      '@cspell/dynamic-import': 8.13.2
-      '@cspell/strong-weak-map': 8.13.2
-      '@cspell/url': 8.13.2
+      '@cspell/cspell-bundled-dicts': 8.14.1
+      '@cspell/cspell-pipe': 8.14.1
+      '@cspell/cspell-resolver': 8.14.1
+      '@cspell/cspell-types': 8.14.1
+      '@cspell/dynamic-import': 8.14.1
+      '@cspell/filetypes': 8.14.1
+      '@cspell/strong-weak-map': 8.14.1
+      '@cspell/url': 8.14.1
       clear-module: 4.1.2
-      comment-json: 4.2.4
-      cspell-config-lib: 8.13.2
-      cspell-dictionary: 8.13.2
-      cspell-glob: 8.13.2
-      cspell-grammar: 8.13.2
-      cspell-io: 8.13.2
-      cspell-trie-lib: 8.13.2
+      comment-json: 4.2.5
+      cspell-config-lib: 8.14.1
+      cspell-dictionary: 8.14.1
+      cspell-glob: 8.14.1
+      cspell-grammar: 8.14.1
+      cspell-io: 8.14.1
+      cspell-trie-lib: 8.14.1
       env-paths: 3.0.0
       fast-equals: 5.0.1
       gensequence: 7.0.0
@@ -3471,27 +3478,27 @@ snapshots:
       vscode-uri: 3.0.8
       xdg-basedir: 5.1.0
 
-  cspell-trie-lib@8.13.2:
+  cspell-trie-lib@8.14.1:
     dependencies:
-      '@cspell/cspell-pipe': 8.13.2
-      '@cspell/cspell-types': 8.13.2
+      '@cspell/cspell-pipe': 8.14.1
+      '@cspell/cspell-types': 8.14.1
       gensequence: 7.0.0
 
-  cspell@8.13.2:
+  cspell@8.14.1:
     dependencies:
-      '@cspell/cspell-json-reporter': 8.13.2
-      '@cspell/cspell-pipe': 8.13.2
-      '@cspell/cspell-types': 8.13.2
-      '@cspell/dynamic-import': 8.13.2
-      '@cspell/url': 8.13.2
+      '@cspell/cspell-json-reporter': 8.14.1
+      '@cspell/cspell-pipe': 8.14.1
+      '@cspell/cspell-types': 8.14.1
+      '@cspell/dynamic-import': 8.14.1
+      '@cspell/url': 8.14.1
       chalk: 5.3.0
       chalk-template: 1.1.0
       commander: 12.1.0
-      cspell-dictionary: 8.13.2
-      cspell-gitignore: 8.13.2
-      cspell-glob: 8.13.2
-      cspell-io: 8.13.2
-      cspell-lib: 8.13.2
+      cspell-dictionary: 8.14.1
+      cspell-gitignore: 8.14.1
+      cspell-glob: 8.14.1
+      cspell-io: 8.14.1
+      cspell-lib: 8.14.1
       fast-glob: 3.3.2
       fast-json-stable-stringify: 2.1.0
       file-entry-cache: 9.0.0
@@ -3567,7 +3574,7 @@ snapshots:
 
   eastasianwidth@0.2.0: {}
 
-  electron-to-chromium@1.5.6: {}
+  electron-to-chromium@1.5.11: {}
 
   emoji-regex@10.3.0: {}
 
@@ -3769,7 +3776,7 @@ snapshots:
       eslint: 8.57.0
       eslint-plugin-es: 3.0.1(eslint@8.57.0)
       eslint-utils: 2.1.0
-      ignore: 5.3.1
+      ignore: 5.3.2
       minimatch: 3.1.2
       resolve: 1.22.8
       semver: 6.3.1
@@ -3831,7 +3838,7 @@ snapshots:
       glob-parent: 6.0.2
       globals: 13.24.0
       graphemer: 1.4.0
-      ignore: 5.3.1
+      ignore: 5.3.2
       imurmurhash: 0.1.4
       is-glob: 4.0.3
       is-path-inside: 3.0.3
@@ -3870,7 +3877,7 @@ snapshots:
   estree-util-visit@2.0.0:
     dependencies:
       '@types/estree-jsx': 1.0.5
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
 
   estree-walker@3.0.3:
     dependencies:
@@ -4054,7 +4061,7 @@ snapshots:
       array-union: 2.1.0
       dir-glob: 3.0.1
       fast-glob: 3.3.2
-      ignore: 5.3.1
+      ignore: 5.3.2
       merge2: 1.4.1
       slash: 3.0.0
 
@@ -4062,7 +4069,7 @@ snapshots:
     dependencies:
       '@sindresorhus/merge-streams': 2.3.0
       fast-glob: 3.3.2
-      ignore: 5.3.1
+      ignore: 5.3.2
       path-type: 5.0.0
       slash: 5.1.0
       unicorn-magic: 0.1.0
@@ -4103,7 +4110,7 @@ snapshots:
 
   human-signals@5.0.0: {}
 
-  ignore@5.3.1: {}
+  ignore@5.3.2: {}
 
   import-fresh@3.3.0:
     dependencies:
@@ -4329,7 +4336,7 @@ snapshots:
   mdast-util-from-markdown@2.0.1:
     dependencies:
       '@types/mdast': 4.0.4
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
       decode-named-character-reference: 1.0.2
       devlop: 1.1.0
       mdast-util-to-string: 4.0.0
@@ -4416,7 +4423,7 @@ snapshots:
       '@types/estree-jsx': 1.0.5
       '@types/hast': 3.0.4
       '@types/mdast': 4.0.4
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
       ccount: 2.0.1
       devlop: 1.1.0
       mdast-util-from-markdown: 2.0.1
@@ -4458,7 +4465,7 @@ snapshots:
   mdast-util-to-markdown@2.1.0:
     dependencies:
       '@types/mdast': 4.0.4
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
       longest-streak: 3.1.0
       mdast-util-phrasing: 4.1.0
       mdast-util-to-string: 4.0.0
@@ -4682,7 +4689,7 @@ snapshots:
     dependencies:
       '@types/acorn': 4.0.6
       '@types/estree': 1.0.5
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
       devlop: 1.1.0
       estree-util-visit: 2.0.0
       micromark-util-symbol: 2.0.0
@@ -4846,7 +4853,7 @@ snapshots:
 
   parse-entities@4.0.1:
     dependencies:
-      '@types/unist': 2.0.10
+      '@types/unist': 2.0.11
       character-entities: 2.0.2
       character-entities-legacy: 3.0.0
       character-reference-invalid: 2.0.1
@@ -4973,26 +4980,26 @@ snapshots:
     dependencies:
       glob: 7.2.3
 
-  rollup@4.20.0:
+  rollup@4.21.0:
     dependencies:
       '@types/estree': 1.0.5
     optionalDependencies:
-      '@rollup/rollup-android-arm-eabi': 4.20.0
-      '@rollup/rollup-android-arm64': 4.20.0
-      '@rollup/rollup-darwin-arm64': 4.20.0
-      '@rollup/rollup-darwin-x64': 4.20.0
-      '@rollup/rollup-linux-arm-gnueabihf': 4.20.0
-      '@rollup/rollup-linux-arm-musleabihf': 4.20.0
-      '@rollup/rollup-linux-arm64-gnu': 4.20.0
-      '@rollup/rollup-linux-arm64-musl': 4.20.0
-      '@rollup/rollup-linux-powerpc64le-gnu': 4.20.0
-      '@rollup/rollup-linux-riscv64-gnu': 4.20.0
-      '@rollup/rollup-linux-s390x-gnu': 4.20.0
-      '@rollup/rollup-linux-x64-gnu': 4.20.0
-      '@rollup/rollup-linux-x64-musl': 4.20.0
-      '@rollup/rollup-win32-arm64-msvc': 4.20.0
-      '@rollup/rollup-win32-ia32-msvc': 4.20.0
-      '@rollup/rollup-win32-x64-msvc': 4.20.0
+      '@rollup/rollup-android-arm-eabi': 4.21.0
+      '@rollup/rollup-android-arm64': 4.21.0
+      '@rollup/rollup-darwin-arm64': 4.21.0
+      '@rollup/rollup-darwin-x64': 4.21.0
+      '@rollup/rollup-linux-arm-gnueabihf': 4.21.0
+      '@rollup/rollup-linux-arm-musleabihf': 4.21.0
+      '@rollup/rollup-linux-arm64-gnu': 4.21.0
+      '@rollup/rollup-linux-arm64-musl': 4.21.0
+      '@rollup/rollup-linux-powerpc64le-gnu': 4.21.0
+      '@rollup/rollup-linux-riscv64-gnu': 4.21.0
+      '@rollup/rollup-linux-s390x-gnu': 4.21.0
+      '@rollup/rollup-linux-x64-gnu': 4.21.0
+      '@rollup/rollup-linux-x64-musl': 4.21.0
+      '@rollup/rollup-win32-arm64-msvc': 4.21.0
+      '@rollup/rollup-win32-ia32-msvc': 4.21.0
+      '@rollup/rollup-win32-x64-msvc': 4.21.0
       fsevents: 2.3.3
 
   run-parallel@1.2.0:
@@ -5224,7 +5231,7 @@ snapshots:
 
   unified@11.0.5:
     dependencies:
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
       bail: 2.0.2
       devlop: 1.1.0
       extend: 3.0.2
@@ -5234,35 +5241,35 @@ snapshots:
 
   unist-util-is@6.0.0:
     dependencies:
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
 
   unist-util-position-from-estree@2.0.0:
     dependencies:
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
 
   unist-util-remove-position@5.0.0:
     dependencies:
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
       unist-util-visit: 5.0.0
 
   unist-util-remove@4.0.0:
     dependencies:
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
       unist-util-is: 6.0.0
       unist-util-visit-parents: 6.0.1
 
   unist-util-stringify-position@4.0.0:
     dependencies:
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
 
   unist-util-visit-parents@6.0.1:
     dependencies:
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
       unist-util-is: 6.0.0
 
   unist-util-visit@5.0.0:
     dependencies:
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
       unist-util-is: 6.0.0
       unist-util-visit-parents: 6.0.1
 
@@ -5278,7 +5285,7 @@ snapshots:
 
   vfile-message@4.0.2:
     dependencies:
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
       unist-util-stringify-position: 4.0.0
 
   vfile-reporter@8.1.1:
@@ -5304,7 +5311,7 @@ snapshots:
 
   vfile@6.0.2:
     dependencies:
-      '@types/unist': 3.0.2
+      '@types/unist': 3.0.3
       unist-util-stringify-position: 4.0.0
       vfile-message: 4.0.2
 
@@ -5314,7 +5321,7 @@ snapshots:
       debug: 4.3.6
       pathe: 1.1.2
       tinyrainbow: 1.2.0
-      vite: 5.4.0(@types/node@18.19.44)
+      vite: 5.4.1(@types/node@18.19.44)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -5326,11 +5333,11 @@ snapshots:
       - supports-color
       - terser
 
-  vite@5.4.0(@types/node@18.19.44):
+  vite@5.4.1(@types/node@18.19.44):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.4.41
-      rollup: 4.20.0
+      rollup: 4.21.0
     optionalDependencies:
       '@types/node': 18.19.44
       fsevents: 2.3.3
@@ -5353,7 +5360,7 @@ snapshots:
       tinybench: 2.9.0
       tinypool: 1.0.0
       tinyrainbow: 1.2.0
-      vite: 5.4.0(@types/node@18.19.44)
+      vite: 5.4.1(@types/node@18.19.44)
       vite-node: 2.0.5(@types/node@18.19.44)
       why-is-node-running: 2.3.0
     optionalDependencies:
