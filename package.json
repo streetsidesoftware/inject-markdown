@@ -11,6 +11,10 @@
   "bin": {
     "inject-markdown": "./bin.mjs"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/streetsidesoftware/inject-markdown"
+  },
   "scripts": {
     "build": "tsc -p .",
     "watch": "tsc -p . --watch",
