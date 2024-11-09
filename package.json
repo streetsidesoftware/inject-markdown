@@ -3,7 +3,7 @@
   "version": "3.1.0",
   "description": "Command line tool to inject files into markdown files.",
   "type": "module",
-  "packageManager": "pnpm@9.4.0",
+  "packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee",
   "bin": {
     "inject-markdown": "./bin.mjs"
   },
@@ -78,6 +78,20 @@
     "unist-util-visit": "^5.0.0",
     "vfile": "^6.0.3",
     "vfile-reporter": "^8.1.1"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/app.mjs"
+    },
+    "./app": {
+      "import": "./dist/app.mjs"
+    },
+    "./bin": {
+      "import": "./bin.mjs"
+    },
+    "./bin.mjs": {
+      "import": "./bin.mjs"
+    }
   },
   "files": [
     "bin.mjs",
