@@ -33,6 +33,7 @@ jobs:
     steps:
       # The logic below handles the npm publication:
       - uses: actions/checkout@v4
+
       - name: Setup
         uses: ./.github/actions/setup
 
