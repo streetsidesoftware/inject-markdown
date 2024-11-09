@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.4](https://github.com/streetsidesoftware/inject-markdown/compare/v3.1.3...v3.1.4) (2024-11-09)
+
+
+### Bug Fixes
+
+* Update repo url ([9c4d004](https://github.com/streetsidesoftware/inject-markdown/commit/9c4d004d7701224bff8115afbea9f9fb47ad412c))
+
 ## [3.1.3](https://github.com/streetsidesoftware/inject-markdown/compare/v3.1.2...v3.1.3) (2024-11-09)
 
 
