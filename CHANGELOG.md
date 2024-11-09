@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.1.1](https://github.com/streetsidesoftware/inject-markdown/compare/v3.1.0...v3.1.1) (2024-11-09)
+
+
+### Bug Fixes
+
+* Add exports ([#426](https://github.com/streetsidesoftware/inject-markdown/issues/426)) ([b420621](https://github.com/streetsidesoftware/inject-markdown/commit/b4206218a0ba2fc3d03bf1372b78b5002435fb99))
+* Update test.yml ([#412](https://github.com/streetsidesoftware/inject-markdown/issues/412)) ([1f0eaf4](https://github.com/streetsidesoftware/inject-markdown/commit/1f0eaf40b8dfb38f89098202dada53469fc0a235))
+
 ## [3.1.0](https://github.com/streetsidesoftware/inject-markdown/compare/v3.0.0...v3.1.0) (2024-07-04)
 
 
