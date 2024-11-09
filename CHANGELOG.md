@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.3](https://github.com/streetsidesoftware/inject-markdown/compare/v3.1.2...v3.1.3) (2024-11-09)
+
+
+### Bug Fixes
+
+* fix package signing ([a40afe3](https://github.com/streetsidesoftware/inject-markdown/commit/a40afe38bac1ba9b7e174f3aab2e633e99860083))
+
 ## [3.1.2](https://github.com/streetsidesoftware/inject-markdown/compare/v3.1.1...v3.1.2) (2024-11-09)
 
 
