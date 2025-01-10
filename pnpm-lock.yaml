@@ -65,10 +65,10 @@ importers:
         version: 18.19.70
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.18.0
-        version: 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.2))(eslint@8.57.1)(typescript@5.7.2)
+        version: 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.3))(eslint@8.57.1)(typescript@5.7.3)
       '@typescript-eslint/parser':
         specifier: ^7.18.0
-        version: 7.18.0(eslint@8.57.1)(typescript@5.7.2)
+        version: 7.18.0(eslint@8.57.1)(typescript@5.7.3)
       '@vitest/coverage-istanbul':
         specifier: ^2.1.8
         version: 2.1.8(vitest@2.1.8(@types/node@18.19.70))
@@ -86,7 +86,7 @@ importers:
         version: 3.7.0(eslint-plugin-import@2.31.0)(eslint@8.57.1)
       eslint-plugin-import:
         specifier: ^2.31.0
-        version: 2.31.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.2))(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1)
+        version: 2.31.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1)
       eslint-plugin-node:
         specifier: ^11.1.0
         version: 11.1.0(eslint@8.57.1)
@@ -103,8 +103,8 @@ importers:
         specifier: ^3.4.2
         version: 3.4.2
       typescript:
-        specifier: ^5.7.2
-        version: 5.7.2
+        specifier: ^5.7.3
+        version: 5.7.3
       vite:
         specifier: ^6.0.7
         version: 6.0.7(@types/node@18.19.70)(yaml@2.7.0)
@@ -205,11 +205,11 @@ packages:
     resolution: {integrity: sha512-NJbov7Jp57fh8addoxesjb8atg/APQfssCH5Q9uZuHBN06wEJDgs7fhfE48bU+RBViC9gltblsYZzZZQKzHYKg==}
     engines: {node: '>=18'}
 
-  '@cspell/dict-ada@4.0.6':
-    resolution: {integrity: sha512-1DpA3LeidQS5Wec5ZnrIRtuv/ijUcfcUq8G5hj/3QZT4vTTRXtIaQnfsq7t3XYsRlisYHkVmm2CgsJ/8hKChLw==}
+  '@cspell/dict-ada@4.1.0':
+    resolution: {integrity: sha512-7SvmhmX170gyPd+uHXrfmqJBY5qLcCX8kTGURPVeGxmt8XNXT75uu9rnZO+jwrfuU2EimNoArdVy5GZRGljGNg==}
 
-  '@cspell/dict-al@1.0.4':
-    resolution: {integrity: sha512-W4ppuwhZN6A1genmj9Q4NC8UKy7TrRb7UjvMsuPDen+V8anePTys9a0DpKp3z0S6nlrcZgqYNe9Hw/9k76mkAQ==}
+  '@cspell/dict-al@1.1.0':
+    resolution: {integrity: sha512-PtNI1KLmYkELYltbzuoztBxfi11jcE9HXBHCpID2lou/J4VMYKJPNqe4ZjVzSI9NYbMnMnyG3gkbhIdx66VSXg==}
 
   '@cspell/dict-aws@4.0.9':
     resolution: {integrity: sha512-bDYdnnJGwSkIZ4gzrauu7qzOs/ZAY/FnU4k11LgdMI8BhwMfsbsy2EI1iS+sD/BI5ZnNT9kU5YR3WADeNOmhRg==}
@@ -232,8 +232,8 @@ packages:
   '@cspell/dict-css@4.0.17':
     resolution: {integrity: sha512-2EisRLHk6X/PdicybwlajLGKF5aJf4xnX2uuG5lexuYKt05xV/J/OiBADmi8q9obhxf1nesrMQbqAt+6CsHo/w==}
 
-  '@cspell/dict-dart@2.2.5':
-    resolution: {integrity: sha512-j/J99MH4NV2Klok0XMqnHxGl2lkewBcYjGYWdBKvVSbLXyA4oOaL+vCZR8Nmwf+lHInJFN8nkMU2k7TnC0MgUw==}
+  '@cspell/dict-dart@2.3.0':
+    resolution: {integrity: sha512-1aY90lAicek8vYczGPDKr70pQSTQHwMFLbmWKTAI6iavmb1fisJBS1oTmMOKE4ximDf86MvVN6Ucwx3u/8HqLg==}
 
   '@cspell/dict-data-science@2.0.6':
     resolution: {integrity: sha512-gOYKZOg358yhnnQfr1/f232REmjeIymXUHJdrLEMPirluv2rzMWvEBBazqRVQ++jMUNg9IduVI0v096ZWMDekA==}
@@ -262,14 +262,14 @@ packages:
   '@cspell/dict-filetypes@3.0.10':
     resolution: {integrity: sha512-JEN3627joBVtpa1yfkdN9vz1Z129PoKGHBKjXCEziJvf2Zt1LeULWYYYg/O6pzRR4yzRa5YbXDTuyrN7vX7DFg==}
 
-  '@cspell/dict-flutter@1.0.4':
-    resolution: {integrity: sha512-XlWLCUsI9m2rKJ5TqYcDucajzQOqa7Hy8dhHaRQEyWic6oYvikpA1KtXsi8JD6JaiqfhejZZ6vNsQm1//6iSAg==}
+  '@cspell/dict-flutter@1.1.0':
+    resolution: {integrity: sha512-3zDeS7zc2p8tr9YH9tfbOEYfopKY/srNsAa+kE3rfBTtQERAZeOhe5yxrnTPoufctXLyuUtcGMUTpxr3dO0iaA==}
 
   '@cspell/dict-fonts@4.0.4':
     resolution: {integrity: sha512-cHFho4hjojBcHl6qxidl9CvUb492IuSk7xIf2G2wJzcHwGaCFa2o3gRcxmIg1j62guetAeDDFELizDaJlVRIOg==}
 
-  '@cspell/dict-fsharp@1.0.5':
-    resolution: {integrity: sha512-6SsdHOtUsTDZ50wjK4FcvIjPiwBSDU9M/+zmUWpFfT5k5d5Ei80n4HGisFtuFdtmoLgz2F/xNnVvhsA2MWJv+w==}
+  '@cspell/dict-fsharp@1.1.0':
+    resolution: {integrity: sha512-oguWmHhGzgbgbEIBKtgKPrFSVAFtvGHaQS0oj+vacZqMObwkapcTGu7iwf4V3Bc2T3caf0QE6f6rQfIJFIAVsw==}
 
   '@cspell/dict-fullstack@3.2.3':
     resolution: {integrity: sha512-62PbndIyQPH11mAv0PyiyT0vbwD0AXEocPpHlCHzfb5v9SspzCCbzQ/LIBiFmyRa+q5LMW35CnSVu6OXdT+LKg==}
@@ -298,8 +298,8 @@ packages:
   '@cspell/dict-java@5.0.11':
     resolution: {integrity: sha512-T4t/1JqeH33Raa/QK/eQe26FE17eUCtWu+JsYcTLkQTci2dk1DfcIKo8YVHvZXBnuM43ATns9Xs0s+AlqDeH7w==}
 
-  '@cspell/dict-julia@1.0.5':
-    resolution: {integrity: sha512-rMC9OC8POmGw9pN96ByZJaY0YGtzSh64AtuJu4uFcuooF0MGmtXwiAhazRC5kPK5XMS+pKMQql/ItTyKbYh1yg==}
+  '@cspell/dict-julia@1.1.0':
+    resolution: {integrity: sha512-CPUiesiXwy3HRoBR3joUseTZ9giFPCydSKu2rkh6I2nVjXnl5vFHzOMLXpbF4HQ1tH2CNfnDbUndxD+I+7eL9w==}
 
   '@cspell/dict-k8s@1.0.10':
     resolution: {integrity: sha512-313haTrX9prep1yWO7N6Xw4D6tvUJ0Xsx+YhCP+5YrrcIKoEw5Rtlg8R4PPzLqe6zibw6aJ+Eqq+y76Vx5BZkw==}
@@ -316,13 +316,13 @@ packages:
   '@cspell/dict-makefile@1.0.4':
     resolution: {integrity: sha512-E4hG/c0ekPqUBvlkrVvzSoAA+SsDA9bLi4xSV3AXHTVru7Y2bVVGMPtpfF+fI3zTkww/jwinprcU1LSohI3ylw==}
 
-  '@cspell/dict-markdown@2.0.8':
-    resolution: {integrity: sha512-GCzfae+PLw9MjdgOO0OB67zguNfhiLnaZX1glCNJ6G1ZWqfeC9eBOxrAR3BkFXoBY0cvDSjIP037QXFEfCgeTg==}
+  '@cspell/dict-markdown@2.0.9':
+    resolution: {integrity: sha512-j2e6Eg18BlTb1mMP1DkyRFMM/FLS7qiZjltpURzDckB57zDZbUyskOFdl4VX7jItZZEeY0fe22bSPOycgS1Z5A==}
     peerDependencies:
       '@cspell/dict-css': ^4.0.17
       '@cspell/dict-html': ^4.0.11
       '@cspell/dict-html-symbol-entities': ^4.0.3
-      '@cspell/dict-typescript': ^3.1.12
+      '@cspell/dict-typescript': ^3.2.0
 
   '@cspell/dict-monkeyc@1.0.10':
     resolution: {integrity: sha512-7RTGyKsTIIVqzbvOtAu6Z/lwwxjGRtY5RkKPlXKHEoEAgIXwfDxb5EkVwzGQwQr8hF/D3HrdYbRT8MFBfsueZw==}
@@ -345,8 +345,8 @@ packages:
   '@cspell/dict-python@4.2.14':
     resolution: {integrity: sha512-NZ/rsTH5gqTlEwbSg0vn5b1TsyzrUvA6ykwCVCwsVDdlQAS82cyDsF9JqHp8S4d6PFykmkfSxtAXYyOUr0KCbg==}
 
-  '@cspell/dict-r@2.0.5':
-    resolution: {integrity: sha512-CpZvA/6Ps/vCaR5c+2tL1dGU7ZlIFMp+lUamamHGG1ZIc0+j+16Tb1+9oksEf7k8LCI/F5Io4uIJ+0NezaY8Rg==}
+  '@cspell/dict-r@2.1.0':
+    resolution: {integrity: sha512-k2512wgGG0lTpTYH9w5Wwco+lAMf3Vz7mhqV8+OnalIE7muA0RSuD9tWBjiqLcX8zPvEJr4LdgxVju8Gk3OKyA==}
 
   '@cspell/dict-ruby@5.0.7':
     resolution: {integrity: sha512-4/d0hcoPzi5Alk0FmcyqlzFW9lQnZh9j07MJzPcyVO62nYJJAGKaPZL2o4qHeCS/od/ctJC5AHRdoUm0ktsw6Q==}
@@ -363,8 +363,8 @@ packages:
   '@cspell/dict-software-terms@4.2.2':
     resolution: {integrity: sha512-cgteXRzx2W/Ug7QSdFJrVxLES7krrZEjZ9J6sXRWOsVYFpgu2Gup8NKmjKOZ8NTnCjHQFrMnbmKdv56q9Kwixw==}
 
-  '@cspell/dict-sql@2.1.9':
-    resolution: {integrity: sha512-dyVtWGUs79SihmxzoXXOpA2mRipQhzZOy5mrRTZvMp3HE7Y5vM1ag/Di8+QCtjYD6l7MjVjp0CxkKp1U7PBpbw==}
+  '@cspell/dict-sql@2.2.0':
+    resolution: {integrity: sha512-MUop+d1AHSzXpBvQgQkCiok8Ejzb+nrzyG16E8TvKL2MQeDwnIvMe3bv90eukP6E1HWb+V/MA/4pnq0pcJWKqQ==}
 
   '@cspell/dict-svelte@1.0.6':
     resolution: {integrity: sha512-8LAJHSBdwHCoKCSy72PXXzz7ulGROD0rP1CQ0StOqXOOlTUeSFaJJlxNYjlONgd2c62XBQiN2wgLhtPN+1Zv7Q==}
@@ -372,11 +372,11 @@ packages:
   '@cspell/dict-swift@2.0.5':
     resolution: {integrity: sha512-3lGzDCwUmnrfckv3Q4eVSW3sK3cHqqHlPprFJZD4nAqt23ot7fic5ALR7J4joHpvDz36nHX34TgcbZNNZOC/JA==}
 
-  '@cspell/dict-terraform@1.0.8':
-    resolution: {integrity: sha512-YR2v2iDtuzEIwOWAlV9V8pdnrIQud6wHQOhuk3oqR3PS0rkAd6dkWrS0Ce2gbZY7AHHxQ2jvJ66pOjAdIDXbtA==}
+  '@cspell/dict-terraform@1.1.0':
+    resolution: {integrity: sha512-G55pcUUxeXAhejstmD35B47SkFd4uqCQimc+CMgq8Nx0dr03guL2iMsz8faRWQGkCnGimX8S91rbOhDv9p/heg==}
 
-  '@cspell/dict-typescript@3.1.12':
-    resolution: {integrity: sha512-gQxryTuRrRW3whM7gASetOTcPVsDGxfVn/MoSX507rcsFdZTnX18+M6D4iE0sUtranF1MWscGPIm6J2gfL3Zxw==}
+  '@cspell/dict-typescript@3.2.0':
+    resolution: {integrity: sha512-Pk3zNePLT8qg51l0M4g1ISowYAEGxTuNfZlgkU5SvHa9Cu7x/BWoyYq9Fvc3kAyoisCjRPyvWF4uRYrPitPDFw==}
 
   '@cspell/dict-vue@3.0.4':
     resolution: {integrity: sha512-0dPtI0lwHcAgSiQFx8CzvqjdoXROcH+1LyqgROCpBgppommWpVhbQ0eubnKotFEXgpUCONVkeZJ6Ql8NbTEu+w==}
@@ -1114,8 +1114,8 @@ packages:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
     engines: {node: '>=6'}
 
-  caniuse-lite@1.0.30001690:
-    resolution: {integrity: sha512-5ExiE3qQN6oF8Clf8ifIDcMRCRE/dMGcETG/XGMD8/XiXm6HXQgQTh1yZYLXXpSOsEUlJm1Xr7kGULZTuGtP/w==}
+  caniuse-lite@1.0.30001692:
+    resolution: {integrity: sha512-A95VKan0kdtrsnMubMKxEKUKImOPSuCpYgxSQBo036P5YYgVIcOYJEgt/txJWqObiRQeISNCfef9nvlQ0vbV7A==}
 
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
@@ -1535,8 +1535,8 @@ packages:
   fast-diff@1.3.0:
     resolution: {integrity: sha512-VxPP4NqbUjj6MaAOafWeUn2cXWLcCtljklUtZf0Ind4XQ+QPtmA0b18zZy0jIQx+ExRVCR/ZQpBmik5lXshNsw==}
 
-  fast-equals@5.2.1:
-    resolution: {integrity: sha512-4DpZF7SS4GQO08ScYvTMuZSRik6Y+46ByOJOZR3yKjE69rooHcHB/UsO89qJyIlyvlya38296vypgnInFhRePA==}
+  fast-equals@5.2.2:
+    resolution: {integrity: sha512-V7/RktU11J3I36Nwq2JnZEM7tNm17eBJz+u25qdxBZeCKiX6BkVSZQjwWIr+IobgnZy+ag73tTZgZi7tr0LrBw==}
     engines: {node: '>=6.0.0'}
 
   fast-glob@3.3.3:
@@ -2598,8 +2598,8 @@ packages:
     resolution: {integrity: sha512-3KS2b+kL7fsuk/eJZ7EQdnEmQoaho/r6KUef7hxvltNA5DR8NAUM+8wJMbJyZ4G9/7i3v5zPBIMN5aybAh2/Jg==}
     engines: {node: '>= 0.4'}
 
-  typescript@5.7.2:
-    resolution: {integrity: sha512-i5t66RHxDvVN40HfDd1PsEThGNnlMCMT3jMUuoh9/0TaqWevNontacunWyN02LA9/fIbEWlcHZcgTKb9QoaLfg==}
+  typescript@5.7.3:
+    resolution: {integrity: sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -2937,8 +2937,8 @@ snapshots:
 
   '@cspell/cspell-bundled-dicts@8.17.1':
     dependencies:
-      '@cspell/dict-ada': 4.0.6
-      '@cspell/dict-al': 1.0.4
+      '@cspell/dict-ada': 4.1.0
+      '@cspell/dict-al': 1.1.0
       '@cspell/dict-aws': 4.0.9
       '@cspell/dict-bash': 4.2.0
       '@cspell/dict-companies': 3.1.12
@@ -2946,7 +2946,7 @@ snapshots:
       '@cspell/dict-cryptocurrencies': 5.0.4
       '@cspell/dict-csharp': 4.0.6
       '@cspell/dict-css': 4.0.17
-      '@cspell/dict-dart': 2.2.5
+      '@cspell/dict-dart': 2.3.0
       '@cspell/dict-django': 4.1.4
       '@cspell/dict-docker': 1.1.12
       '@cspell/dict-dotnet': 5.0.9
@@ -2955,9 +2955,9 @@ snapshots:
       '@cspell/dict-en-gb': 1.1.33
       '@cspell/dict-en_us': 4.3.29
       '@cspell/dict-filetypes': 3.0.10
-      '@cspell/dict-flutter': 1.0.4
+      '@cspell/dict-flutter': 1.1.0
       '@cspell/dict-fonts': 4.0.4
-      '@cspell/dict-fsharp': 1.0.5
+      '@cspell/dict-fsharp': 1.1.0
       '@cspell/dict-fullstack': 3.2.3
       '@cspell/dict-gaming-terms': 1.1.0
       '@cspell/dict-git': 3.0.4
@@ -2967,13 +2967,13 @@ snapshots:
       '@cspell/dict-html': 4.0.11
       '@cspell/dict-html-symbol-entities': 4.0.3
       '@cspell/dict-java': 5.0.11
-      '@cspell/dict-julia': 1.0.5
+      '@cspell/dict-julia': 1.1.0
       '@cspell/dict-k8s': 1.0.10
       '@cspell/dict-latex': 4.0.3
       '@cspell/dict-lorem-ipsum': 4.0.4
       '@cspell/dict-lua': 4.0.7
       '@cspell/dict-makefile': 1.0.4
-      '@cspell/dict-markdown': 2.0.8(@cspell/dict-css@4.0.17)(@cspell/dict-html-symbol-entities@4.0.3)(@cspell/dict-html@4.0.11)(@cspell/dict-typescript@3.1.12)
+      '@cspell/dict-markdown': 2.0.9(@cspell/dict-css@4.0.17)(@cspell/dict-html-symbol-entities@4.0.3)(@cspell/dict-html@4.0.11)(@cspell/dict-typescript@3.2.0)
       '@cspell/dict-monkeyc': 1.0.10
       '@cspell/dict-node': 5.0.6
       '@cspell/dict-npm': 5.1.22
@@ -2981,16 +2981,16 @@ snapshots:
       '@cspell/dict-powershell': 5.0.14
       '@cspell/dict-public-licenses': 2.0.12
       '@cspell/dict-python': 4.2.14
-      '@cspell/dict-r': 2.0.5
+      '@cspell/dict-r': 2.1.0
       '@cspell/dict-ruby': 5.0.7
       '@cspell/dict-rust': 4.0.11
       '@cspell/dict-scala': 5.0.7
       '@cspell/dict-software-terms': 4.2.2
-      '@cspell/dict-sql': 2.1.9
+      '@cspell/dict-sql': 2.2.0
       '@cspell/dict-svelte': 1.0.6
       '@cspell/dict-swift': 2.0.5
-      '@cspell/dict-terraform': 1.0.8
-      '@cspell/dict-typescript': 3.1.12
+      '@cspell/dict-terraform': 1.1.0
+      '@cspell/dict-typescript': 3.2.0
       '@cspell/dict-vue': 3.0.4
 
   '@cspell/cspell-json-reporter@8.17.1':
@@ -3007,9 +3007,9 @@ snapshots:
 
   '@cspell/cspell-types@8.17.1': {}
 
-  '@cspell/dict-ada@4.0.6': {}
+  '@cspell/dict-ada@4.1.0': {}
 
-  '@cspell/dict-al@1.0.4': {}
+  '@cspell/dict-al@1.1.0': {}
 
   '@cspell/dict-aws@4.0.9': {}
 
@@ -3027,7 +3027,7 @@ snapshots:
 
   '@cspell/dict-css@4.0.17': {}
 
-  '@cspell/dict-dart@2.2.5': {}
+  '@cspell/dict-dart@2.3.0': {}
 
   '@cspell/dict-data-science@2.0.6': {}
 
@@ -3047,11 +3047,11 @@ snapshots:
 
   '@cspell/dict-filetypes@3.0.10': {}
 
-  '@cspell/dict-flutter@1.0.4': {}
+  '@cspell/dict-flutter@1.1.0': {}
 
   '@cspell/dict-fonts@4.0.4': {}
 
-  '@cspell/dict-fsharp@1.0.5': {}
+  '@cspell/dict-fsharp@1.1.0': {}
 
   '@cspell/dict-fullstack@3.2.3': {}
 
@@ -3071,7 +3071,7 @@ snapshots:
 
   '@cspell/dict-java@5.0.11': {}
 
-  '@cspell/dict-julia@1.0.5': {}
+  '@cspell/dict-julia@1.1.0': {}
 
   '@cspell/dict-k8s@1.0.10': {}
 
@@ -3083,12 +3083,12 @@ snapshots:
 
   '@cspell/dict-makefile@1.0.4': {}
 
-  '@cspell/dict-markdown@2.0.8(@cspell/dict-css@4.0.17)(@cspell/dict-html-symbol-entities@4.0.3)(@cspell/dict-html@4.0.11)(@cspell/dict-typescript@3.1.12)':
+  '@cspell/dict-markdown@2.0.9(@cspell/dict-css@4.0.17)(@cspell/dict-html-symbol-entities@4.0.3)(@cspell/dict-html@4.0.11)(@cspell/dict-typescript@3.2.0)':
     dependencies:
       '@cspell/dict-css': 4.0.17
       '@cspell/dict-html': 4.0.11
       '@cspell/dict-html-symbol-entities': 4.0.3
-      '@cspell/dict-typescript': 3.1.12
+      '@cspell/dict-typescript': 3.2.0
 
   '@cspell/dict-monkeyc@1.0.10': {}
 
@@ -3106,7 +3106,7 @@ snapshots:
     dependencies:
       '@cspell/dict-data-science': 2.0.6
 
-  '@cspell/dict-r@2.0.5': {}
+  '@cspell/dict-r@2.1.0': {}
 
   '@cspell/dict-ruby@5.0.7': {}
 
@@ -3118,15 +3118,15 @@ snapshots:
 
   '@cspell/dict-software-terms@4.2.2': {}
 
-  '@cspell/dict-sql@2.1.9': {}
+  '@cspell/dict-sql@2.2.0': {}
 
   '@cspell/dict-svelte@1.0.6': {}
 
   '@cspell/dict-swift@2.0.5': {}
 
-  '@cspell/dict-terraform@1.0.8': {}
+  '@cspell/dict-terraform@1.1.0': {}
 
-  '@cspell/dict-typescript@3.1.12': {}
+  '@cspell/dict-typescript@3.2.0': {}
 
   '@cspell/dict-vue@3.0.4': {}
 
@@ -3466,34 +3466,34 @@ snapshots:
 
   '@types/unist@3.0.3': {}
 
-  '@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.2))(eslint@8.57.1)(typescript@5.7.2)':
+  '@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.3))(eslint@8.57.1)(typescript@5.7.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.1
-      '@typescript-eslint/parser': 7.18.0(eslint@8.57.1)(typescript@5.7.2)
+      '@typescript-eslint/parser': 7.18.0(eslint@8.57.1)(typescript@5.7.3)
       '@typescript-eslint/scope-manager': 7.18.0
-      '@typescript-eslint/type-utils': 7.18.0(eslint@8.57.1)(typescript@5.7.2)
-      '@typescript-eslint/utils': 7.18.0(eslint@8.57.1)(typescript@5.7.2)
+      '@typescript-eslint/type-utils': 7.18.0(eslint@8.57.1)(typescript@5.7.3)
+      '@typescript-eslint/utils': 7.18.0(eslint@8.57.1)(typescript@5.7.3)
       '@typescript-eslint/visitor-keys': 7.18.0
       eslint: 8.57.1
       graphemer: 1.4.0
       ignore: 5.3.2
       natural-compare: 1.4.0
-      ts-api-utils: 1.4.3(typescript@5.7.2)
+      ts-api-utils: 1.4.3(typescript@5.7.3)
     optionalDependencies:
-      typescript: 5.7.2
+      typescript: 5.7.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.2)':
+  '@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.3)':
     dependencies:
       '@typescript-eslint/scope-manager': 7.18.0
       '@typescript-eslint/types': 7.18.0
-      '@typescript-eslint/typescript-estree': 7.18.0(typescript@5.7.2)
+      '@typescript-eslint/typescript-estree': 7.18.0(typescript@5.7.3)
       '@typescript-eslint/visitor-keys': 7.18.0
       debug: 4.4.0
       eslint: 8.57.1
     optionalDependencies:
-      typescript: 5.7.2
+      typescript: 5.7.3
     transitivePeerDependencies:
       - supports-color
 
@@ -3502,21 +3502,21 @@ snapshots:
       '@typescript-eslint/types': 7.18.0
       '@typescript-eslint/visitor-keys': 7.18.0
 
-  '@typescript-eslint/type-utils@7.18.0(eslint@8.57.1)(typescript@5.7.2)':
+  '@typescript-eslint/type-utils@7.18.0(eslint@8.57.1)(typescript@5.7.3)':
     dependencies:
-      '@typescript-eslint/typescript-estree': 7.18.0(typescript@5.7.2)
-      '@typescript-eslint/utils': 7.18.0(eslint@8.57.1)(typescript@5.7.2)
+      '@typescript-eslint/typescript-estree': 7.18.0(typescript@5.7.3)
+      '@typescript-eslint/utils': 7.18.0(eslint@8.57.1)(typescript@5.7.3)
       debug: 4.4.0
       eslint: 8.57.1
-      ts-api-utils: 1.4.3(typescript@5.7.2)
+      ts-api-utils: 1.4.3(typescript@5.7.3)
     optionalDependencies:
-      typescript: 5.7.2
+      typescript: 5.7.3
     transitivePeerDependencies:
       - supports-color
 
   '@typescript-eslint/types@7.18.0': {}
 
-  '@typescript-eslint/typescript-estree@7.18.0(typescript@5.7.2)':
+  '@typescript-eslint/typescript-estree@7.18.0(typescript@5.7.3)':
     dependencies:
       '@typescript-eslint/types': 7.18.0
       '@typescript-eslint/visitor-keys': 7.18.0
@@ -3525,18 +3525,18 @@ snapshots:
       is-glob: 4.0.3
       minimatch: 9.0.5
       semver: 7.6.3
-      ts-api-utils: 1.4.3(typescript@5.7.2)
+      ts-api-utils: 1.4.3(typescript@5.7.3)
     optionalDependencies:
-      typescript: 5.7.2
+      typescript: 5.7.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@7.18.0(eslint@8.57.1)(typescript@5.7.2)':
+  '@typescript-eslint/utils@7.18.0(eslint@8.57.1)(typescript@5.7.3)':
     dependencies:
       '@eslint-community/eslint-utils': 4.4.1(eslint@8.57.1)
       '@typescript-eslint/scope-manager': 7.18.0
       '@typescript-eslint/types': 7.18.0
-      '@typescript-eslint/typescript-estree': 7.18.0(typescript@5.7.2)
+      '@typescript-eslint/typescript-estree': 7.18.0(typescript@5.7.3)
       eslint: 8.57.1
     transitivePeerDependencies:
       - supports-color
@@ -3706,7 +3706,7 @@ snapshots:
 
   browserslist@4.24.4:
     dependencies:
-      caniuse-lite: 1.0.30001690
+      caniuse-lite: 1.0.30001692
       electron-to-chromium: 1.5.79
       node-releases: 2.0.19
       update-browserslist-db: 1.1.2(browserslist@4.24.4)
@@ -3732,7 +3732,7 @@ snapshots:
 
   callsites@3.1.0: {}
 
-  caniuse-lite@1.0.30001690: {}
+  caniuse-lite@1.0.30001692: {}
 
   ccount@2.0.1: {}
 
@@ -3811,7 +3811,7 @@ snapshots:
       '@cspell/cspell-pipe': 8.17.1
       '@cspell/cspell-types': 8.17.1
       cspell-trie-lib: 8.17.1
-      fast-equals: 5.2.1
+      fast-equals: 5.2.2
 
   cspell-gitignore@8.17.1:
     dependencies:
@@ -3854,7 +3854,7 @@ snapshots:
       cspell-io: 8.17.1
       cspell-trie-lib: 8.17.1
       env-paths: 3.0.0
-      fast-equals: 5.2.1
+      fast-equals: 5.2.2
       gensequence: 7.0.0
       import-fresh: 3.3.0
       resolve-from: 5.0.0
@@ -4143,15 +4143,15 @@ snapshots:
       is-glob: 4.0.3
       stable-hash: 0.0.4
     optionalDependencies:
-      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.2))(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1)
+      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.2))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1):
+  eslint-module-utils@2.12.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
-      '@typescript-eslint/parser': 7.18.0(eslint@8.57.1)(typescript@5.7.2)
+      '@typescript-eslint/parser': 7.18.0(eslint@8.57.1)(typescript@5.7.3)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
       eslint-import-resolver-typescript: 3.7.0(eslint-plugin-import@2.31.0)(eslint@8.57.1)
@@ -4164,7 +4164,7 @@ snapshots:
       eslint-utils: 2.1.0
       regexpp: 3.2.0
 
-  eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.2))(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1):
+  eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.8
@@ -4175,7 +4175,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.2))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1)
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3
@@ -4187,7 +4187,7 @@ snapshots:
       string.prototype.trimend: 1.0.9
       tsconfig-paths: 3.15.0
     optionalDependencies:
-      '@typescript-eslint/parser': 7.18.0(eslint@8.57.1)(typescript@5.7.2)
+      '@typescript-eslint/parser': 7.18.0(eslint@8.57.1)(typescript@5.7.3)
     transitivePeerDependencies:
       - eslint-import-resolver-typescript
       - eslint-import-resolver-webpack
@@ -4316,7 +4316,7 @@ snapshots:
 
   fast-diff@1.3.0: {}
 
-  fast-equals@5.2.1: {}
+  fast-equals@5.2.2: {}
 
   fast-glob@3.3.3:
     dependencies:
@@ -5675,9 +5675,9 @@ snapshots:
 
   trough@2.2.0: {}
 
-  ts-api-utils@1.4.3(typescript@5.7.2):
+  ts-api-utils@1.4.3(typescript@5.7.3):
     dependencies:
-      typescript: 5.7.2
+      typescript: 5.7.3
 
   tsconfig-paths@3.15.0:
     dependencies:
@@ -5727,7 +5727,7 @@ snapshots:
       possible-typed-array-names: 1.0.0
       reflect.getprototypeof: 1.0.10
 
-  typescript@5.7.2: {}
+  typescript@5.7.3: {}
 
   unbox-primitive@1.1.0:
     dependencies:
