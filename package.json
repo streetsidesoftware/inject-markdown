@@ -59,7 +59,7 @@
     "cspell": "^8.17.5",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.1.1",
-    "eslint-import-resolver-typescript": "^3.8.5",
+    "eslint-import-resolver-typescript": "^3.8.7",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.2.3",
