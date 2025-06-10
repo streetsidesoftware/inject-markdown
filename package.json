@@ -52,14 +52,14 @@
   "devDependencies": {
     "@tsconfig/node18": "^18.2.4",
     "@types/mdast": "^4.0.4",
-    "@types/node": "^18.19.110",
+    "@types/node": "^18.19.111",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
-    "@vitest/coverage-istanbul": "^3.2.1",
+    "@vitest/coverage-istanbul": "^3.2.3",
     "cspell": "^8.19.4",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.1.5",
-    "eslint-import-resolver-typescript": "^4.4.2",
+    "eslint-import-resolver-typescript": "^4.4.3",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.4.1",
@@ -68,7 +68,7 @@
     "prettier": "^3.5.3",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
-    "vitest": "^3.2.1"
+    "vitest": "^3.2.3"
   },
   "dependencies": {
     "chalk": "^5.4.1",
