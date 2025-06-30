@@ -40,7 +40,7 @@ export function parseHashString(hash: string): InjectInfo {
             const isArray = Array.isArray(v);
             const a = isArray ? v : [v];
             a.push(value);
-            !isArray && p.set(key, a);
+            if (!isArray) p.set(key, a);
             return;
         }
         p.set(key, value);
@@ -85,7 +85,7 @@ export function parseHashString(hash: string): InjectInfo {
             info.heading = key;
         }
 
-        !value && tags.push(key);
+        if (!value) tags.push(key);
     }
 
     if (tags.length) {

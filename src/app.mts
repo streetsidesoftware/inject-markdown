@@ -64,7 +64,7 @@ export async function app(program = defaultCommand): Promise<Command> {
             const option = fixOptions(optionsCli);
             const result = await processGlobs(files, option);
             const showSummary = (!optionsCli.silent && !!result.numberOfFiles) || optionsCli.summary === true;
-            showSummary && console.error(chalk.white(formatSummary(result)));
+            if (showSummary) console.error(chalk.white(formatSummary(result)));
             if (!result.numberOfFiles && optionsCli.mustFindFiles) {
                 program.error('No Markdown files found.');
             }
