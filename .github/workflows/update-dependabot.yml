@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -52,13 +53,13 @@ jobs:
         run: |
           echo "$SUMMARY"
 
-      - name: PR
-        uses: streetsidesoftware/actions/.github/actions/pr@v1
+      - name: Create PR
+        if: github.ref_name == 'main'
+        uses: peter-evans/create-pull-request@v7
         with:
           commit-message: '${{ env.PR_TYPE }}: Workflow Bot -- Update dependabot.yml'
           branch: ${{ env.NEW_BRANCH }}
           base: ${{ env.REF_BRANCH }}
           title: '${{ env.PR_TYPE }}: Workflow Bot -- Update dependabot.yml (${{ env.REF_BRANCH }})'
           body: ${{ steps.dependabot.outputs.summary }}
-          app_id: ${{ secrets.AUTOMATION_APP_ID }}
-          app_private_key: ${{ secrets.AUTOMATION_PRIVATE_KEY }}
+          token: ${{ secrets.GITHUB_TOKEN }}
