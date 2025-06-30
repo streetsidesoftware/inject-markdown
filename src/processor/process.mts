@@ -40,7 +40,7 @@ export async function processGlobs(globs: string[], options: Options): Promise<R
         result.numberOfFilesSkipped += r.skipped ? 1 : 0;
         if (r.hasErrors || r.hasMessages) {
             result.errorCount += r.hasErrors ? 1 : 0;
-            r.hasErrors && result.filesWithErrors.push(file);
+            if (r.hasErrors) result.filesWithErrors.push(file);
             console.error(reportFileErrors(r.file));
             if (r.hasErrors && (options.stopOnErrors ?? true)) break;
         }
@@ -58,7 +58,7 @@ export interface Options extends FileInjectorOptions {
 async function findFiles(globs: string[], cwd: string | undefined) {
     const _cwd = process.cwd();
     const cwdToUse = path.resolve(cwd || '.');
-    cwd && isMainThread && process.chdir(cwdToUse);
+    if (cwd && isMainThread) process.chdir(cwdToUse);
     const options: Mutable<GlobbyOptions> = {
         ignore: excludes,
         onlyFiles: true,
@@ -68,7 +68,7 @@ async function findFiles(globs: string[], cwd: string | undefined) {
         globs.map((a) => a.trim()).filter((a) => !!a),
         options,
     );
-    isMainThread && process.chdir(_cwd);
+    if (isMainThread) process.chdir(_cwd);
     // console.log('%o', files);
     return files.filter((f) => path.extname(f) in allowedFileExtensions);
 }

@@ -324,7 +324,7 @@ async function processFileInjections(
         if (!directive.file || directive.type !== 'start') return;
         const dFile = directive.file;
         const directiveFileUrl = dFile.toUrl(fileUrl);
-        options.verbose && stderr.write(`\n  ${gray(dFile.href)}`);
+        if (options.verbose) stderr.write(`\n  ${gray(dFile.href)}`);
         const root = await readAndParseMarkdownFile(directiveFileUrl);
         return injectContent(dn, root);
     }
@@ -334,7 +334,7 @@ async function processFileInjections(
         if (!directive.file || directive.type !== 'code') return;
         const dFile = directive.file;
         const directiveFileUrl = dFile.toUrl(fileUrl);
-        options.verbose && stderr.write(`\n  ${gray(dFile.href)}`);
+        if (options.verbose) stderr.write(`\n  ${gray(dFile.href)}`);
         const root = await readAndParseCodeFile(directiveFileUrl, dn);
         return injectContent(dn, root);
     }
@@ -410,7 +410,7 @@ async function processFileInjections(
     async function resolveAndReadFile(file: URL): Promise<VFileEx> {
         try {
             return await readFile(fs, file);
-        } catch (e) {
+        } catch {
             // console.log('resolveAndReadFile: (%s) %o', file.href, e);
             throw new Error(`Failed to read "${relativePathNormalized(file)}"`);
         }
@@ -642,7 +642,7 @@ function parseDirectiveNode(node: Html): Directive | undefined {
 function collectInjectionNodes(root: Root): DirectiveNodeBase[] {
     const nodes: DirectiveNodeBase[] = [];
     visit(root, isInjectNode, (node, _index, parent) => {
-        parent && nodes.push({ node, parent, directive: undefined });
+        if (parent) nodes.push({ node, parent, directive: undefined });
     });
     return nodes;
 }
