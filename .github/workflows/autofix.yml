@@ -1,31 +1,25 @@
-name: Lint
-
+name: autofix.ci
 on:
-  workflow_dispatch:
-    inputs:
-      base:
-        description: The Base Ref to apply the diff
-        required: false
-        default: 'main'
-  push:
-    branches: ['main']
   pull_request:
-    branches: ['main']
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  lint:
+  autofix:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup
         uses: ./.github/actions/setup
+
       - name: Lint
         run: |
           pnpm build
           pnpm lint:fix
-          pnpm spell
+
+      - uses: autofix-ci/action@635ffb0c9798bd160680f18fd73371e355b85f27
