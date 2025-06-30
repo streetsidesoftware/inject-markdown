@@ -3,16 +3,14 @@ import { isMainThread } from 'node:worker_threads';
 import { globby, type Options as GlobbyOptions } from 'globby';
 import * as path from 'path';
 
+import { FileInjector, type FileInjectorOptions } from '../FileInjector/FileInjector.js';
 import { nodeFsa } from '../FileSystemAdapter/fsa.js';
 import { reportFileErrors } from './reportFileErrors.mjs';
-import { FileInjector, type FileInjectorOptions } from '../FileInjector/FileInjector.js';
 
 const excludes = ['node_modules'];
 const allowedFileExtensions: Record<string, boolean | undefined> = {
     '.md': true,
 };
-
-
 
 export async function processGlobs(globs: string[], options: Options): Promise<Result> {
     const fs = nodeFsa();
