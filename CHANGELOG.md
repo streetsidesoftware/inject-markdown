@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/streetsidesoftware/inject-markdown/compare/v3.1.4...v4.0.0) (2025-06-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* Require node 20 and above ([#619](https://github.com/streetsidesoftware/inject-markdown/issues/619))
+
+### Features
+
+* Require node 20 and above ([#619](https://github.com/streetsidesoftware/inject-markdown/issues/619)) ([b3f7f5e](https://github.com/streetsidesoftware/inject-markdown/commit/b3f7f5e14eb4fe78a170600c149eda8eb6717808))
+
 ## [3.1.4](https://github.com/streetsidesoftware/inject-markdown/compare/v3.1.3...v3.1.4) (2024-11-09)
 
 
