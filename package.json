@@ -7,7 +7,7 @@
     "provenance": true
   },
   "type": "module",
-  "packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee",
+  "packageManager": "pnpm@10.12.4+sha512.5ea8b0deed94ed68691c9bad4c955492705c5eeb8a87ef86bc62c74a26b037b08ff9570f108b2e4dbd1dd1a9186fea925e527f141c648e85af45631074680184",
   "bin": {
     "inject-markdown": "./bin.mjs"
   },
@@ -50,9 +50,9 @@
   "homepage": "https://github.com/streetsidesoftware/inject-markdown#readme",
   "license": "MIT",
   "devDependencies": {
-    "@tsconfig/node18": "^18.2.4",
+    "@tsconfig/node20": "^20.1.6",
     "@types/mdast": "^4.0.4",
-    "@types/node": "^18.19.113",
+    "@types/node": "^20.19.2",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "@vitest/coverage-istanbul": "^3.2.4",
@@ -109,6 +109,6 @@
     "!**/*.map"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   }
 }
