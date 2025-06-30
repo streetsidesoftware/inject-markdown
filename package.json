@@ -69,7 +69,7 @@
   },
   "dependencies": {
     "chalk": "^5.4.1",
-    "commander": "^13.1.0",
+    "commander": "^14.0.0",
     "globby": "^14.1.0",
     "node-fetch": "^3.3.2",
     "remark": "^15.0.1",
