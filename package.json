@@ -50,19 +50,19 @@
   "homepage": "https://github.com/streetsidesoftware/inject-markdown#readme",
   "license": "MIT",
   "devDependencies": {
-    "@eslint/js": "^9.36.0",
+    "@eslint/js": "^9.37.0",
     "@tsconfig/node20": "^20.1.6",
     "@types/mdast": "^4.0.4",
     "@types/node": "^20.19.19",
     "@vitest/coverage-istanbul": "^3.2.4",
     "cspell": "^9.2.1",
-    "eslint": "^9.36.0",
+    "eslint": "^9.37.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "globals": "^16.4.0",
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.45.0",
-    "vite": "^7.1.7",
+    "vite": "^7.1.9",
     "vitest": "^3.2.4"
   },
   "dependencies": {
