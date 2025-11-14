@@ -51,7 +51,7 @@
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@tsconfig/node20": "^20.1.6",
+    "@tsconfig/node20": "^20.1.7",
     "@types/mdast": "^4.0.4",
     "@types/node": "^20.19.24",
     "@vitest/coverage-istanbul": "^3.2.4",
