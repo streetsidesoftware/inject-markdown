@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.0.1](https://github.com/streetsidesoftware/inject-markdown/compare/v5.0.0...v5.0.1) (2026-08-22)
+
+
+### Miscellaneous Chores
+
+* release 5.0.1 ([#771](https://github.com/streetsidesoftware/inject-markdown/issues/771)) ([4710bfb](https://github.com/streetsidesoftware/inject-markdown/commit/4710bfb1f17a69e28f2df5dd1cb16a5cfd85e8e0))
+
 ## [5.0.0](https://github.com/streetsidesoftware/inject-markdown/compare/v4.0.0...v5.0.0) (2026-08-22)
 
 
