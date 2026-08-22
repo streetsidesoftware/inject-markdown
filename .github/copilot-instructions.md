@@ -101,6 +101,14 @@ Always run `lint`, `build`, and `test` after changes to verify correctness.
 
 GitHub Actions workflows live in `.github/workflows/`. The main workflows are `test.yml` (runs unit tests) and `lint.yml` (runs linting). Releases are managed by Release Please (`release-please-config.json`, `.release-please-manifest.json`).
 
+## Pull Requests
+
+All PR should follow the Conventional Commits style.
+
+- `fix:` -- for small changes and bug fixes that change the published code.
+- `feat:` -- for features and other larger changes.
+- `chore:` -- for changes that are related to the CI/CD process, like updating depdencencies.
+
 ## README / Documentation Maintenance
 
 `README.md` is itself injected via `inject-markdown`. Do **not** manually edit the injected sections (between `@@inject` and `@@inject-end` markers). Edit the source files in `content/` or `static/` instead, then regenerate with:
