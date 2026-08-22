@@ -60,7 +60,7 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "globals": "^16.5.0",
     "prettier": "^3.9.6",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.0",
     "typescript-eslint": "^8.67.0",
     "vite": "^7.3.6",
     "vitest": "^3.2.7"
@@ -87,7 +87,15 @@
     "patchedDependencies": {},
     "onlyBuiltDependencies": [
       "esbuild"
-    ]
+    ],
+    "peerDependencyRules": {
+      "ignoreMissing": [],
+      "allowedVersions": {
+        "typescript-eslint>typescript": ">=4.8.4",
+        "@typescript-eslint/parser>typescript": ">=4.8.4",
+        "@typescript-eslint/eslint-plugin>typescript": ">=4.8.4"
+      }
+    }
   },
   "exports": {
     ".": {
