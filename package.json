@@ -7,7 +7,7 @@
     "provenance": true
   },
   "type": "module",
-  "packageManager": "pnpm@10.15.1+sha512.34e538c329b5553014ca8e8f4535997f96180a1d0f614339357449935350d924e22f8614682191264ec33d1462ac21561aff97f6bb18065351c162c7e8f6de67",
+  "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621",
   "bin": {
     "inject-markdown": "./bin.mjs"
   },
@@ -50,24 +50,24 @@
   "homepage": "https://github.com/streetsidesoftware/inject-markdown#readme",
   "license": "MIT",
   "devDependencies": {
-    "@eslint/js": "^9.39.5",
+    "@eslint/js": "^10.0.1",
     "@tsconfig/node22": "^22.0.6",
     "@types/mdast": "^4.0.4",
     "@types/node": "^22.20.1",
-    "@vitest/coverage-istanbul": "^3.2.7",
-    "cspell": "^9.8.0",
-    "eslint": "^9.39.5",
-    "eslint-plugin-simple-import-sort": "^12.1.1",
-    "globals": "^16.5.0",
+    "@vitest/coverage-istanbul": "^4.1.11",
+    "cspell": "^10.0.1",
+    "eslint": "^10.8.1",
+    "eslint-plugin-simple-import-sort": "^14.0.0",
+    "globals": "^17.11.0",
     "prettier": "^3.9.6",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.67.0",
-    "vite": "^7.3.6",
-    "vitest": "^3.2.7"
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
   },
   "dependencies": {
-    "chalk": "^5.6.2",
-    "commander": "^14.0.3",
+    "chalk": "^6.0.0",
+    "commander": "^15.0.0",
     "globby": "^16.2.4",
     "node-fetch": "^3.3.2",
     "remark": "^15.0.1",
@@ -81,13 +81,6 @@
     "unist-util-visit": "^5.1.0",
     "vfile": "^6.0.3",
     "vfile-reporter": "^8.1.1"
-  },
-  "pnpm": {
-    "overrides": {},
-    "patchedDependencies": {},
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
   },
   "exports": {
     ".": {
