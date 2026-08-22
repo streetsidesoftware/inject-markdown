@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.0.2](https://github.com/streetsidesoftware/inject-markdown/compare/v5.0.1...v5.0.2) (2026-08-22)
+
+
+### Bug Fixes
+
+* Try publishing again ([#773](https://github.com/streetsidesoftware/inject-markdown/issues/773)) ([895c118](https://github.com/streetsidesoftware/inject-markdown/commit/895c1187a67d8323bdb6907d1879b10547abbabc))
+
 ## [5.0.1](https://github.com/streetsidesoftware/inject-markdown/compare/v5.0.0...v5.0.1) (2026-08-22)
 
 * Work on NPM signing.
