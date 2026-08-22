@@ -17,7 +17,7 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: googleapis/release-please-action@v5
         id: release
         with:
@@ -33,7 +33,7 @@ jobs:
     if: ${{ needs.release-please.outputs.release_created }}
     steps:
       # The logic below handles the npm publication:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup
         uses: ./.github/actions/setup
