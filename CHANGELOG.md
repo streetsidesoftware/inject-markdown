@@ -2,6 +2,8 @@
 
 ## [5.0.1](https://github.com/streetsidesoftware/inject-markdown/compare/v5.0.0...v5.0.1) (2026-08-22)
 
+* Work on NPM signing.
+
 
 ### Miscellaneous Chores
 
