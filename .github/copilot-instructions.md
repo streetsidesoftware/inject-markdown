@@ -5,6 +5,7 @@
 `inject-markdown` is a Node.js CLI tool (and library) that injects file content into Markdown files using special HTML comment directives. Developers annotate their Markdown with `@@inject` comments and then run the tool to populate those sections automatically, keeping documentation in sync with source files.
 
 Key directives:
+
 - `<!--- @@inject: <file> --->` – injects a file's content (Markdown inline, non-Markdown as a code block).
 - `<!--- @@inject-code: <file> --->` – always injects as a code block.
 - `<!--- @@inject-start: <file> --->` – alias for `@@inject`.
