@@ -1,18 +1,20 @@
-version: '0.2'
+version: "0.2"
 ignorePaths:
   - node_modules
   - pnpm-*
   - temp
   - coverage
-  - '*.snap'
+  - "*.snap"
 dictionaryDefinitions: []
-dictionaries: ['typescript']
+dictionaries:
+  - typescript
 words:
   - autobuild
   - buildscript
   - codecov
   - codeql
   - coverallsapp
+  - frontmatter
   - globby
   - lcov
   - mdast

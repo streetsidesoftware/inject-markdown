@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import assert from 'assert';
 import chalk, { supportsColor } from 'chalk';
 import type { BlockContent, Code, DefinitionContent, Heading, Html, Parent, Root, RootContent } from 'mdast';
+import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
@@ -271,7 +272,7 @@ async function processFileInjections(
             file.data.hasInjections = false;
             return file;
         }
-        const result = await initParser()
+        const result = await initParser(toInitOptions(file))
             .use(processHasInjections)
             .use(processInjections)
             .use(remarkStringify, outputOptions)
@@ -417,7 +418,7 @@ async function processFileInjections(
     }
 
     function parseMarkdownFile(file: VFileEx): Root {
-        return initParser().parse(file);
+        return initParser(toInitOptions(file)).parse(file);
     }
 
     function relativePathNormalized(path: URL, relDir?: URL): string {
@@ -709,7 +710,7 @@ function hasEofNewLine(content: string): boolean {
 
 function errorToComment(err: Error): Root {
     const msg = (err.message || err.toString()).split('\n').join('\n  ');
-    return initParser().parse(`\
+    return unified().use(remarkParse).use(remarkGfm).parse(`\
 <!---
   ${msg}
 --->`);
@@ -730,8 +731,25 @@ function refersToTheSameFile(a: RelURL | URL | undefined, b: RelURL | URL | unde
     return a === b || (a && !b) || a?.pathname === b?.pathname;
 }
 
-function initParser() {
+
+interface ParserOptions {
+    frontmatter?: boolean;
+    gfm?: boolean;
+}
+
+function initParser(options: ParserOptions) {
+    if (options.frontmatter) {
+        return unified().use(remarkParse).use(remarkFrontmatter, ['yaml', 'toml']).use(remarkGfm);
+    }
     return unified().use(remarkParse).use(remarkGfm);
+}
+
+function toInitOptions(file: VFileEx): ParserOptions {
+        const options: ParserOptions = { gfm: true };
+        if (file.content.startsWith('---\n')) {
+            options.frontmatter = true;
+        }
+        return options;
 }
 
 interface ParseResult {
