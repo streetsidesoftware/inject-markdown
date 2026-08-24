@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import assert from 'assert';
 import chalk, { supportsColor } from 'chalk';
 import type { BlockContent, Code, DefinitionContent, Heading, Html, Parent, Root, RootContent } from 'mdast';
-import remarkFrontmatter from 'remark-frontmatter'
+import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
@@ -731,7 +731,6 @@ function refersToTheSameFile(a: RelURL | URL | undefined, b: RelURL | URL | unde
     return a === b || (a && !b) || a?.pathname === b?.pathname;
 }
 
-
 interface ParserOptions {
     frontmatter?: boolean;
     gfm?: boolean;
@@ -745,11 +744,11 @@ function initParser(options: ParserOptions) {
 }
 
 function toInitOptions(file: VFileEx): ParserOptions {
-        const options: ParserOptions = { gfm: true };
-        if (file.content.startsWith('---\n')) {
-            options.frontmatter = true;
-        }
-        return options;
+    const options: ParserOptions = { gfm: true };
+    if (file.content.startsWith('---\n')) {
+        options.frontmatter = true;
+    }
+    return options;
 }
 
 interface ParseResult {

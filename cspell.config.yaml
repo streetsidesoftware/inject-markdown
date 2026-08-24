@@ -1,10 +1,10 @@
-version: "0.2"
+version: '0.2'
 ignorePaths:
   - node_modules
   - pnpm-*
   - temp
   - coverage
-  - "*.snap"
+  - '*.snap'
 dictionaryDefinitions: []
 dictionaries:
   - typescript
