@@ -1,3 +1,9 @@
+---
+title: Example 2
+description: 'An example with Frontmatter'
+permalink: /
+---
+
 # Contains special characters
 
 ## How it works with camelCase
