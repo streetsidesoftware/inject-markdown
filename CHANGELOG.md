@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.0.3](https://github.com/streetsidesoftware/inject-markdown/compare/v5.0.2...v5.0.3) (2026-08-25)
+
+
+### Bug Fixes
+
+* Fix issue with frontmatter getting changed ([#779](https://github.com/streetsidesoftware/inject-markdown/issues/779)) ([810ff00](https://github.com/streetsidesoftware/inject-markdown/commit/810ff00bc71144bcd55943d9891e603cd149127f))
+
 ## [5.0.2](https://github.com/streetsidesoftware/inject-markdown/compare/v5.0.1...v5.0.2) (2026-08-22)
 
 
