@@ -6,13 +6,15 @@ ignorePaths:
   - coverage
   - '*.snap'
 dictionaryDefinitions: []
-dictionaries: ['typescript']
+dictionaries:
+  - typescript
 words:
   - autobuild
   - buildscript
   - codecov
   - codeql
   - coverallsapp
+  - frontmatter
   - globby
   - lcov
   - mdast

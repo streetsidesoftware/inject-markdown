@@ -15,17 +15,23 @@ export interface FileData extends VFileData {
 export class VFileEx extends VFile {
     readonly fileUrl: URL;
     data: FileData;
+    #content: string;
 
     constructor(value: string, data: FileData) {
         super({ path: data.fileUrl.pathname, value, data });
         this.fileUrl = data.fileUrl;
         this.data = data;
+        this.#content = value;
     }
 
     error(reason: string, place?: MessageOptions): ReturnType<VFile['message']> {
         const msg = this.message(reason, place);
         msg.fatal = true;
         return msg;
+    }
+
+    get content(): string {
+        return this.#content;
     }
 }
 
