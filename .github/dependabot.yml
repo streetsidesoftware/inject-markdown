@@ -9,27 +9,37 @@ updates:
     directory: '/' # Location of package manifests
     versioning-strategy: increase
     schedule:
-      interval: 'daily'
+      interval: 'weekly'
+    groups:
+      production-dependencies:
+        dependency-type: 'production'
+        update-types:
+          - minor
+          - patch
+      development-dependencies:
+        dependency-type: 'development'
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: '@types/node'
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: 'github-actions'
     # Workflow files stored in the
     # default location of `.github/workflows`
-    directory: '/'
+    directories:
+      - '/'
+      - '/.github/actions/*'
     schedule:
       interval: 'daily'
-
-  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
-  - package-ecosystem: github-actions
-    directory: /.github/actions/setup
-    schedule:
-      interval: daily
     commit-message:
-      prefix: ci
-
-  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
-  - package-ecosystem: github-actions
-    directory: /.github/actions/install-build-test
-    schedule:
-      interval: daily
-    commit-message:
-      prefix: ci
+      prefix: chore
+    groups:
+      action-dependencies-version:
+        patterns: ['*']
+        applies-to: 'version-updates'
+      action-dependencies-security:
+        patterns: ['*']
+        applies-to: 'security-updates'
