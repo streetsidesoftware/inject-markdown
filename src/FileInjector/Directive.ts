@@ -40,7 +40,7 @@ export function parseDirective(html: string): Directive | undefined {
 }
 
 function hasExplicitLang(file: RelURL | undefined): boolean {
-    return !!file && !!parseHash(file).lang;
+    return !!file && parseHash(file).lang !== undefined;
 }
 
 function fileExtension(pathname: string): string {
