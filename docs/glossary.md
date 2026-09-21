@@ -24,7 +24,10 @@ Any parsed source row that is not a header row. Row numbering for `start-row`/`e
 The range of data rows actually injected, determined by `start-row`, `end-row`, and `num-rows` together. See [ADR-0004](ADRs/0004-table-row-window-options.md).
 
 **Column reference**
-An entry in the `columns` option identifying one source column, either by 1-based number or by name (matched against the first header row), optionally carrying an alignment marker. See [ADR-0003](ADRs/0003-table-columns-option.md).
+An entry in the `columns` option identifying one source column, either by 1-based number or by name (matched against the column's header match string, see below), optionally carrying an alignment marker. See [ADR-0003](ADRs/0003-table-columns-option.md).
+
+**Header match string**
+The text a `columns` name reference is compared against: a column's non-empty header-row cells joined with a single space (not `<br />`) and whitespace-normalized, distinct from the `<br />`-joined text actually displayed in the output header. Unaffected by `header-format`. See [ADR-0002](ADRs/0002-table-header-rows-option.md).
 
 **Alignment marker**
 A leading and/or trailing colon on a column reference (`:Name`, `Name:`, `:Name:`) requesting left/right/center alignment for that column, mirroring GFM's own `:---`/`---:`/`:---:` table delimiter-row syntax.
@@ -34,3 +37,6 @@ Automatic right-alignment applied to a column with no explicit alignment marker,
 
 **Explicit alignment**
 Alignment set directly via a `columns` alignment marker; always takes precedence over auto-alignment for that column.
+
+**Header format**
+A display-only casing transform (`none`/`title`/`upper`/`lower`) applied to rendered header-cell text via `header-format`. Never affects the header match string used by `columns` name references. See [ADR-0006](ADRs/0006-table-header-format.md).

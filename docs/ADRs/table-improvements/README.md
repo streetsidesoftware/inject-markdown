@@ -1,6 +1,6 @@
 # Table improvements
 
-ADRs for table-injection options (`header-rows`, `columns`, row windowing, auto-alignment). Numbering restarts at `0001` within this group; see [../README.md](../README.md) for the overall ADR convention.
+ADRs for table-injection options (`header-rows`, `columns`, row windowing, auto-alignment, header formatting). Numbering restarts at `0001` within this group; see [../README.md](../README.md) for the overall ADR convention.
 
 | ADR | Title | Status |
 | --- | --- | --- |
@@ -9,5 +9,6 @@ ADRs for table-injection options (`header-rows`, `columns`, row windowing, auto-
 | [0003](0003-table-columns-option.md) | `columns` option | Proposed |
 | [0004](0004-table-row-window-options.md) | Row window options (`start-row`, `end-row`, `num-rows`) | Proposed |
 | [0005](0005-table-auto-alignment.md) | Auto-alignment by content type | Proposed |
+| [0006](0006-table-header-format.md) | `header-format` option | Proposed |
 
 See also: [../../glossary.md](../../glossary.md).
