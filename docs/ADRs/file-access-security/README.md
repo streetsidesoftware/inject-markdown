@@ -4,8 +4,8 @@ ADRs for restricting which local files an `@@inject` directive may read, so a di
 
 | ADR                                           | Title                                                | Status   |
 | --------------------------------------------- | ---------------------------------------------------- | -------- |
-| [0001](0001-injection-root-boundary.md)       | Injection-root boundary for local file reads         | Proposed |
-| [0002](0002-injection-root-escape-hatch.md)   | Injection-root escape hatch (`--allow-outside-root`) | Proposed |
-| [0003](0003-rollout-as-major-version-bump.md) | Ship as a breaking change in the next major version  | Proposed |
+| [0001](0001-injection-root-boundary.md)       | Injection-root boundary for local file reads         | Accepted |
+| [0002](0002-injection-root-escape-hatch.md)   | Injection-root escape hatch (`--allow-outside-root`) | Accepted |
+| [0003](0003-rollout-as-major-version-bump.md) | Ship as a breaking change in the next major version  | Accepted |
 
 See also: [../../glossary.md](../../glossary.md).

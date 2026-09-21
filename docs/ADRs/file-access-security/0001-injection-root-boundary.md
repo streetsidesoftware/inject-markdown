@@ -1,6 +1,6 @@
 # ADR-0001: Injection-root boundary for local file reads
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 
