@@ -10,6 +10,7 @@ dictionaries:
   - typescript
 words:
   - autobuild
+  - basenames
   - buildscript
   - codecov
   - codeql
