@@ -266,6 +266,49 @@ exports[`FileInjector > processFile 'fixtures/headers/README.md' {} 2`] = `
 ]
 `;
 
+exports[`FileInjector > processFile 'fixtures/inject-only/README.md' { injectOnly: true } 1`] = `
+[
+  [
+    "fixtures/inject-only/README.md",
+    "Inject Only
+===========
+
+This document is deliberately formatted in ways that a whole-document
+re-stringify normalizes (setext heading, extra blank lines, an unusual
+list marker), to check that \`--inject-only\` leaves everything outside the
+injected span byte-for-byte untouched.
+
+
+There are two blank lines above this paragraph.
+
+* Item one
+* Item two
+
+<!--- @@inject: snippet.md --->
+
+Injected content.
+
+<!--- @@inject-end: snippet.md --->
+",
+    "utf8",
+  ],
+]
+`;
+
+exports[`FileInjector > processFile 'fixtures/inject-only/README.md' { injectOnly: true } 2`] = `
+[
+  {
+    "target": "stderr",
+    "text": "fixtures/inject-only/README.md ...",
+  },
+  {
+    "target": "stderr",
+    "text": " done.
+",
+  },
+]
+`;
+
 exports[`FileInjector > processFile 'fixtures/quotes/README.md' {} 1`] = `
 [
   [

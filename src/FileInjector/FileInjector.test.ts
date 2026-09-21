@@ -52,6 +52,7 @@ describe('FileInjector', () => {
         ${'fixtures/headers/README.md'}        | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/headers/README.md'}
         ${'fixtures/tables/README.md'}         | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/tables/README.md'}
         ${'fixtures/style-preserve/README.md'} | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/style-preserve/README.md'}
+        ${'fixtures/inject-only/README.md'}    | ${{ injectOnly: true }}                                  | ${oc({ hasChanged: true })}  | ${'fixtures/inject-only/README.md'}
     `('processFile $file $options', async ({ file, options, expectedResult, expectedFile }) => {
         const logger = createLogger();
         options.cwd = options.cwd || __root__;
@@ -82,6 +83,126 @@ describe('FileInjector', () => {
         expect(r).toEqual(expectedResult);
         expect(normalizeWriteFileCalls(fsa.writeFile)).toMatchSnapshot();
         expect(logger.history).toMatchSnapshot();
+    });
+});
+
+describe('injectOnly', () => {
+    const fixtureFile = 'fixtures/inject-only/README.md';
+    const fixtureUrl = pathToFileURL(path.join(__root__, fixtureFile));
+
+    async function inject(fsa: FSA, options: Record<string, unknown> = {}) {
+        const fi = new FileInjector(fsa, { injectOnly: true, cwd: __root__, silent: true, ...options });
+        return fi.processFile(fixtureFile);
+    }
+
+    test('preserves everything outside the injected span byte-for-byte', async () => {
+        const source = await appFsa.readFile(fixtureUrl, 'utf8');
+        const directive = '<!--- @@inject: snippet.md --->';
+        const directiveIndex = source.indexOf(directive);
+        expect(directiveIndex).toBeGreaterThan(-1);
+        const prefix = source.slice(0, directiveIndex);
+
+        const fsa = createFSA();
+        const r = await inject(fsa);
+        expect(r.hasChanged).toBe(true);
+
+        const written = r.file.value as string;
+        expect(written.startsWith(prefix)).toBe(true);
+        expect(written.endsWith('<!--- @@inject-end: snippet.md --->\n')).toBe(true);
+        // The setext heading and the double blank line, which a whole-document
+        // restringify would normalize, must survive untouched.
+        expect(written).toContain('Inject Only\n===========\n');
+        expect(written).toContain('untouched.\n\n\nThere are two blank lines');
+    });
+
+    test('a second run over already-injected content is a no-op', async () => {
+        const fsa = createFSA();
+        const r1 = await inject(fsa);
+
+        const fsa2 = createFSA();
+        fsa2.store.set(fixtureUrl, r1.file.value as string);
+        const r2 = await inject(fsa2);
+        expect(r2.hasChanged).toBe(false);
+        expect(r2.file.value).toBe(r1.file.value);
+    });
+
+    test('updating the injected file only changes the injected span', async () => {
+        const fsa = createFSA();
+        const r1 = await inject(fsa);
+
+        const fsa2 = createFSA();
+        fsa2.store.set(fixtureUrl, r1.file.value as string);
+        fsa2.store.set(pathToFileURL(path.join(__root__, 'fixtures/inject-only/snippet.md')), 'Updated content!\n');
+        const r2 = await inject(fsa2);
+        expect(r2.hasChanged).toBe(true);
+
+        const before = r1.file.value as string;
+        const after = r2.file.value as string;
+        const endDirective = '<!--- @@inject-end: snippet.md --->';
+        const directiveIndex = before.indexOf('<!--- @@inject: snippet.md --->');
+        // The injected body's length changes, so the two texts only realign
+        // once the (identical) end marker starts.
+        expect(after.slice(0, directiveIndex)).toBe(before.slice(0, directiveIndex));
+        expect(after.slice(after.indexOf(endDirective))).toBe(before.slice(before.indexOf(endDirective)));
+        expect(after).toContain('Updated content!');
+    });
+
+    test('--clean --inject-only removes the injected body but restores the original bytes', async () => {
+        const original = await appFsa.readFile(fixtureUrl, 'utf8');
+
+        const fsa = createFSA();
+        const r1 = await inject(fsa);
+
+        const fsa2 = createFSA();
+        fsa2.store.set(fixtureUrl, r1.file.value as string);
+        const r2 = await inject(fsa2, { clean: true });
+        expect(r2.hasChanged).toBe(true);
+        expect(r2.file.value).toBe(original);
+    });
+
+    test('keeps a directive nested inside a list item (indentation reconstructed)', async () => {
+        // `fixtures/vacations/vacations.md` has `@@inject: parts/prices.md`
+        // indented two spaces inside a `- Prices` list item. The whole span
+        // between the directives is replaced, prefix included, so the
+        // fragment's later lines must have that prefix reconstructed or the
+        // injected content falls out of the list item.
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { injectOnly: true, cwd: __root__, silent: true });
+        const r = await fi.processFile('fixtures/vacations/vacations.md');
+        expect(r.hasChanged).toBe(true);
+
+        const written = r.file.value as string;
+        const start = written.indexOf('- Prices');
+        const end = written.indexOf('# Highlight Destination');
+        expect(start).toBeGreaterThan(-1);
+        expect(end).toBeGreaterThan(start);
+        const section = written.slice(start, end).trimEnd();
+        const lines = section.split('\n');
+        expect(lines[0]).toBe('- Prices');
+        for (const line of lines.slice(1)) {
+            // every continuation line stays indented under the list item;
+            // a blank line is allowed to be indentation-only.
+            expect(line === '  ' || line.startsWith('  ')).toBe(true);
+        }
+        expect(section).toContain('  <!--- @@inject: parts/prices.md --->');
+        expect(section).toContain('  ## Data');
+        expect(section).toContain('  <!--- @@inject-end: parts/prices.md --->');
+    });
+
+    test('preserves CRLF line endings for a nested-list-item directive', async () => {
+        const vacationsUrl = pathToFileURL(path.join(__root__, 'fixtures/vacations/vacations.md'));
+        const crlfSource = (await appFsa.readFile(vacationsUrl, 'utf8')).replace(/\r?\n/g, '\r\n');
+
+        const fsa = createFSA();
+        fsa.store.set(vacationsUrl, crlfSource);
+        const fi = new FileInjector(fsa, { injectOnly: true, cwd: __root__, silent: true });
+        const r = await fi.processFile('fixtures/vacations/vacations.md');
+        expect(r.hasChanged).toBe(true);
+
+        const written = r.file.value as string;
+        expect(written).not.toMatch(/(?<!\r)\n/); // no bare LF
+        expect(written).not.toMatch(/\r(?!\n)/); // no stray CR
+        expect(written).toContain('- Prices\r\n  <!--- @@inject: parts/prices.md --->\r\n  \r\n  ## Data\r\n');
     });
 });
 

@@ -10,6 +10,8 @@ This file had references to files that do not exist.
 
 Another unmatched directive:
 
+<!--- @@inject-end: we-forgot-this-one.md --->
+
 No file given
 
 <!--- @@inject: --->

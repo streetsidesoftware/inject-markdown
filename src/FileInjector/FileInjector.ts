@@ -22,6 +22,7 @@ import { dirToUrl, pathToUrl, relativePath, type RelURL } from '../util/url_help
 import { detectMarkdownStyle } from './detectStyle.js';
 import { type Directive, directiveRegExp, type DirectiveType, parseDirective } from './Directive.js';
 import { applyQuote, errorToComment, extractHeader, isHtmlNode, sanitizeImport, toCode, toRoot } from './Markdown.js';
+import { applyPatches, indentContinuationLines, lineIndent, type Patch, stringifyFragment } from './patchContent.js';
 import { rowsToTable } from './Table.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
@@ -59,6 +60,17 @@ export interface FileInjectorOptions {
     cwd?: PathLike | undefined;
     /** Only clean the file, do not inject */
     clean?: boolean;
+
+    /**
+     * Only rewrite the text spans covered by `@@inject` directives (start
+     * marker through end marker, inclusive); everything else in the file is
+     * left byte-for-byte identical to the source, instead of re-stringifying
+     * the whole document.
+     *
+     * The CLI defaults this to `true` (`--no-inject-only` to opt out); left
+     * unset here, this library defaults to `false`.
+     */
+    injectOnly?: boolean;
 
     /**
      * Only show errors.
@@ -182,6 +194,8 @@ async function processFileInjections(
     assert(isVFileEx(vFile));
     const file = vFile;
     const fileUrl = file.data.fileUrl;
+    const content = extractContent(file);
+    const lineEnding = detectLineEnding(content);
     setColor();
     const logger = options.logger;
     // console.log('File: %s\nOptions: %o', file.path, options);
@@ -205,8 +219,6 @@ async function processFileInjections(
 
     async function __processFile(): Promise<ProcessFileResult> {
         const fileValue = file.value;
-        const content = extractContent(file);
-        const lineEnding = detectLineEnding(content);
         const processFileResult: ProcessFileResult = {
             file,
             injectionsFound: false,
@@ -232,8 +244,15 @@ async function processFileInjections(
         }
         const hasErrors = result.messages.filter((m) => m.fatal).length > 0;
         const hasMessages = result.messages.filter((m) => !m.fatal).length > 0;
-        const resultAsString = extractContent(result);
-        const resultContent = fixContentLineEndings(resultAsString, lineEnding, hasEofNewLine(content));
+        const resultContent =
+            options.injectOnly && result.data.injectOnlyPatches
+                ? applyPatches(content, result.data.injectOnlyPatches)
+                : fixContentLineEndings(extractContent(result), lineEnding, hasEofNewLine(content));
+        if (options.injectOnly && result.data.injectOnlyPatches) {
+            // Ensure the bytes written match `resultContent` exactly, not the
+            // whole-document re-stringify that also ran (and is discarded here).
+            result.value = resultContent;
+        }
         const hasChanged = content !== resultContent;
         processFileResult.hasChanged = hasChanged;
         processFileResult.hasErrors = hasErrors;
@@ -279,7 +298,7 @@ async function processFileInjections(
         const outputOptions: StringifyOptions = { ...defaultOutputOptions };
         const result = await initParser(toInitOptions(file))
             .use(processHasInjections, outputOptions)
-            .use(processInjections)
+            .use(processInjections, outputOptions)
             .use(remarkStringify, outputOptions)
             .process(file);
         assert(isVFileEx(result));
@@ -296,73 +315,91 @@ async function processFileInjections(
         };
     }
 
-    function processInjections() {
+    function processInjections(outputOptions: StringifyOptions) {
         return async (root: Root, file: VFile): Promise<Root> => {
             assert(isVFileEx(file));
-            root = deleteInjectedContent(root, file);
-            if (options.clean) return root;
-            root = await injectFiles(root);
+            const endOffsets = options.injectOnly ? new Map<Html, number>() : undefined;
+            root = deleteInjectedContent(root, file, endOffsets);
+            if (options.clean) {
+                if (endOffsets) {
+                    file.data.injectOnlyPatches = [...endOffsets].map(([startNode, endOffset]) => ({
+                        start: startNode.position?.end.offset ?? endOffset,
+                        end: endOffset,
+                        text: '',
+                    }));
+                }
+                return root;
+            }
+            const ctx: InjectOnlyCtx | undefined = endOffsets
+                ? { outputOptions, endOffsets, lineEnding, patches: [] }
+                : undefined;
+            root = await injectFiles(root, ctx);
+            if (ctx) file.data.injectOnlyPatches = ctx.patches;
             return root;
         };
     }
 
-    async function injectFiles(root: Root): Promise<Root> {
+    async function injectFiles(root: Root, ctx: InjectOnlyCtx | undefined): Promise<Root> {
         const directiveNodes = collectInjectionNodesAndParse(root);
 
         for (const node of directiveNodes) {
             if (!isDirectiveNode(node) || !node.directive.file?.href) continue;
-            await injectFile(node);
+            await injectFile(node, ctx);
         }
 
         return root;
     }
 
-    async function injectFile(dn: DirectiveNode): Promise<void> {
+    async function injectFile(dn: DirectiveNode, ctx: InjectOnlyCtx | undefined): Promise<void> {
         switch (dn.directive.type) {
             case 'start':
-                return injectMarkdownFile(dn);
+                return injectMarkdownFile(dn, ctx);
             case 'code':
-                return injectCodeFile(dn);
+                return injectCodeFile(dn, ctx);
             case 'table':
-                return injectTableFile(dn);
+                return injectTableFile(dn, ctx);
         }
     }
 
-    async function injectMarkdownFile(dn: DirectiveNode): Promise<void> {
+    async function injectMarkdownFile(dn: DirectiveNode, ctx: InjectOnlyCtx | undefined): Promise<void> {
         const directive = dn.directive;
         if (!directive.file || directive.type !== 'start') return;
         const dFile = directive.file;
         const directiveFileUrl = dFile.toUrl(fileUrl);
         if (options.verbose) stderr.write(`\n  ${gray(dFile.href)}`);
         const root = await readAndParseMarkdownFile(directiveFileUrl);
-        return injectContent(dn, root);
+        return injectContent(dn, root, ctx);
     }
 
-    async function injectCodeFile(dn: DirectiveNode): Promise<void> {
+    async function injectCodeFile(dn: DirectiveNode, ctx: InjectOnlyCtx | undefined): Promise<void> {
         const directive = dn.directive;
         if (!directive.file || directive.type !== 'code') return;
         const dFile = directive.file;
         const directiveFileUrl = dFile.toUrl(fileUrl);
         if (options.verbose) stderr.write(`\n  ${gray(dFile.href)}`);
         const root = await readAndParseCodeFile(directiveFileUrl, dn);
-        return injectContent(dn, root);
+        return injectContent(dn, root, ctx);
     }
 
-    async function injectTableFile(dn: DirectiveNode): Promise<void> {
+    async function injectTableFile(dn: DirectiveNode, ctx: InjectOnlyCtx | undefined): Promise<void> {
         const directive = dn.directive;
         if (!directive.file || directive.type !== 'table') return;
         const dFile = directive.file;
         const directiveFileUrl = dFile.toUrl(fileUrl);
         if (options.verbose) stderr.write(`\n  ${gray(dFile.href)}`);
         const root = await readAndParseTableFile(directiveFileUrl, dn);
-        return injectContent(dn, root);
+        return injectContent(dn, root, ctx);
     }
 
-    async function injectContent(dn: DirectiveNode, content: ParseResult): Promise<void> {
+    async function injectContent(
+        dn: DirectiveNode,
+        parseResult: ParseResult,
+        ctx: InjectOnlyCtx | undefined,
+    ): Promise<void> {
         const directive = dn.directive;
         if (!directive.file) return;
-        const { info } = content;
-        const root = applyQuote(content.root, info.quote ?? false);
+        const { info } = parseResult;
+        const root = applyQuote(parseResult.root, info.quote ?? false);
         const href = normalizeHref(directive.file.href);
         const parent = dn.parent;
         const index = parent.children.indexOf(dn.node);
@@ -382,6 +419,23 @@ async function processFileInjections(
             type: 'html',
             value: `<!--- ${directiveEnd} ${href} --->`,
         };
+        if (ctx) {
+            const startOffset = dn.node.position?.start.offset;
+            const endOffset = ctx.endOffsets.get(dn.node) ?? dn.node.position?.end.offset;
+            if (startOffset !== undefined && endOffset !== undefined) {
+                const fragment = stringifyFragment([start, ...root.children, end], ctx.outputOptions, ctx.lineEnding);
+                // The directive may sit inside a list item or blockquote, whose
+                // continuation lines share a prefix (indentation, `> `, ...).
+                // That prefix falls inside the replaced span, so it has to be
+                // reconstructed on every line but the first.
+                const indent = lineIndent(content, startOffset);
+                ctx.patches.push({
+                    start: startOffset,
+                    end: endOffset,
+                    text: indentContinuationLines(fragment, indent),
+                });
+            }
+        }
         parent.children.splice(index, 1, start, ...root.children, end);
     }
 
@@ -465,9 +519,18 @@ async function processFileInjections(
     }
 }
 
-function deleteInjectedContent(root: Root, file: VFileEx): Root {
+function deleteInjectedContent(root: Root, file: VFileEx, endOffsets?: Map<Html, number>): Root {
     const directiveNodes = collectInjectionNodesAndParse(root);
     const pairs = findInjectionPairs(directiveNodes, file);
+
+    if (endOffsets) {
+        for (const pair of pairs) {
+            const endOffset = pair.end?.node.position?.end.offset;
+            if (pair.start && endOffset !== undefined) {
+                endOffsets.set(pair.start.node, endOffset);
+            }
+        }
+    }
 
     interface BaseNode {
         type: string;
@@ -529,6 +592,15 @@ interface DirectiveNodeBase {
 
 interface DirectiveNode extends DirectiveNodeBase {
     directive: Directive;
+}
+
+/** `--inject-only` mode: threaded through the inject calls to collect patches. */
+interface InjectOnlyCtx {
+    outputOptions: StringifyOptions;
+    /** original end-marker offset for each surviving start node, from a matched pair. */
+    endOffsets: Map<Html, number>;
+    lineEnding: string;
+    patches: Patch[];
 }
 
 const startTypes: Record<DirectiveType, boolean> = {

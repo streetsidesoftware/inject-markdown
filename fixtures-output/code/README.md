@@ -50,12 +50,12 @@ This is an example bit of markdown.
 
 ## Chapter 3: Directives
 
--   `@@inject: <markdown_file.md>[#heading]` and `@@inject-start:  <markdown_file.md>[#heading]` -- injects the contents of a markdown file.
-    -   `<markdown_file.md>` -- the file to import
-    -   `heading` -- optional heading to extract.
--   `@@inject: <non-markdown-file>[#lang]`, `@@inject-start:  <non-markdown-file>[#lang]`, and `@@inject-code: <file>[#lang]`
-    -   `<non-markdown-file>`, `<file>` -- the file to import
-    -   `lang` -- optional language to use for the code bock.
+- `@@inject: <markdown_file.md>[#heading]` and `@@inject-start:  <markdown_file.md>[#heading]` -- injects the contents of a markdown file.
+  - `<markdown_file.md>` -- the file to import
+  - `heading` -- optional heading to extract.
+- `@@inject: <non-markdown-file>[#lang]`, `@@inject-start:  <non-markdown-file>[#lang]`, and `@@inject-code: <file>[#lang]`
+  - `<non-markdown-file>`, `<file>` -- the file to import
+  - `lang` -- optional language to use for the code bock.
 
 <!--- @@inject-end: chapters.md#Chapter 3: Directives --->
 
@@ -78,3 +78,13 @@ async function version(): Promise<string> {
 ```
 
 <!--- @@inject-end: https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe/src/app.mts#L15-L19 --->
+
+## GitHub Footnote
+
+|        | version | Node | Support               | End-Of-Life |
+| :----- | :------ | :--- | :-------------------- | :---------- |
+| cspell | 6.x     | 14.x | In Active Development | TBD         |
+| cspell | 5.x     | 12.x | Paid support only[^1] | 2022-10-01  |
+| cspell | 4.x     | 10.x | Paid support only[^1] | 2022-05-01  |
+
+[^1]: [Support - Street Side Software](https://streetsidesoftware.com/support/#maintenance-agreements)

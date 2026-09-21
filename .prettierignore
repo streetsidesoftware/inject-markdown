@@ -14,3 +14,5 @@ cspell.json
 .release-please-manifest.json
 # Deliberately written in a non-default Markdown style to test style detection.
 /fixtures/style-preserve/README.md
+# Deliberately written in a non-default Markdown style to test --inject-only.
+/fixtures/inject-only/README.md
