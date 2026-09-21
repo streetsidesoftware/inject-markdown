@@ -349,6 +349,52 @@ exports[`FileInjector > processFile 'fixtures/quotes/README.md' {} 2`] = `
 ]
 `;
 
+exports[`FileInjector > processFile 'fixtures/style-preserve/README.md' {} 1`] = `
+[
+  [
+    "fixtures/style-preserve/README.md",
+    "# Style Preserve
+
+This document is written with a non-default Markdown style, to check
+that inject-markdown does not rewrite it when injecting content elsewhere
+in the file.
+
+* Item one
+* Item two
+
+Some *emphasis* and __strong__ text.
+
+~~~js
+const a = 1;
+~~~
+
+***
+
+<!--- @@inject: snippet.md --->
+
+Injected content.
+
+<!--- @@inject-end: snippet.md --->
+",
+    "utf8",
+  ],
+]
+`;
+
+exports[`FileInjector > processFile 'fixtures/style-preserve/README.md' {} 2`] = `
+[
+  {
+    "target": "stderr",
+    "text": "fixtures/style-preserve/README.md ...",
+  },
+  {
+    "target": "stderr",
+    "text": " done.
+",
+  },
+]
+`;
+
 exports[`FileInjector > processFile 'fixtures/tables/README.md' {} 1`] = `
 [
   [

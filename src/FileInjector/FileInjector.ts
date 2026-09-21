@@ -6,7 +6,7 @@ import type { Html, Parent, Root } from 'mdast';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
-import remarkStringify from 'remark-stringify';
+import remarkStringify, { type Options as StringifyOptions } from 'remark-stringify';
 import { unified } from 'unified';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
@@ -19,6 +19,7 @@ import { fileType } from '../util/fileType.mjs';
 import { type InjectInfo, parseHash } from '../util/hash.js';
 import { isDefined } from '../util/isDefined.js';
 import { dirToUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
+import { detectMarkdownStyle } from './detectStyle.js';
 import { type Directive, directiveRegExp, type DirectiveType, parseDirective } from './Directive.js';
 import { applyQuote, errorToComment, extractHeader, isHtmlNode, sanitizeImport, toCode, toRoot } from './Markdown.js';
 import { rowsToTable } from './Table.js';
@@ -32,7 +33,11 @@ const directiveStartCode = directivePrefix + '-code:';
 const directiveStartTable = directivePrefix + '-table:';
 const directiveEnd = directivePrefix + '-end:';
 
-const outputOptions = {
+/**
+ * Fallback formatting style, used for any construct that isn't present
+ * (and therefore isn't detected) in the file being processed.
+ */
+const defaultOutputOptions: StringifyOptions = {
     bullet: '-',
     emphasis: '_',
     fence: '`',
@@ -40,7 +45,7 @@ const outputOptions = {
     incrementListMarker: false,
     rule: '-',
     strong: '*',
-} as const;
+};
 
 export interface Logger {
     log: typeof console.log;
@@ -272,8 +277,13 @@ async function processFileInjections(
             file.data.hasInjections = false;
             return file;
         }
+        // Mutated in-place by `processHasInjections`, below, once it has seen
+        // the file's pristine (pre-injection) tree. `remarkStringify` reads
+        // this same object when it eventually compiles, at the end of the
+        // pipeline, so mutating it after `.use()` still takes effect.
+        const outputOptions: StringifyOptions = { ...defaultOutputOptions };
         const result = await initParser(toInitOptions(file))
-            .use(processHasInjections)
+            .use(processHasInjections, outputOptions)
             .use(processInjections)
             .use(remarkStringify, outputOptions)
             .process(file);
@@ -281,11 +291,12 @@ async function processFileInjections(
         return result;
     }
 
-    function processHasInjections() {
+    function processHasInjections(outputOptions: StringifyOptions) {
         return (root: Root, file: VFile): Root => {
             assert(isVFileEx(file));
             const nodes = collectInjectionNodes(root);
             file.data.hasInjections = nodes.length > 0;
+            Object.assign(outputOptions, detectMarkdownStyle(root, extractContent(file)));
             return root;
         };
     }
