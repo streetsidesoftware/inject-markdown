@@ -770,14 +770,23 @@ function refersToTheSameFile(a: RelURL | URL | undefined, b: RelURL | URL | unde
     return a === b || (a && !b) || a?.pathname === b?.pathname;
 }
 
-/** Real (symlink-resolved) paths of the injection root and any `allowOutsideRoot` directories. */
+/**
+ * Real (symlink-resolved) paths of the injection root and any `allowOutsideRoot` directories.
+ * An unresolvable `allowOutsideRoot` entry (e.g. a typo'd path) is dropped rather than failing
+ * the whole set — it couldn't have matched a directive's resolved target anyway, and letting it
+ * reject here would otherwise turn every read in the file into a misleading "Failed to read" for
+ * files that are actually inside the (still-valid) injection root.
+ */
 async function resolveInjectionRoots(
     fs: FileSystemAdapter,
     cwd: URL,
     allowOutsideRoot: string[] | undefined,
 ): Promise<string[]> {
-    const dirs = [cwd, ...(allowOutsideRoot ?? []).map((dir) => dirToUrl(dir))];
-    return Promise.all(dirs.map((dir) => fs.realpath(dir)));
+    const root = await fs.realpath(cwd);
+    const extras = await Promise.all(
+        (allowOutsideRoot ?? []).map((dir) => fs.realpath(dirToUrl(dir)).catch(() => undefined)),
+    );
+    return [root, ...extras.filter(isDefined)];
 }
 
 function isWithinRoot(root: string, target: string): boolean {

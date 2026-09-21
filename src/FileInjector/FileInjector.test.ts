@@ -246,6 +246,18 @@ describe('injection root boundary', () => {
         expect(r.hasErrors).toBe(false);
         expect(r.file.value).toContain('TOP SECRET');
     });
+
+    test('an unresolvable allowOutsideRoot entry is dropped, not fatal to in-root reads', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, {
+            cwd: boundaryRoot,
+            silent: true,
+            allowOutsideRoot: [path.join(__root__, 'fixtures/injection-root-boundary/does-not-exist')],
+        });
+        const r = await fi.processFile('local.md');
+        expect(r.hasErrors).toBe(false);
+        expect(r.file.value).toContain('Inside content.');
+    });
 });
 
 function normalizeWriteFileCalls(
