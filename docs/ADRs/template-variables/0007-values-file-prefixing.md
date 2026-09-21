@@ -1,0 +1,34 @@
+# ADR-0007: `values-file=` multi-file imports and prefixing
+
+**Status:** Proposed
+**Date:** 2026-09-21
+**Deciders:** Jason Dent
+
+## Context
+
+[ADR-0002](0002-directive-value-sources.md) originally scoped `values-file=` to a single path. In practice, a directive commonly wants values from more than one file at once — e.g. `version` from `package.json` plus a separately-generated `build-info.json` — and combining them into one flat namespace risks silent collisions if two files happen to share a key name (`name`, `version`, ...). We need a syntax for listing multiple files in one `values-file=`, a way to keep their keys apart by default, and an explicit way to opt out of that separation when a directive only ever uses one file and wants its keys addressable without a prefix.
+
+## Decision
+
+1. **Syntax:** `values-file=[prefix:]path[,[prefix:]path...]` — the same comma-separated-list, optional-`prefix:`-per-entry grammar as [ADR-0002](0002-directive-value-sources.md)'s `values=` option. Whole-entry quoting is available for a path containing a literal comma or colon (e.g. a Windows drive letter), mirroring `columns`'s whole-value quoting ([table-improvements ADR-0001](../table-improvements/0001-table-option-encoding-conventions.md) point 3).
+2. **Default: auto-derived prefix.** An entry with no colon (`values-file=package.json`) is namespaced under a prefix auto-derived from its own basename with the extension stripped — `package.json` → `package`, `../shared/build-info.json` → `build-info`. `{@ package.version @}` then looks up `version` inside `package.json`.
+3. **Explicit prefix.** `prefix:path` (e.g. `values-file=pkg:package.json`) sets the prefix directly, overriding what would have been auto-derived.
+4. **Root merge (opt-out).** `:path` — an empty prefix before the colon — merges that file's top-level keys directly into the root namespace instead of under any prefix. This is how a directive using only one values file gets bare names (`{@ version @}` instead of `{@ values.version @}`).
+5. **Invalid auto-derived prefix is a directive error.** If a basename (with extension stripped) isn't a valid placeholder-name segment ([ADR-0001](0001-placeholder-syntax.md): `[A-Za-z0-9_-]+`) — e.g. `build info.json` (space) or `v1.2.json` (an extra dot, ambiguous with the dotted-path separator) — the directive fails with an error asking for an explicit prefix or `:path`, rather than silently sanitizing the name into something the author didn't write.
+6. **Collision: last-listed wins.** If two entries resolve to the same prefix, or two root-merged (`:path`) entries define the same top-level key, the later entry in the list overrides the earlier one. This matches ordinary config-layering conventions (e.g. `docker compose -f a.yml -f b.yml`, repeated `-e KEY=1 -e KEY=2` flags) where a later entry is understood to patch over an earlier one — a different axis from the table feature's "first match wins" ([table-improvements ADR-0001](../table-improvements/0001-table-option-encoding-conventions.md) point 7), which resolves *ambiguous matches within one file's data*, not an author-ordered list of override sources.
+7. **Applies identically to CLI `--values-file`.** [ADR-0003](0003-cli-and-env-value-sources.md) is revised: `--values-file` is repeatable, each occurrence taking the same `[prefix:]path` grammar (`--values-file package.json --values-file :shared.json`), for the same reasons as the directive-level option.
+
+## Options Considered
+
+- **Auto-prefix as an opt-in (`:path` triggers auto-derivation, bare `path` stays flat-merged)** — the initial design here, reversed after discussion: it makes the *unsafe* default (flat merge, silent collisions once a second file is added later) the path of least resistance. Flipping the default so every file is namespaced unless explicitly opted out (`:path`) means adding a second `values-file` entry can never silently shadow the first file's keys.
+- **Sanitizing invalid basenames automatically** (e.g. replacing spaces/extra dots) instead of erroring — rejected: an implicit, reverse-engineered prefix is harder to predict from the directive text than a clear error; consistent with this feature's fail-fast posture for other bad references.
+- **Keyword marker (`auto:path`) for auto-derivation** instead of bare `path` — rejected: reserves `auto` as a prefix name no real values file could ever intentionally use, where the "no colon at all" form needs no new keyword and pairs naturally with `:path`'s "empty prefix" form for the opposite case.
+- **First-listed wins on collision** (matching the table feature's convention) — rejected in favor of last-wins: an author-ordered list of value sources reads more naturally as later entries layering on top of earlier ones, the same intuition behind precedence in [ADR-0004](0004-value-source-precedence.md) (more specific/local source overrides) and how most CLIs treat repeated flags for the same key.
+
+## Consequences
+
+- The feature request's own motivating example (`npm install myPackage@{@ version @}` from a single values file) now needs `values-file=:values.json` (root merge) or an inline `values=version:1.2.3` to produce a bare `{@ version @}` — a bare `values-file=values.json` instead produces `{@ values.version @}`. README/feature docs need to show both forms so this isn't a surprise.
+- Basename derivation strips only the final extension, consistent with how `fileExtension` already computes extensions in [Directive.ts](../../../src/FileInjector/Directive.ts).
+- [ADR-0003](0003-cli-and-env-value-sources.md)'s `--values-file` decision point 2 is revised from a single path to repeatable-with-prefix; its Options Considered gains a note that the singular form was superseded here.
+- Repeated `--value name=val` CLI flags for the same `name` follow the same last-wins rule, for consistency with this ADR's collision policy — the later flag on the command line overrides the earlier one.
+- New glossary terms: **Values-file prefix**, **Auto-derived prefix**, **Root merge (`:path`)**.
