@@ -51,7 +51,7 @@ The directory (default: `cwd`) that every local (`file:`) `@@inject`-family dire
 A repeatable CLI option (and matching `FileInjectorOptions.allowOutsideRoot`) naming specific extra directories a directive may resolve into, on top of the injection root. See [ADR-0002](ADRs/file-access-security/0002-injection-root-escape-hatch.md).
 
 **Placeholder**
-A `{@ name @}` marker inside injected content, replaced with a value resolved against sources the *directive* (not the injected file) supplies. Whitespace inside the delimiters is optional and trimmed; a leading backslash (`\{@ ... @}`) escapes it to literal text. Not a full template engine — no conditionals or loops. See [ADR-0001](ADRs/template-variables/0001-placeholder-syntax.md).
+A `{@ name @}` marker inside injected content, replaced with a value resolved against sources the _directive_ (not the injected file) supplies. Whitespace inside the delimiters is optional and trimmed; a leading backslash (`\{@ ... @}`) escapes it to literal text. Not a full template engine — no conditionals or loops. See [ADR-0001](ADRs/template-variables/0001-placeholder-syntax.md).
 
 **Placeholder name**
 The dotted path inside a placeholder (e.g. `package.version`), each segment `[A-Za-z0-9_-]+`. A dotted name traverses into nested objects from a JSON value source. See [ADR-0001](ADRs/template-variables/0001-placeholder-syntax.md).
@@ -78,7 +78,7 @@ A repeatable CLI option naming environment variable names a directive may refere
 A reserved placeholder-name prefix (`{@ env.VERSION @}`) resolving to `process.env.VERSION` when allow-listed via `--allow-env`; always reserved, even if another value source defines a top-level `env` key. See [ADR-0003](ADRs/template-variables/0003-cli-and-env-value-sources.md).
 
 **Value source precedence**
-The fixed lookup order for resolving a placeholder name when more than one source *type* defines it: directive `values=` > directive `values-file=` > CLI `--value` > CLI `--values-file` > environment (`env.` namespace only). The first source defining a name wins; sources are not deep-merged. Distinct from the last-wins rule for collisions *within* one `values-file=`/`--values-file` list — see [Values-file prefix](#values-file-prefix). See [ADR-0004](ADRs/template-variables/0004-value-source-precedence.md).
+The fixed lookup order for resolving a placeholder name when more than one source _type_ defines it: directive `values=` > directive `values-file=` > CLI `--value` > CLI `--values-file` > environment (`env.` namespace only). The first source defining a name wins; sources are not deep-merged. Distinct from the last-wins rule for collisions _within_ one `values-file=`/`--values-file` list — see [Values-file prefix](#values-file-prefix). See [ADR-0004](ADRs/template-variables/0004-value-source-precedence.md).
 
 **Unresolved placeholder**
 A placeholder whose name no value source defines, or that resolves to a non-scalar (object/array) value. Left untouched in the output with one warning per unique name per directive by default; becomes a directive error under `--strict-vars`. See [ADR-0005](ADRs/template-variables/0005-unresolved-placeholders-and-strict-mode.md).

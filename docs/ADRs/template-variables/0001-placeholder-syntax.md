@@ -19,7 +19,7 @@ Before deciding where values come from (subsequent ADRs), we need the placeholde
 
 ## Options Considered
 
-- **Reusing the existing `#`-hash option character set (`&`, `=`) for placeholders** — rejected: hash options ([hash.ts](../../../src/util/hash.ts)) configure the directive itself, while placeholders live in the injected *content*, a different surface entirely; reusing that syntax there would collide with legitimate content and blur the two concepts.
+- **Reusing the existing `#`-hash option character set (`&`, `=`) for placeholders** — rejected: hash options ([hash.ts](../../../src/util/hash.ts)) configure the directive itself, while placeholders live in the injected _content_, a different surface entirely; reusing that syntax there would collide with legitimate content and blur the two concepts.
 - **Requiring exact single-space spacing (`{@ name @}`)** — rejected in favor of trimmed/optional whitespace: hand-authored Markdown varies, and trimming keeps the mental model consistent with how `parseHashString` already trims option values.
 - **No escape mechanism** — rejected: this repo's own docs (README, ADRs, this file) need to show the `{@ ... @}` syntax verbatim without it being interpreted as a live placeholder.
 
