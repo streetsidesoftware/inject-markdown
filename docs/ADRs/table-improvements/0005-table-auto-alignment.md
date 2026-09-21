@@ -10,13 +10,13 @@ Beyond the explicit alignment markers in `columns` ([ADR-0003](0003-table-column
 
 ## Decision
 
-**Scope of detection:** a column's *data rows* (within the active row window, [ADR-0004](0004-table-row-window-options.md); never the header text) are inspected, ignoring empty cells.
+**Scope of detection:** a column's _data rows_ (within the active row window, [ADR-0004](0004-table-row-window-options.md); never the header text) are inspected, ignoring empty cells.
 
 **Pattern matched as "numeric/currency":**
 
 - Optional leading `+`/`-` sign.
 - Optional currency symbol from a fixed set as a prefix: `$`, `€`, `£`, `¥`.
-- Digits with a thousands/decimal separator, tolerant of both conventions so the same detector works for `1,234.56` and `1.234,56` — a value is accepted if it parses cleanly under *either* interpretation.
+- Digits with a thousands/decimal separator, tolerant of both conventions so the same detector works for `1,234.56` and `1.234,56` — a value is accepted if it parses cleanly under _either_ interpretation.
 - Optional trailing `%`.
 - No ISO currency codes (`USD 5`), no other symbols (₹, ₩, etc.) — fixed set only, matching [ADR-0001](0001-table-option-encoding-conventions.md)'s general v1 bias toward a small, explicit ruleset over broad locale coverage.
 

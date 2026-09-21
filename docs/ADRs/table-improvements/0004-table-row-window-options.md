@@ -6,7 +6,7 @@
 
 ## Context
 
-Large CSV/TSV sources need a way to inject a bounded slice of rows — both to keep generated Markdown readable and to cap accidental injection of huge files. Table injection already supports `#L1-L10` (`lines`, parsed in [hash.ts](../../../src/util/hash.ts) and applied via `extractLines` in [FileInjector.ts](../../../src/FileInjector/FileInjector.ts)), which slices *raw source lines* before parsing. The new options need clear semantics of their own and a clear relationship to `lines`.
+Large CSV/TSV sources need a way to inject a bounded slice of rows — both to keep generated Markdown readable and to cap accidental injection of huge files. Table injection already supports `#L1-L10` (`lines`, parsed in [hash.ts](../../../src/util/hash.ts) and applied via `extractLines` in [FileInjector.ts](../../../src/FileInjector/FileInjector.ts)), which slices _raw source lines_ before parsing. The new options need clear semantics of their own and a clear relationship to `lines`.
 
 ## Decision
 
@@ -37,7 +37,7 @@ This mirrors how an empty/short CSV already produces a header-only or empty tabl
 - **Row numbers counted from the raw file (including header rows)** — rejected: would force every `start-row` to account for `header-rows`, which is error-prone whenever `header-rows` changes; counting from the first data row is more stable and matches the spec's own wording ("starting row after the header rows").
 - **Mutually exclusive with `lines`** — rejected: `lines` operates on raw text (useful e.g. to skip a leading comment block a delimited parser can't handle), while the row-window options operate on parsed data rows; forcing a choice between them would remove legitimate combined use (e.g. `lines` to cut a preamble, then `start-row`/`num-rows` to page through the remaining data).
 - **New options replace `lines` for tables** — rejected for the same reason; `lines` still has a distinct job.
-- **Error on out-of-range window** — rejected in favor of empty-table-body, consistent with [ADR-0001](0001-table-option-encoding-conventions.md)'s general preference to fail loudly on *directive* mistakes (bad column refs) but not on data-dependent conditions (a source file that's shorter than expected isn't necessarily a directive bug — e.g. a growing/shrinking log-derived CSV).
+- **Error on out-of-range window** — rejected in favor of empty-table-body, consistent with [ADR-0001](0001-table-option-encoding-conventions.md)'s general preference to fail loudly on _directive_ mistakes (bad column refs) but not on data-dependent conditions (a source file that's shorter than expected isn't necessarily a directive bug — e.g. a growing/shrinking log-derived CSV).
 - **Literal formula as originally spec'd** (`max-row = min(start-row + num-rows, end-row)`, i.e. last row = `start-row + num-rows` with no `-1`) — rejected: would make `num-rows`'s default of 10,000 yield 10,001 rows starting from row 1, an off-by-one that doesn't match "num-rows" reading as a count.
 
 ## Consequences

@@ -29,8 +29,8 @@ This directory records architecturally significant decisions for `inject-markdow
 
 ## Groups
 
-| Group | Description |
-| --- | --- |
+| Group                                      | Description                                                                             |
+| ------------------------------------------ | --------------------------------------------------------------------------------------- |
 | [table-improvements/](table-improvements/) | `header-rows`, `columns`, row windowing, and auto-alignment options for table injection |
 
 ## Index (ungrouped ADRs)
