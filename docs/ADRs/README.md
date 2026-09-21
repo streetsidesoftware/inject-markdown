@@ -29,12 +29,13 @@ This directory records architecturally significant decisions for `inject-markdow
 
 ## Groups
 
-| Group                                      | Description                                                                             |
-| ------------------------------------------ | --------------------------------------------------------------------------------------- |
-| [table-improvements/](table-improvements/) | `header-rows`, `columns`, row windowing, and auto-alignment options for table injection |
+| Group                                          | Description                                                                             |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [table-improvements/](table-improvements/)     | `header-rows`, `columns`, row windowing, and auto-alignment options for table injection |
+| [file-access-security/](file-access-security/) | Boundary restricting which local files an `@@inject` directive may read                 |
 
 ## Index (ungrouped ADRs)
 
-_None yet — all current ADRs belong to the `table-improvements` group above._
+_None yet — all current ADRs belong to a group above._
 
 See also: [glossary.md](../glossary.md).
