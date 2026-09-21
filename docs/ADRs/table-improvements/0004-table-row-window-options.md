@@ -6,7 +6,7 @@
 
 ## Context
 
-Large CSV/TSV sources need a way to inject a bounded slice of rows — both to keep generated Markdown readable and to cap accidental injection of huge files. Table injection already supports `#L1-L10` (`lines`, parsed in [hash.ts](../../src/util/hash.ts) and applied via `extractLines` in [FileInjector.ts](../../src/FileInjector/FileInjector.ts)), which slices *raw source lines* before parsing. The new options need clear semantics of their own and a clear relationship to `lines`.
+Large CSV/TSV sources need a way to inject a bounded slice of rows — both to keep generated Markdown readable and to cap accidental injection of huge files. Table injection already supports `#L1-L10` (`lines`, parsed in [hash.ts](../../../src/util/hash.ts) and applied via `extractLines` in [FileInjector.ts](../../../src/FileInjector/FileInjector.ts)), which slices *raw source lines* before parsing. The new options need clear semantics of their own and a clear relationship to `lines`.
 
 ## Decision
 
@@ -42,5 +42,5 @@ This mirrors how an empty/short CSV already produces a header-only or empty tabl
 
 ## Consequences
 
-- `readAndParseTableFile` in [FileInjector.ts](../../src/FileInjector/FileInjector.ts) needs a second slicing step operating on parsed rows (post `rowsToTable`'s row split, pre-render), in addition to the existing raw-line `extractLines` step.
+- `readAndParseTableFile` in [FileInjector.ts](../../../src/FileInjector/FileInjector.ts) needs a second slicing step operating on parsed rows (post `rowsToTable`'s row split, pre-render), in addition to the existing raw-line `extractLines` step.
 - A silent empty-table-body result for an out-of-range window means a typo in `start-row` (e.g. `start-row=100` on a 20-row file) won't surface as an error — only as an unexpectedly empty table in the rendered Markdown. Worth a callout in user docs; can be revisited if this proves to hide real mistakes in practice.

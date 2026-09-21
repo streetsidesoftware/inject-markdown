@@ -6,7 +6,7 @@
 
 ## Context
 
-`rowsToTable` ([Table.ts](../../src/FileInjector/Table.ts)) currently always treats the first parsed row as the header. We need a `header-rows` option so authors can declare zero header rows (columns addressed only by number) or more than one (e.g. a two-row header where row 1 is a group label and row 2 is the sub-column name).
+`rowsToTable` ([Table.ts](../../../src/FileInjector/Table.ts)) currently always treats the first parsed row as the header. We need a `header-rows` option so authors can declare zero header rows (columns addressed only by number) or more than one (e.g. a two-row header where row 1 is a group label and row 2 is the sub-column name).
 
 See [ADR-0001](0001-table-option-encoding-conventions.md) for the shared bare-flag and error-handling conventions this option follows.
 

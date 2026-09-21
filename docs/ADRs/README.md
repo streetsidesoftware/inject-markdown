@@ -5,6 +5,7 @@ This directory records architecturally significant decisions for `inject-markdow
 ## Convention
 
 - Files are named `NNNN-short-title.md`, numbered sequentially (`0001`, `0002`, ...).
+- **Grouping:** when several ADRs decide facets of one feature/initiative (e.g. a batch of related options shipped together), put them in a subfolder named after the initiative (kebab-case, e.g. `table-improvements/`) with its own `README.md` index and its own `0001`-based numbering — this keeps a single feature's decisions together and stops the flat top-level list from growing noisy as unrelated ADRs accumulate over time. An ADR that doesn't belong to any such group stays flat directly in this directory, numbered in the top-level sequence.
 - An ADR is immutable once its status moves to `Accepted`. If a decision changes later, write a new ADR that supersedes it (update the old ADR's `Status` to `Superseded by ADR-NNNN` and link both ways) rather than editing the original's Decision section.
 - While a decision is still being worked out (as in an interview-driven design session), an ADR may carry `Status: Proposed` and be revised in place — treat it as settled once the related feature ships and flip it to `Accepted`.
 
@@ -26,14 +27,14 @@ This directory records architecturally significant decisions for `inject-markdow
 ## Consequences
 ```
 
-## Index
+## Groups
 
-| ADR | Title | Status |
-| --- | --- | --- |
-| [0001](0001-table-option-encoding-conventions.md) | Table option encoding conventions | Proposed |
-| [0002](0002-table-header-rows-option.md) | `header-rows` option | Proposed |
-| [0003](0003-table-columns-option.md) | `columns` option | Proposed |
-| [0004](0004-table-row-window-options.md) | Row window options (`start-row`, `end-row`, `num-rows`) | Proposed |
-| [0005](0005-table-auto-alignment.md) | Auto-alignment by content type | Proposed |
+| Group | Description |
+| --- | --- |
+| [table-improvements/](table-improvements/) | `header-rows`, `columns`, row windowing, and auto-alignment options for table injection |
+
+## Index (ungrouped ADRs)
+
+_None yet — all current ADRs belong to the `table-improvements` group above._
 
 See also: [glossary.md](../glossary.md).

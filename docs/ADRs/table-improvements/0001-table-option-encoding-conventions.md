@@ -6,9 +6,9 @@
 
 ## Context
 
-Table injection (`@@inject`/`@@inject-start`/`@@inject-table` against a `.csv`/`.tsv` source, see [Directive.ts](../../src/FileInjector/Directive.ts) and [FileInjector.ts](../../src/FileInjector/FileInjector.ts)) currently supports no table-shaping options: `rowsToTable` ([Table.ts](../../src/FileInjector/Table.ts)) always treats the first row as the header and emits every column, unaligned.
+Table injection (`@@inject`/`@@inject-start`/`@@inject-table` against a `.csv`/`.tsv` source, see [Directive.ts](../../../src/FileInjector/Directive.ts) and [FileInjector.ts](../../../src/FileInjector/FileInjector.ts)) currently supports no table-shaping options: `rowsToTable` ([Table.ts](../../../src/FileInjector/Table.ts)) always treats the first row as the header and emits every column, unaligned.
 
-We're adding four new options — `header-rows`, `columns`, `num-rows`, `start-row`, `end-row` — plus automatic alignment by content type. All existing directive options (`heading=`, `lang=`, `code`, `quote`, `L1-L10`) live in the `#`-fragment of the file reference and are parsed by `parseHashString` ([hash.ts](../../src/util/hash.ts)) via `URLSearchParams`. Before designing each option individually, we need shared conventions so the five new options (and any future ones) read consistently.
+We're adding four new options — `header-rows`, `columns`, `num-rows`, `start-row`, `end-row` — plus automatic alignment by content type. All existing directive options (`heading=`, `lang=`, `code`, `quote`, `L1-L10`) live in the `#`-fragment of the file reference and are parsed by `parseHashString` ([hash.ts](../../../src/util/hash.ts)) via `URLSearchParams`. Before designing each option individually, we need shared conventions so the five new options (and any future ones) read consistently.
 
 Cross-cutting questions decided here: value syntax for lists, whether options support a bare/flag form, indexing base, and error-handling posture for bad references.
 
