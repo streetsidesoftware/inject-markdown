@@ -43,3 +43,9 @@ A display-only casing transform (`none`/`title`/`upper`/`lower`) applied to rend
 
 **`column-names`**
 A comma-separated list, positional against the output column order, that overrides individual header labels verbatim (bypassing `header-format`). An empty entry keeps that column's existing header; it never affects column selection or `columns` name matching. See [ADR-0007](ADRs/table-improvements/0007-table-column-names.md).
+
+**Injection root**
+The directory (default: `cwd`) that every local (`file:`) `@@inject`-family directive's resolved, realpath'd target must stay inside; a reference resolving outside it is a fatal error. Applies only to local file reads, not remote `http(s)` fetches. See [ADR-0001](ADRs/file-access-security/0001-injection-root-boundary.md).
+
+**`--allow-outside-root`**
+A repeatable CLI option (and matching `FileInjectorOptions.allowOutsideRoot`) naming specific extra directories a directive may resolve into, on top of the injection root. See [ADR-0002](ADRs/file-access-security/0002-injection-root-escape-hatch.md).
