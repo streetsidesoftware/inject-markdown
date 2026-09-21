@@ -69,13 +69,21 @@ export function detectMarkdownStyle(root: Root, content: string): Options {
     return options;
 }
 
-function firstNonSpace(content: string, offset: number): string | undefined {
+/**
+ * Exported only so it can be unit tested directly: in practice,
+ * `mdast-util-from-markdown` always sets a node's `position.start.offset`
+ * on the marker itself, never on preceding indentation, so this
+ * whitespace-skipping is defensive and not known to be exercised through
+ * `detectMarkdownStyle`'s normal, parser-driven code path.
+ */
+export function firstNonSpace(content: string, offset: number): string | undefined {
     let i = offset;
     while (i < content.length && (content[i] === ' ' || content[i] === '\t')) ++i;
     return content[i];
 }
 
-function orderedMarkerAt(content: string, offset: number): string | undefined {
+/** See {@link firstNonSpace}. */
+export function orderedMarkerAt(content: string, offset: number): string | undefined {
     let i = offset;
     while (i < content.length && (content[i] === ' ' || content[i] === '\t')) ++i;
     while (i < content.length && /[0-9]/.test(content[i])) ++i;

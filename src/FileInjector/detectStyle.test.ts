@@ -3,7 +3,7 @@ import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import { describe, expect, test } from 'vitest';
 
-import { detectMarkdownStyle } from './detectStyle.js';
+import { detectMarkdownStyle, firstNonSpace, orderedMarkerAt } from './detectStyle.js';
 
 function parse(content: string) {
     return unified().use(remarkParse).use(remarkGfm).parse(content);
@@ -71,5 +71,28 @@ text
 * four
 `;
         expect(detectMarkdownStyle(parse(content), content).bullet).toBe('-');
+    });
+});
+
+// `mdast-util-from-markdown` never hands `detectMarkdownStyle` an offset that
+// sits before leading indentation (see the two helpers' doc comments), so
+// these edge cases are tested directly against synthetic offsets instead.
+describe('firstNonSpace', () => {
+    test('skips spaces and tabs to find the marker', () => {
+        expect(firstNonSpace(' \t- item', 0)).toBe('-');
+    });
+
+    test('returns the character at offset when there is no leading whitespace', () => {
+        expect(firstNonSpace('- item', 0)).toBe('-');
+    });
+});
+
+describe('orderedMarkerAt', () => {
+    test('skips spaces and tabs, then digits, to find the delimiter', () => {
+        expect(orderedMarkerAt(' \t12. item', 0)).toBe('.');
+    });
+
+    test('returns the delimiter when there is no leading whitespace', () => {
+        expect(orderedMarkerAt('1) item', 0)).toBe(')');
     });
 });
