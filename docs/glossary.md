@@ -60,7 +60,7 @@ The dotted path inside a placeholder (e.g. `package.version`), each segment `[A-
 A directive hash option supplying inline placeholder values as comma-separated `name:value` pairs (`values=name:val,name2:val2`), with whole-value quoting for literal commas/colons. Highest-precedence value source for its directive. See [ADR-0002](ADRs/template-variables/0002-directive-value-sources.md).
 
 **`values-file=` option**
-A directive hash option naming a JSON file of placeholder values, resolved relative to the containing document and subject to the injection-root boundary like any directive file reference. See [ADR-0002](ADRs/template-variables/0002-directive-value-sources.md).
+A directive hash option naming one or more JSON files of placeholder values (`values-file=[prefix:]path[,...]`), each resolved relative to the containing document and subject to the injection-root boundary like any directive file reference. See [ADR-0002](ADRs/template-variables/0002-directive-value-sources.md), [ADR-0007](ADRs/template-variables/0007-values-file-prefixing.md).
 
 **`vars` flag**
 A bare directive hash flag (`#vars`) that opts a directive into placeholder scanning against CLI/environment value sources alone, when it defines no `values=`/`values-file=` of its own. See [ADR-0002](ADRs/template-variables/0002-directive-value-sources.md).
@@ -69,7 +69,7 @@ A bare directive hash flag (`#vars`) that opts a directive into placeholder scan
 A repeatable CLI option (`--value name=val`) setting a run-wide placeholder value, available to any directive that opts into scanning. See [ADR-0003](ADRs/template-variables/0003-cli-and-env-value-sources.md).
 
 **`--values-file`**
-A CLI option naming a JSON file of run-wide placeholder values, resolved relative to `--cwd`. See [ADR-0003](ADRs/template-variables/0003-cli-and-env-value-sources.md).
+A repeatable CLI option naming a JSON file of run-wide placeholder values, resolved relative to `--cwd`; each occurrence takes the same `[prefix:]path` grammar as the directive-level `values-file=` option. See [ADR-0003](ADRs/template-variables/0003-cli-and-env-value-sources.md), [ADR-0007](ADRs/template-variables/0007-values-file-prefixing.md).
 
 **`--allow-env`**
 A repeatable CLI option naming environment variable names a directive may reference via the `env.` placeholder namespace, mirroring `--allow-outside-root`'s allowlist pattern. See [ADR-0003](ADRs/template-variables/0003-cli-and-env-value-sources.md).
@@ -78,10 +78,19 @@ A repeatable CLI option naming environment variable names a directive may refere
 A reserved placeholder-name prefix (`{@ env.VERSION @}`) resolving to `process.env.VERSION` when allow-listed via `--allow-env`; always reserved, even if another value source defines a top-level `env` key. See [ADR-0003](ADRs/template-variables/0003-cli-and-env-value-sources.md).
 
 **Value source precedence**
-The fixed lookup order for resolving a placeholder name when more than one source defines it: directive `values=` > directive `values-file=` > CLI `--value` > CLI `--values-file` > environment (`env.` namespace only). The first source defining a name wins; sources are not deep-merged. See [ADR-0004](ADRs/template-variables/0004-value-source-precedence.md).
+The fixed lookup order for resolving a placeholder name when more than one source *type* defines it: directive `values=` > directive `values-file=` > CLI `--value` > CLI `--values-file` > environment (`env.` namespace only). The first source defining a name wins; sources are not deep-merged. Distinct from the last-wins rule for collisions *within* one `values-file=`/`--values-file` list — see [Values-file prefix](#values-file-prefix). See [ADR-0004](ADRs/template-variables/0004-value-source-precedence.md).
 
 **Unresolved placeholder**
 A placeholder whose name no value source defines, or that resolves to a non-scalar (object/array) value. Left untouched in the output with one warning per unique name per directive by default; becomes a directive error under `--strict-vars`. See [ADR-0005](ADRs/template-variables/0005-unresolved-placeholders-and-strict-mode.md).
 
 **`--strict-vars`**
 A CLI flag making an unresolved placeholder a directive error (via `file.error()`, respecting `--stop-on-errors`/`--write-on-error`) instead of the default warn-and-leave-untouched behavior. See [ADR-0005](ADRs/template-variables/0005-unresolved-placeholders-and-strict-mode.md).
+
+**Values-file prefix**
+The namespace a `values-file=`/`--values-file` entry's keys are placed under, addressed via a dotted [placeholder name](#placeholder-name) (e.g. `{@ package.version @}`). Auto-derived from the file's basename by default, settable explicitly (`prefix:path`), or opted out of via [root merge](#root-merge-path) (`:path`). See [ADR-0007](ADRs/template-variables/0007-values-file-prefixing.md).
+
+**Auto-derived prefix**
+The default values-file prefix, computed by stripping the extension from a `values-file=`/`--values-file` entry's basename (`package.json` → `package`). A directive error if the result isn't a valid placeholder-name segment (`[A-Za-z0-9_-]+`) — no automatic sanitizing. See [ADR-0007](ADRs/template-variables/0007-values-file-prefixing.md).
+
+**Root merge (`:path`)**
+A `values-file=`/`--values-file` entry written with an empty prefix (a leading colon, no name before it), merging that file's top-level keys directly into the root namespace instead of under an auto-derived or explicit prefix — the opt-out for a directive that wants bare placeholder names from a single file. See [ADR-0007](ADRs/template-variables/0007-values-file-prefixing.md).
