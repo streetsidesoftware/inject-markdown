@@ -1,5 +1,15 @@
 # How to use Injections
 
+## Injection Root
+
+A local (`file:`) directive reference must resolve inside the **injection root** — the directory set by `--cwd` (default: the current directory). A reference that resolves outside it, including via a symlink, is a read error; this protects against a directive in a processed Markdown file disclosing files outside the intended project tree (e.g. `.env`, SSH keys) into generated output. Remote (`http(s)`) references are unaffected.
+
+For a legitimate reference outside the injection root — e.g. a monorepo doc at `packages/docs/README.md` injecting a code sample from a sibling `packages/shared/src/example.ts` — pass `--allow-outside-root <dir>` (repeatable) naming each additional directory that's allowed:
+
+```sh
+inject-markdown packages/docs/README.md --cwd packages/docs --allow-outside-root ../shared
+```
+
 ## Import Code
 
 All non-markdown files will be imported as a code block.

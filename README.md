@@ -33,24 +33,27 @@ Usage: inject-markdown [options] <files...>
 Inject file content into markdown files.
 
 Arguments:
-  files                 Files to scan for injected content.
+  files                       Files to scan for injected content.
 
 Options:
-  --no-must-find-files  No error if files are not found.
-  --output-dir <dir>    Output Directory
-  --cwd <dir>           Current Directory
-  --clean               Remove the injected content.
-  --no-inject-only      Update the whole file.
-  --verbose             Verbose output.
-  --silent              Only output errors.
-  --no-stop-on-errors   Do not stop if an error occurs.
-  --write-on-error      write the file even if an injection error occurs.
-  --color               Force color.
-  --no-color            Do not use color.
-  --no-summary          Do not show the summary
-  --dry-run             Process the files, but do not write.
-  -V, --version         output the version number
-  -h, --help            display help for command
+  --no-must-find-files        No error if files are not found.
+  --output-dir <dir>          Output Directory
+  --cwd <dir>                 Current Directory
+  --allow-outside-root <dir>  Allow local @@inject references to resolve into
+                              <dir>, outside the injection root (cwd).
+                              Repeatable.
+  --clean                     Remove the injected content.
+  --no-inject-only            Update the whole file.
+  --verbose                   Verbose output.
+  --silent                    Only output errors.
+  --no-stop-on-errors         Do not stop if an error occurs.
+  --write-on-error            write the file even if an injection error occurs.
+  --color                     Force color.
+  --no-color                  Do not use color.
+  --no-summary                Do not show the summary
+  --dry-run                   Process the files, but do not write.
+  -V, --version               output the version number
+  -h, --help                  display help for command
 ```
 
 <!--- @@inject-end: content/help.txt --->
@@ -58,6 +61,16 @@ Options:
 <!--- @@inject: content/README.md --->
 
 # How to use Injections
+
+## Injection Root
+
+A local (`file:`) directive reference must resolve inside the **injection root** — the directory set by `--cwd` (default: the current directory). A reference that resolves outside it, including via a symlink, is a read error; this protects against a directive in a processed Markdown file disclosing files outside the intended project tree (e.g. `.env`, SSH keys) into generated output. Remote (`http(s)`) references are unaffected.
+
+For a legitimate reference outside the injection root — e.g. a monorepo doc at `packages/docs/README.md` injecting a code sample from a sibling `packages/shared/src/example.ts` — pass `--allow-outside-root <dir>` (repeatable) naming each additional directory that's allowed:
+
+```sh
+inject-markdown packages/docs/README.md --cwd packages/docs --allow-outside-root ../shared
+```
 
 ## Import Code
 

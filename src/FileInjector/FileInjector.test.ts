@@ -206,6 +206,48 @@ describe('injectOnly', () => {
     });
 });
 
+describe('injection root boundary', () => {
+    const boundaryRoot = path.join(__root__, 'fixtures/injection-root-boundary/root');
+
+    test('injects a file inside the injection root', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
+        const r = await fi.processFile('local.md');
+        expect(r.hasErrors).toBe(false);
+        expect(r.file.value).toContain('Inside content.');
+    });
+
+    test('rejects a "../" reference that escapes the injection root', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
+        const r = await fi.processFile('escape.md');
+        expect(r.hasErrors).toBe(true);
+        expect(r.file.messages.map(String).join('\n')).toContain('Failed to read "../outside/secret.md"');
+        expect(r.file.value).not.toContain('TOP SECRET');
+    });
+
+    test('rejects a symlink inside the root that resolves outside it', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
+        const r = await fi.processFile('symlink-escape.md');
+        expect(r.hasErrors).toBe(true);
+        expect(r.file.messages.map(String).join('\n')).toContain('Failed to read "link-to-outside/secret.md"');
+        expect(r.file.value).not.toContain('TOP SECRET');
+    });
+
+    test('allowOutsideRoot permits a listed outside directory', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, {
+            cwd: boundaryRoot,
+            silent: true,
+            allowOutsideRoot: [path.join(__root__, 'fixtures/injection-root-boundary/outside')],
+        });
+        const r = await fi.processFile('escape.md');
+        expect(r.hasErrors).toBe(false);
+        expect(r.file.value).toContain('TOP SECRET');
+    });
+});
+
 function normalizeWriteFileCalls(
     writeFile: MockedFileSystemAdapter['writeFile'],
 ): MockedFileSystemAdapter['writeFile']['mock']['calls'] {
@@ -247,6 +289,7 @@ function createFSA(): FSA {
         readFile: vi.fn().mockImplementation(readFile),
         writeFile: vi.fn().mockImplementation(writeFile),
         mkdir: vi.fn().mockImplementation(async (_path: PathLike) => undefined),
+        realpath: vi.fn().mockImplementation((p: PathLike) => appFsa.realpath(p)),
     };
 
     const ma = fsaMethods as MockedFileSystemAdapter;

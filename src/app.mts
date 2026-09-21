@@ -44,6 +44,11 @@ export async function app(program = defaultCommand): Promise<Command> {
         .option('--no-must-find-files', 'No error if files are not found.')
         .option('--output-dir <dir>', 'Output Directory')
         .option('--cwd <dir>', 'Current Directory')
+        .option(
+            '--allow-outside-root <dir>',
+            'Allow local @@inject references to resolve into <dir>, outside the injection root (cwd). Repeatable.',
+            (dir: string, dirs: string[] = []) => [...dirs, dir],
+        )
         .option('--clean', 'Remove the injected content.')
         .addOption(new CommanderOption('--inject-only', 'Only update the injected content.').default(true).hideHelp())
         .option('--no-inject-only', 'Update the whole file.')

@@ -115,6 +115,12 @@ export interface FileInjectorOptions {
      * Dry Run mode, do not write files.
      */
     dryRun?: boolean;
+
+    /**
+     * Additional directories, outside the injection root (`cwd`), that a local
+     * directive-file reference is allowed to resolve into.
+     */
+    allowOutsideRoot?: string[] | undefined;
 }
 
 export class FileInjector {
@@ -196,6 +202,7 @@ async function processFileInjections(
     const fileUrl = file.data.fileUrl;
     const content = extractContent(file);
     const lineEnding = detectLineEnding(content);
+    let injectionRootsPromise: Promise<string[]> | undefined;
     setColor();
     const logger = options.logger;
     // console.log('File: %s\nOptions: %o', file.path, options);
@@ -503,10 +510,29 @@ async function processFileInjections(
 
     async function resolveAndReadFile(file: URL): Promise<VFileEx> {
         try {
+            await assertWithinInjectionRoot(file);
             return await readFile(fs, file);
         } catch {
             // console.log('resolveAndReadFile: (%s) %o', file.href, e);
             throw new Error(`Failed to read "${relativePathNormalized(file)}"`);
+        }
+    }
+
+    /**
+     * Local (`file:`) references must resolve inside the injection root (`cwd`) or one of
+     * `allowOutsideRoot`'s directories; remote fetches are unaffected. Real paths are compared
+     * so a symlink inside the root pointing outside it can't be used to escape.
+     */
+    async function assertWithinInjectionRoot(target: URL): Promise<void> {
+        if (target.protocol !== 'file:') return;
+        const roots = await (injectionRootsPromise ??= resolveInjectionRoots(
+            fs,
+            options.cwd,
+            options.allowOutsideRoot,
+        ));
+        const realTarget = await fs.realpath(target);
+        if (!roots.some((root) => isWithinRoot(root, realTarget))) {
+            throw new Error(`Outside the injection root: "${relativePathNormalized(target)}"`);
         }
     }
 
@@ -742,6 +768,21 @@ function extractLines(content: string, lines: [number, number] | undefined): str
 
 function refersToTheSameFile(a: RelURL | URL | undefined, b: RelURL | URL | undefined): boolean {
     return a === b || (a && !b) || a?.pathname === b?.pathname;
+}
+
+/** Real (symlink-resolved) paths of the injection root and any `allowOutsideRoot` directories. */
+async function resolveInjectionRoots(
+    fs: FileSystemAdapter,
+    cwd: URL,
+    allowOutsideRoot: string[] | undefined,
+): Promise<string[]> {
+    const dirs = [cwd, ...(allowOutsideRoot ?? []).map((dir) => dirToUrl(dir))];
+    return Promise.all(dirs.map((dir) => fs.realpath(dir)));
+}
+
+function isWithinRoot(root: string, target: string): boolean {
+    const rel = path.relative(root, target);
+    return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
 }
 
 interface ParserOptions {

@@ -25,6 +25,7 @@ describe('app', () => {
         args
         ${'README.md'}
         ${'fixtures/no-injections/*.md'}
+        ${['escape.md', '--cwd=fixtures/injection-root-boundary/root', '--allow-outside-root=fixtures/injection-root-boundary/outside']}
     `('run $args', async ({ args }) => {
         const command = new Command();
         const argv = createArgv(args, '--output-dir=temp');
@@ -38,6 +39,8 @@ describe('app', () => {
         ${['fixtures/with-errors/*.md', '--no-stop-on-error']}
         ${['fixtures/with-errors/*.md', '--no-stop-on-errors']}
         ${['fixtures/with-errors/*.md', '--color']}
+        ${['escape.md', '--cwd=fixtures/injection-root-boundary/root']}
+        ${['symlink-escape.md', '--cwd=fixtures/injection-root-boundary/root']}
     `('run with errors $args', async ({ args }) => {
         const command = new Command();
         const argv = createArgv(args, '--output-dir=temp');
