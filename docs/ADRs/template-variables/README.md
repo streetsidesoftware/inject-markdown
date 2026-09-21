@@ -10,5 +10,6 @@ ADRs for template variable substitution: `{@ name @}` placeholders inside inject
 | [0004](0004-value-source-precedence.md)                          | Value source precedence and combination               | Proposed |
 | [0005](0005-unresolved-placeholders-and-strict-mode.md)          | Unresolved placeholders and strict mode               | Proposed |
 | [0006](0006-substitution-mechanics-and-timing.md)                | Substitution mechanics and timing                     | Proposed |
+| [0007](0007-values-file-prefixing.md)                            | `values-file=` multi-file imports and prefixing        | Proposed |
 
 See also: [../../glossary.md](../../glossary.md).
