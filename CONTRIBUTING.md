@@ -1,5 +1,10 @@
 # Contributing to inject-markdown
 
+[![unit tests](https://github.com/streetsidesoftware/inject-markdown/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/streetsidesoftware/inject-markdown/actions)
+[![lint](https://github.com/streetsidesoftware/inject-markdown/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/streetsidesoftware/inject-markdown/actions)
+[![codecov](https://codecov.io/gh/streetsidesoftware/inject-markdown/branch/main/graph/badge.svg?token=Dr4fi2Sy08)](https://codecov.io/gh/streetsidesoftware/inject-markdown)
+[![Coverage Status](https://coveralls.io/repos/github/streetsidesoftware/inject-markdown/badge.svg?branch=main)](https://coveralls.io/github/streetsidesoftware/inject-markdown)
+
 Notes for maintainers and contributors working on this codebase. For CLI/library usage docs, see [README.md](README.md).
 
 ## Getting started
@@ -50,6 +55,8 @@ src/
   FileInjector/              Core injection logic
     FileInjector.ts          Main class: parses Markdown (via remark), resolves & injects files
     Directive.ts              Parses @@inject HTML comment directives
+    Markdown.ts               mdast generation/manipulation helpers (code blocks, quoting, heading extraction, errors)
+    Table.ts                  Builds a GFM table mdast node from parsed CSV/TSV rows
     VFileEx.ts                Extends vfile's VFile with injection metadata; isVFileEx() type-narrows
     utils.ts                  Error conversion helpers
   FileSystemAdapter/          Abstraction over Node's fs (for testability)
@@ -61,7 +68,7 @@ src/
     reportFileErrors.mts      Formats per-file error messages
   reporting/
     formatSummary.mts          Formats the CLI summary line
-  util/                       Shared helpers (URL parsing, hash/fragment parsing, file type detection)
+  util/                       Shared helpers (URL parsing, hash/fragment parsing, file type detection, CSV/TSV parsing)
 bin.mjs                       CLI shim invoking the built src/app.mts
 dist/                         Compiled output (generated; not committed)
 fixtures/, fixtures-output/   Integration-test input/expected-output pairs

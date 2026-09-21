@@ -2,35 +2,34 @@ import * as path from 'node:path';
 
 import assert from 'assert';
 import chalk, { supportsColor } from 'chalk';
-import type { BlockContent, Code, DefinitionContent, Heading, Html, Parent, Root, RootContent } from 'mdast';
+import type { Html, Parent, Root } from 'mdast';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
 import { unified } from 'unified';
-import { is } from 'unist-util-is';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
 import { fileURLToPath } from 'url';
 import type { VFile } from 'vfile';
 
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
+import { delimiterForExtension, parseDelimitedText } from '../util/csv.js';
 import { fileType } from '../util/fileType.mjs';
 import { type InjectInfo, parseHash } from '../util/hash.js';
 import { isDefined } from '../util/isDefined.js';
 import { dirToUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
-import { type Directive, type DirectiveType, parseDirective } from './Directive.js';
+import { type Directive, directiveRegExp, type DirectiveType, parseDirective } from './Directive.js';
+import { applyQuote, errorToComment, extractHeader, isHtmlNode, sanitizeImport, toCode, toRoot } from './Markdown.js';
+import { rowsToTable } from './Table.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
-
-type Node = Root | RootContent;
-
-const directiveRegExp = /^[ \t]*<!---?\s*@@inject(\b|-)/;
 
 const directivePrefix = '@@inject';
 const directiveStart = directivePrefix + ':';
 const directiveStartVerbose = directivePrefix + '-start:';
 const directiveStartCode = directivePrefix + '-code:';
+const directiveStartTable = directivePrefix + '-table:';
 const directiveEnd = directivePrefix + '-end:';
 
 const outputOptions = {
@@ -317,6 +316,8 @@ async function processFileInjections(
                 return injectMarkdownFile(dn);
             case 'code':
                 return injectCodeFile(dn);
+            case 'table':
+                return injectTableFile(dn);
         }
     }
 
@@ -340,6 +341,16 @@ async function processFileInjections(
         return injectContent(dn, root);
     }
 
+    async function injectTableFile(dn: DirectiveNode): Promise<void> {
+        const directive = dn.directive;
+        if (!directive.file || directive.type !== 'table') return;
+        const dFile = directive.file;
+        const directiveFileUrl = dFile.toUrl(fileUrl);
+        if (options.verbose) stderr.write(`\n  ${gray(dFile.href)}`);
+        const root = await readAndParseTableFile(directiveFileUrl, dn);
+        return injectContent(dn, root);
+    }
+
     async function injectContent(dn: DirectiveNode, content: ParseResult): Promise<void> {
         const directive = dn.directive;
         if (!directive.file) return;
@@ -353,7 +364,9 @@ async function processFileInjections(
             ? directiveStartVerbose
             : dn.node.value.includes(directiveStartCode)
               ? directiveStartCode
-              : directiveStart;
+              : dn.node.value.includes(directiveStartTable)
+                ? directiveStartTable
+                : directiveStart;
         const start: Html = {
             type: 'html',
             value: `<!--- ${startDirective} ${href} --->`,
@@ -363,6 +376,25 @@ async function processFileInjections(
             value: `<!--- ${directiveEnd} ${href} --->`,
         };
         parent.children.splice(index, 1, start, ...root.children, end);
+    }
+
+    async function readAndParseTableFile(fileName: URL, directive: DirectiveNode): Promise<ParseResult> {
+        const info = parseHash(fileName);
+        const lines = info.lines;
+        try {
+            const vFile = await resolveAndReadFile(fileName);
+            const content = extractLines(extractContent(vFile), lines);
+            const delimiter = delimiterForExtension(path.extname(fileName.pathname));
+            const rows = parseDelimitedText(content, delimiter);
+            return {
+                root: toRoot(rowsToTable(rows)),
+                info,
+            };
+        } catch (e) {
+            const err = toError(e);
+            file.error(err.message, directive.node.position);
+            return { root: errorToComment(err), info };
+        }
     }
 
     async function readAndParseCodeFile(fileName: URL, directive: DirectiveNode): Promise<ParseResult> {
@@ -424,89 +456,6 @@ async function processFileInjections(
     function relativePathNormalized(path: URL, relDir?: URL): string {
         return relativePath(relDir || file.data.cwdUrl || options.cwd, path).toString();
     }
-}
-
-function sanitizeImport(root: Root): Root {
-    remove(root, (n) => isHtmlNode(n) && directiveRegExp.test(n.value));
-    return root;
-}
-
-function extractHeader(root: Root, header: string | undefined): Root {
-    if (!header) return root;
-
-    function normalizeHeader(h: string): string {
-        return h.toLowerCase().replace(/[-_\s#`*]/g, '');
-    }
-
-    const searchFor = normalizeHeader(header);
-    const children = root.children;
-    const foundIdx = children.findIndex(
-        (n: RootContent) => isHeadingNode(n) && normalizeHeader(headingString(n)) === searchFor,
-    );
-    const found = root.children[foundIdx];
-    if (!found || !isHeadingNode(found)) {
-        return toRoot({
-            type: 'html',
-            value: `<!--- header: "${header}" not found.  --->`,
-        });
-    }
-
-    const nodes: RootContent[] = [found];
-
-    const depth = found.depth;
-
-    for (let i = foundIdx + 1; i < children.length; ++i) {
-        const n = children[i];
-        if (isHeadingNode(n) && n.depth <= depth) {
-            break;
-        }
-        nodes.push(n);
-    }
-
-    return toRoot(nodes);
-}
-
-function toCode(lang: string, content: string | RootContent | Root): Code {
-    const value = contentToString(content).trim();
-
-    return {
-        type: 'code',
-        lang,
-        value,
-    };
-}
-
-function toRoot(content: Root | RootContent | RootContent[]): Root {
-    if (!Array.isArray(content) && content.type === 'root') return content;
-    const children = Array.isArray(content) ? content : [content];
-    return {
-        type: 'root',
-        children,
-    };
-}
-
-function applyQuote(root: Root, makeIntoQuote: boolean): Root {
-    if (!makeIntoQuote) return root;
-    return toRoot({ type: 'blockquote', children: filterChildren(root.children) });
-}
-
-function filterChildren(children: RootContent[]): (BlockContent | DefinitionContent)[] {
-    return children.filter(filterContent);
-}
-
-function filterContent(c: RootContent): c is BlockContent | DefinitionContent {
-    return c.type !== 'yaml';
-}
-
-function headingString(n: Heading): string {
-    return contentToString(n);
-}
-
-function contentToString(content: RootContent | Root | string): string {
-    if (typeof content === 'string') return content;
-    const root = toRoot(content);
-    const md = unified().use(remarkStringify).stringify(root);
-    return md;
 }
 
 function deleteInjectedContent(root: Root, file: VFileEx): Root {
@@ -578,6 +527,7 @@ interface DirectiveNode extends DirectiveNodeBase {
 const startTypes: Record<DirectiveType, boolean> = {
     start: true,
     code: true,
+    table: true,
     end: false,
 } as const;
 
@@ -675,15 +625,7 @@ function detectLineEnding(content: string): string {
     return content[pos - 1] === '\r' ? '\r\n' : '\n';
 }
 
-function isHtmlNode(n: Node | unknown): n is Html {
-    return is(n, 'html');
-}
-
-function isHeadingNode(n: Node | unknown): n is Heading {
-    return is(n, 'heading');
-}
-
-function isInjectNode(n: Node | unknown): n is Html {
+function isInjectNode(n: unknown): n is Html {
     if (!isHtmlNode(n)) {
         return false;
     }
@@ -706,14 +648,6 @@ function fixContentLineEndings(content: string, lineEnding: string, fixEofNewLin
 
 function hasEofNewLine(content: string): boolean {
     return content[content.length - 1] === '\n';
-}
-
-function errorToComment(err: Error): Root {
-    const msg = (err.message || err.toString()).split('\n').join('\n  ');
-    return unified().use(remarkParse).use(remarkGfm).parse(`\
-<!---
-  ${msg}
---->`);
 }
 
 function normalizeHref(href: string): string {
