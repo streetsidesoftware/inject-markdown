@@ -188,6 +188,22 @@ describe('injectOnly', () => {
         expect(section).toContain('  ## Data');
         expect(section).toContain('  <!--- @@inject-end: parts/prices.md --->');
     });
+
+    test('preserves CRLF line endings for a nested-list-item directive', async () => {
+        const vacationsUrl = pathToFileURL(path.join(__root__, 'fixtures/vacations/vacations.md'));
+        const crlfSource = (await appFsa.readFile(vacationsUrl, 'utf8')).replace(/\r?\n/g, '\r\n');
+
+        const fsa = createFSA();
+        fsa.store.set(vacationsUrl, crlfSource);
+        const fi = new FileInjector(fsa, { injectOnly: true, cwd: __root__, silent: true });
+        const r = await fi.processFile('fixtures/vacations/vacations.md');
+        expect(r.hasChanged).toBe(true);
+
+        const written = r.file.value as string;
+        expect(written).not.toMatch(/(?<!\r)\n/); // no bare LF
+        expect(written).not.toMatch(/\r(?!\n)/); // no stray CR
+        expect(written).toContain('- Prices\r\n  <!--- @@inject: parts/prices.md --->\r\n  \r\n  ## Data\r\n');
+    });
 });
 
 function normalizeWriteFileCalls(

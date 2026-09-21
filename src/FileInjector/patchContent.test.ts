@@ -62,6 +62,25 @@ describe('indentContinuationLines', () => {
     test('prefixes blank lines too, so a blockquote stays open across them', () => {
         expect(indentContinuationLines('a\n\nb', '> ')).toBe('a\n> \n> b');
     });
+
+    test('preserves CRLF line endings without introducing a bare LF or stray CR', () => {
+        // stringifyFragment always produces *uniform* CRLF (every `\n`
+        // independently converted from pure-LF via one global replace), so
+        // splitting/rejoining on bare `\n` never encounters a lone `\r`.
+        const text = 'a\r\nb\r\nc';
+        const result = indentContinuationLines(text, '  ');
+        expect(result).toBe('a\r\n  b\r\n  c');
+        expect(result).not.toMatch(/(?<!\r)\n/); // no bare LF
+        expect(result).not.toMatch(/\r(?!\n)/); // no stray CR
+    });
+
+    test('preserves CRLF across a blank line', () => {
+        const text = 'a\r\n\r\nb';
+        const result = indentContinuationLines(text, '  ');
+        expect(result).toBe('a\r\n  \r\n  b');
+        expect(result).not.toMatch(/(?<!\r)\n/);
+        expect(result).not.toMatch(/\r(?!\n)/);
+    });
 });
 
 describe('stringifyFragment', () => {

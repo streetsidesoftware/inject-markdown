@@ -3,11 +3,11 @@ import remarkGfm from 'remark-gfm';
 import remarkStringify, { type Options as StringifyOptions } from 'remark-stringify';
 import { unified } from 'unified';
 
-/** A byte-offset splice into the original source text. */
+/** A character-offset (string index, not byte offset) splice into the original source text. */
 export interface Patch {
-    /** offset into the original source (inclusive) */
+    /** character offset into the original source (inclusive) */
     start: number;
-    /** offset into the original source (exclusive) */
+    /** character offset into the original source (exclusive) */
     end: number;
     /** replacement text, already using the file's line ending */
     text: string;
@@ -56,7 +56,7 @@ export function lineIndent(content: string, offset: number): string {
  * Prefix every line but the first with `indent`, so a fragment spliced back
  * into a container that relies on a per-line prefix (a list item, a
  * blockquote) stays nested inside it. The first line is left alone because
- * it's glued directly after the original prefix bytes, which are untouched;
+ * it's glued directly after the original prefix text, which is untouched;
  * every later line needs that prefix reconstructed, since the whole span
  * between the directives — prefixes included — was replaced.
  */
