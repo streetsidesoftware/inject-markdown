@@ -24,5 +24,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for environment setup (Node/corepack), bu
 - Directive matching is two-step: a quick regex pre-filter (`directiveRegExp`), then a full parse via `parseDirective` — both must pass for a comment to be treated as a directive.
 - The remark stringify options (bullet style, fence char, etc.) are fixed constants to keep round-tripped Markdown output consistent — don't change them casually.
 - `--clean` removes injected sections but keeps the directive comment markers; `--dry-run` processes/reports without writing.
-- Adding a new CLI option requires registering it in `app.mts` *and* adding it to the `Options`/`FileInjectorOptions` interfaces.
+- Adding a new CLI option requires registering it in `app.mts` _and_ adding it to the `Options`/`FileInjectorOptions` interfaces.
 - Imports must use explicit `.js` extensions even for `.ts`/`.mts` source files (NodeNext ESM resolution) — see [CONTRIBUTING.md](CONTRIBUTING.md) for full code style rules.
