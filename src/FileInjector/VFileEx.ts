@@ -2,6 +2,7 @@ import type { Data as VFileData, MessageOptions as VFileMessageOptions } from 'v
 import { VFile } from 'vfile';
 
 import type { BufferEncoding } from '../FileSystemAdapter/FileSystemAdapter.js';
+import type { Patch } from './patchContent.js';
 
 export type MessageOptions = VFileMessageOptions['place'];
 
@@ -10,6 +11,8 @@ export interface FileData extends VFileData {
     fileUrl: URL;
     cwdUrl?: URL;
     hasInjections?: boolean;
+    /** `--inject-only` mode: the patches to splice into the original source. */
+    injectOnlyPatches?: Patch[];
 }
 
 export class VFileEx extends VFile {

@@ -19,6 +19,8 @@ words:
   - lcov
   - mdast
   - pnpm
+  - restringify
+  - setext
   - stringifying
   - unist
   - vfile

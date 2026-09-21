@@ -45,6 +45,8 @@ export async function app(program = defaultCommand): Promise<Command> {
         .option('--output-dir <dir>', 'Output Directory')
         .option('--cwd <dir>', 'Current Directory')
         .option('--clean', 'Remove the injected content.')
+        .addOption(new CommanderOption('--inject-only', 'Only update the injected content.').default(true).hideHelp())
+        .option('--no-inject-only', 'Update the whole file.')
         .option('--verbose', 'Verbose output.')
         .option('--silent', 'Only output errors.')
         .addOption(new CommanderOption('--stop-on-errors', 'Stop if an error occurs.').hideHelp())

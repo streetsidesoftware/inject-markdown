@@ -40,6 +40,7 @@ Options:
   --output-dir <dir>    Output Directory
   --cwd <dir>           Current Directory
   --clean               Remove the injected content.
+  --no-inject-only      Update the whole file.
   --verbose             Verbose output.
   --silent              Only output errors.
   --no-stop-on-errors   Do not stop if an error occurs.
