@@ -40,3 +40,6 @@ Alignment set directly via a `columns` alignment marker; always takes precedence
 
 **Header format**
 A display-only casing transform (`none`/`title`/`upper`/`lower`) applied to rendered header-cell text via `header-format`. Never affects the header match string used by `columns` name references. See [ADR-0006](ADRs/0006-table-header-format.md).
+
+**column-names**
+A comma-separated list, positional against the output column order, that overrides individual header labels verbatim (bypassing `header-format`). An empty entry keeps that column's existing header; it never affects column selection or `columns` name matching. See [ADR-0007](ADRs/0007-table-column-names.md).
