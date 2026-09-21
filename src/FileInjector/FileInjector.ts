@@ -33,10 +33,7 @@ const directiveStartCode = directivePrefix + '-code:';
 const directiveStartTable = directivePrefix + '-table:';
 const directiveEnd = directivePrefix + '-end:';
 
-/**
- * Fallback formatting style, used for any construct that isn't present
- * (and therefore isn't detected) in the file being processed.
- */
+/** Fallback style for constructs `detectMarkdownStyle` finds no evidence for. */
 const defaultOutputOptions: StringifyOptions = {
     bullet: '-',
     emphasis: '_',
@@ -277,10 +274,8 @@ async function processFileInjections(
             file.data.hasInjections = false;
             return file;
         }
-        // Mutated in-place by `processHasInjections`, below, once it has seen
-        // the file's pristine (pre-injection) tree. `remarkStringify` reads
-        // this same object when it eventually compiles, at the end of the
-        // pipeline, so mutating it after `.use()` still takes effect.
+        // remarkStringify reads this object lazily at compile time, so
+        // processHasInjections can still mutate it after `.use()`.
         const outputOptions: StringifyOptions = { ...defaultOutputOptions };
         const result = await initParser(toInitOptions(file))
             .use(processHasInjections, outputOptions)

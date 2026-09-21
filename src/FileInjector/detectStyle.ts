@@ -3,14 +3,9 @@ import type { Options } from 'remark-stringify';
 import { visit } from 'unist-util-visit';
 
 /**
- * Detect the predominant Markdown formatting style used in a document, so
- * that re-stringifying it (as inject-markdown must, to splice in injected
- * content) round-trips the parts of the document that were not touched by
- * an injection as closely as possible to their original form.
- *
- * This inspects the actual marker characters used in the parsed tree
- * (via node position offsets into the original source) rather than the
- * defaults `remark-stringify` would otherwise fall back to.
+ * Detects the Markdown marker style (bullets, emphasis, fences, etc.) `root`
+ * actually uses, by majority vote over its nodes, so re-stringifying can
+ * preserve it instead of falling back to remark-stringify's defaults.
  */
 export function detectMarkdownStyle(root: Root, content: string): Options {
     const rule = new Tally<'-' | '_' | '*'>();
@@ -70,11 +65,9 @@ export function detectMarkdownStyle(root: Root, content: string): Options {
 }
 
 /**
- * Exported only so it can be unit tested directly: in practice,
- * `mdast-util-from-markdown` always sets a node's `position.start.offset`
- * on the marker itself, never on preceding indentation, so this
- * whitespace-skipping is defensive and not known to be exercised through
- * `detectMarkdownStyle`'s normal, parser-driven code path.
+ * Exported for direct testing: `mdast-util-from-markdown` always offsets
+ * nodes at the marker itself, not preceding indentation, so this
+ * whitespace-skipping isn't reachable via `detectMarkdownStyle` today.
  */
 export function firstNonSpace(content: string, offset: number): string | undefined {
     let i = offset;

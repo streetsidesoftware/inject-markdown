@@ -74,9 +74,8 @@ text
     });
 });
 
-// `mdast-util-from-markdown` never hands `detectMarkdownStyle` an offset that
-// sits before leading indentation (see the two helpers' doc comments), so
-// these edge cases are tested directly against synthetic offsets instead.
+// Not reachable via detectMarkdownStyle (see the helpers' doc comments) —
+// tested directly against synthetic offsets instead.
 describe('firstNonSpace', () => {
     test('skips spaces and tabs to find the marker', () => {
         expect(firstNonSpace(' \t- item', 0)).toBe('-');
