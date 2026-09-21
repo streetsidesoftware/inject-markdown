@@ -15,7 +15,7 @@ Today every column in a CSV/TSV source is injected, in source order, unaligned. 
 **Column reference (`<ref>`) grammar:**
 
 - A bare 1-based number (`3`) referencing the column by source position, or
-- A name (`Price`) matched against the *first* header row's text for that column ([ADR-0002](0002-table-header-rows-option.md)). Names are unavailable when `header-rows=0`.
+- A name (`Price`) matched against that column's whitespace-normalized, whitespace-joined header text across all header rows ([ADR-0002](0002-table-header-rows-option.md)), e.g. `columns="Name First,Name Last"` against a two-row group header. Names are unavailable when `header-rows=0`.
 - Either form may carry an alignment marker as a leading and/or trailing colon, mirroring GFM's own `:---` / `---:` / `:---:` delimiter-row syntax:
   - `:Name` → left-align
   - `Name:` → right-align
