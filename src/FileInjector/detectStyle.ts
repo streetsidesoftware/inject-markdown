@@ -77,7 +77,7 @@ function firstNonSpace(content: string, offset: number): string | undefined {
 
 function orderedMarkerAt(content: string, offset: number): string | undefined {
     let i = offset;
-    while (i < content.length && content[i] === ' ') ++i;
+    while (i < content.length && (content[i] === ' ' || content[i] === '\t')) ++i;
     while (i < content.length && /[0-9]/.test(content[i])) ++i;
     return content[i];
 }
