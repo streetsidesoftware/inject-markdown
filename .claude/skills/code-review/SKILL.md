@@ -28,7 +28,7 @@ Review changes with a correctness-first mindset. Focus on actionable findings, s
 - **CHANGELOG policy (blocking):**
   - `CHANGELOG.md` is auto-generated and must not be manually modified.
   - `CHANGELOG.md` should not be spell checked, linted, or formatted by review workflow expectations.
-- **README policy (blocking for user-facing drift):**
+- **Documentation policy (blocking for user-facing drift):**
   - User-facing docs should avoid implementation details.
   - `README.md` must stay focused on usage, behavior, and outcomes.
   - Implementation details are acceptable in `CONTRIBUTING.md`.
