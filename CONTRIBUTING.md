@@ -55,6 +55,8 @@ src/
   FileInjector/              Core injection logic
     FileInjector.ts          Main class: parses Markdown (via remark), resolves & injects files
     Directive.ts              Parses @@inject HTML comment directives
+    Markdown.ts               mdast generation/manipulation helpers (code blocks, quoting, heading extraction, errors)
+    Table.ts                  Builds a GFM table mdast node from parsed CSV/TSV rows
     VFileEx.ts                Extends vfile's VFile with injection metadata; isVFileEx() type-narrows
     utils.ts                  Error conversion helpers
   FileSystemAdapter/          Abstraction over Node's fs (for testability)
@@ -66,7 +68,7 @@ src/
     reportFileErrors.mts      Formats per-file error messages
   reporting/
     formatSummary.mts          Formats the CLI summary line
-  util/                       Shared helpers (URL parsing, hash/fragment parsing, file type detection)
+  util/                       Shared helpers (URL parsing, hash/fragment parsing, file type detection, CSV/TSV parsing)
 bin.mjs                       CLI shim invoking the built src/app.mts
 dist/                         Compiled output (generated; not committed)
 fixtures/, fixtures-output/   Integration-test input/expected-output pairs

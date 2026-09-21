@@ -3,6 +3,9 @@ import { parseRelativeUrl, type RelURL } from '../util/url_helper.js';
 
 const injectDirectiveRegExp = /^[ \t]*<!--+\s*@@inject(?<type>|-start|-end|-code|-table)[:\s]\s*(?<file>.*?)-+->$/;
 
+/** Quick pre-filter for html comment nodes that look like an `@@inject` directive. */
+export const directiveRegExp = /^[ \t]*<!---?\s*@@inject(\b|-)/;
+
 export type DirectiveType = 'start' | 'end' | 'code' | 'table';
 
 export interface Directive {
