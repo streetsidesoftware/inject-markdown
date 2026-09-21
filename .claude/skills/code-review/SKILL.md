@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: "Review pull request changes for correctness, safety, and user-facing documentation quality. Use when asked to review code or validate a PR before merge."
+description: 'Review pull request changes for correctness, safety, and user-facing documentation quality. Use when asked to review code or validate a PR before merge.'
 ---
 
 # Code Review Skill
