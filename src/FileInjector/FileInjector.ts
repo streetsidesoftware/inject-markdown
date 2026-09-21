@@ -38,6 +38,7 @@ const outputOptions = {
     fence: '`',
     fences: true,
     incrementListMarker: false,
+    rule: '-',
     strong: '*',
 } as const;
 
