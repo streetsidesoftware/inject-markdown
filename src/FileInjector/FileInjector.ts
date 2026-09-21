@@ -22,7 +22,7 @@ import { dirToUrl, pathToUrl, relativePath, type RelURL } from '../util/url_help
 import { detectMarkdownStyle } from './detectStyle.js';
 import { type Directive, directiveRegExp, type DirectiveType, parseDirective } from './Directive.js';
 import { applyQuote, errorToComment, extractHeader, isHtmlNode, sanitizeImport, toCode, toRoot } from './Markdown.js';
-import { applyPatches, type Patch, stringifyFragment } from './patchContent.js';
+import { applyPatches, indentContinuationLines, lineIndent, type Patch, stringifyFragment } from './patchContent.js';
 import { rowsToTable } from './Table.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
@@ -393,13 +393,13 @@ async function processFileInjections(
 
     async function injectContent(
         dn: DirectiveNode,
-        content: ParseResult,
+        parseResult: ParseResult,
         ctx: InjectOnlyCtx | undefined,
     ): Promise<void> {
         const directive = dn.directive;
         if (!directive.file) return;
-        const { info } = content;
-        const root = applyQuote(content.root, info.quote ?? false);
+        const { info } = parseResult;
+        const root = applyQuote(parseResult.root, info.quote ?? false);
         const href = normalizeHref(directive.file.href);
         const parent = dn.parent;
         const index = parent.children.indexOf(dn.node);
@@ -423,10 +423,16 @@ async function processFileInjections(
             const startOffset = dn.node.position?.start.offset;
             const endOffset = ctx.endOffsets.get(dn.node) ?? dn.node.position?.end.offset;
             if (startOffset !== undefined && endOffset !== undefined) {
+                const fragment = stringifyFragment([start, ...root.children, end], ctx.outputOptions, ctx.lineEnding);
+                // The directive may sit inside a list item or blockquote, whose
+                // continuation lines share a prefix (indentation, `> `, ...).
+                // That prefix falls inside the replaced span, so it has to be
+                // reconstructed on every line but the first.
+                const indent = lineIndent(content, startOffset);
                 ctx.patches.push({
                     start: startOffset,
                     end: endOffset,
-                    text: stringifyFragment([start, ...root.children, end], ctx.outputOptions, ctx.lineEnding),
+                    text: indentContinuationLines(fragment, indent),
                 });
             }
         }

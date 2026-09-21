@@ -42,3 +42,28 @@ export function stringifyFragment(nodes: RootContent[], outputOptions: Stringify
     const trimmed = markdown.replace(/\n+$/, '');
     return lineEnding === '\n' ? trimmed : trimmed.replace(/\n/g, lineEnding);
 }
+
+/**
+ * The literal text preceding `offset` on its own source line: indentation,
+ * a blockquote `> `, a list marker's continuation width, etc.
+ */
+export function lineIndent(content: string, offset: number): string {
+    const lineStart = content.lastIndexOf('\n', offset - 1) + 1;
+    return content.slice(lineStart, offset);
+}
+
+/**
+ * Prefix every line but the first with `indent`, so a fragment spliced back
+ * into a container that relies on a per-line prefix (a list item, a
+ * blockquote) stays nested inside it. The first line is left alone because
+ * it's glued directly after the original prefix bytes, which are untouched;
+ * every later line needs that prefix reconstructed, since the whole span
+ * between the directives — prefixes included — was replaced.
+ */
+export function indentContinuationLines(text: string, indent: string): string {
+    if (!indent) return text;
+    return text
+        .split('\n')
+        .map((line, i) => (i === 0 ? line : indent + line))
+        .join('\n');
+}

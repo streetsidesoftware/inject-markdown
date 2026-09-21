@@ -159,6 +159,35 @@ describe('injectOnly', () => {
         expect(r2.hasChanged).toBe(true);
         expect(r2.file.value).toBe(original);
     });
+
+    test('keeps a directive nested inside a list item (indentation reconstructed)', async () => {
+        // `fixtures/vacations/vacations.md` has `@@inject: parts/prices.md`
+        // indented two spaces inside a `- Prices` list item. The whole span
+        // between the directives is replaced, prefix included, so the
+        // fragment's later lines must have that prefix reconstructed or the
+        // injected content falls out of the list item.
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { injectOnly: true, cwd: __root__, silent: true });
+        const r = await fi.processFile('fixtures/vacations/vacations.md');
+        expect(r.hasChanged).toBe(true);
+
+        const written = r.file.value as string;
+        const start = written.indexOf('- Prices');
+        const end = written.indexOf('# Highlight Destination');
+        expect(start).toBeGreaterThan(-1);
+        expect(end).toBeGreaterThan(start);
+        const section = written.slice(start, end).trimEnd();
+        const lines = section.split('\n');
+        expect(lines[0]).toBe('- Prices');
+        for (const line of lines.slice(1)) {
+            // every continuation line stays indented under the list item;
+            // a blank line is allowed to be indentation-only.
+            expect(line === '  ' || line.startsWith('  ')).toBe(true);
+        }
+        expect(section).toContain('  <!--- @@inject: parts/prices.md --->');
+        expect(section).toContain('  ## Data');
+        expect(section).toContain('  <!--- @@inject-end: parts/prices.md --->');
+    });
 });
 
 function normalizeWriteFileCalls(

@@ -1,7 +1,7 @@
 import type { Html, RootContent } from 'mdast';
 import { describe, expect, test } from 'vitest';
 
-import { applyPatches, type Patch, stringifyFragment } from './patchContent.js';
+import { applyPatches, indentContinuationLines, lineIndent, type Patch, stringifyFragment } from './patchContent.js';
 
 describe('applyPatches', () => {
     test('leaves content unchanged when there are no patches', () => {
@@ -28,6 +28,39 @@ describe('applyPatches', () => {
         const content = '<!--- start ---><!--- body ---><!--- end --->';
         const patches: Patch[] = [{ start: '<!--- start --->'.length, end: content.length, text: '' }];
         expect(applyPatches(content, patches)).toBe('<!--- start --->');
+    });
+});
+
+describe('lineIndent', () => {
+    test('returns the literal prefix before the offset on its line', () => {
+        const content = '- Prices\n  <!--- @@inject: file.md --->\n';
+        const offset = content.indexOf('<!---');
+        expect(lineIndent(content, offset)).toBe('  ');
+    });
+
+    test('captures a blockquote marker as the prefix', () => {
+        const content = '> <!--- @@inject: file.md --->\n';
+        const offset = content.indexOf('<!---');
+        expect(lineIndent(content, offset)).toBe('> ');
+    });
+
+    test('returns an empty string at the start of a line', () => {
+        const content = '<!--- @@inject: file.md --->\n';
+        expect(lineIndent(content, 0)).toBe('');
+    });
+});
+
+describe('indentContinuationLines', () => {
+    test('leaves the text unchanged when there is no indent', () => {
+        expect(indentContinuationLines('a\nb\nc', '')).toBe('a\nb\nc');
+    });
+
+    test('prefixes every line but the first', () => {
+        expect(indentContinuationLines('a\nb\nc', '  ')).toBe('a\n  b\n  c');
+    });
+
+    test('prefixes blank lines too, so a blockquote stays open across them', () => {
+        expect(indentContinuationLines('a\n\nb', '> ')).toBe('a\n> \n> b');
     });
 });
 
