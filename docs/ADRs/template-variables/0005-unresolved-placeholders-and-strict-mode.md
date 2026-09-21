@@ -16,7 +16,7 @@ The feature request specifies that unresolved placeholders remain untouched in t
 
 ## Options Considered
 
-- **JSON-stringify non-scalar values** into the output — rejected: starts to look like general templating, which the feature request explicitly scopes out ("The goal in NOT a full fledge template engine").
+- **JSON-stringify non-scalar values** into the output — rejected: starts to look like general templating, which the feature request explicitly scopes out (the goal is simple value injection, not a full-fledged template engine).
 - **Hard error on a non-scalar reference even outside strict mode** — rejected: inconsistent with the request's explicit default of "unresolved placeholders remain untouched with only a warning"; strict mode is the intended opt-in for turning any of this into a hard failure.
 - **One warning per occurrence** instead of per unique name — rejected: for a placeholder repeated several times in one injected block (e.g. a version string used across multiple `npm install` lines), per-occurrence warnings would dominate the output without adding information beyond "this name is unresolved."
 - **`--strict-vars` aborts the whole run immediately** instead of erroring just that file — rejected: inconsistent with how every other injection error (bad file reference, bad `columns` reference) is handled today — collected and reported per file, not an immediate hard stop mid-run.
