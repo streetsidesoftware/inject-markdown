@@ -26,5 +26,6 @@ words:
   - stringifying
   - unist
   - vfile
+  - worktrees
 ignoreWords: []
 import: []

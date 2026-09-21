@@ -20,6 +20,7 @@ export default defineConfig(
             'sample-*',
             'fixtures*',
             'content',
+            '.claude/worktrees',
         ],
     },
     {
