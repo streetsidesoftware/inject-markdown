@@ -1,10 +1,5 @@
 # Markdown File Injector
 
-[![unit tests](https://github.com/streetsidesoftware/inject-markdown/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/streetsidesoftware/inject-markdown/actions)
-[![lint](https://github.com/streetsidesoftware/inject-markdown/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/streetsidesoftware/inject-markdown/actions)
-[![codecov](https://codecov.io/gh/streetsidesoftware/inject-markdown/branch/main/graph/badge.svg?token=Dr4fi2Sy08)](https://codecov.io/gh/streetsidesoftware/inject-markdown)
-[![Coverage Status](https://coveralls.io/repos/github/streetsidesoftware/inject-markdown/badge.svg?branch=main)](https://coveralls.io/github/streetsidesoftware/inject-markdown)
-
 A Command line tool to inject files into Markdown files.
 
 ## Justification
@@ -107,6 +102,38 @@ export function sayHello(name: string): string {
 }
 ```
 
+## Import a CSV/TSV as a Table
+
+`.csv` and `.tsv` files are injected as a Markdown table by default, using all of the columns.
+
+### Syntax
+
+```markdown
+<!--- @@inject: sample.csv --->
+```
+
+### Example
+
+```markdown
+<!--- @@inject: sample.csv --->
+
+| name         | role          |
+| ------------ | ------------- |
+| Ada Lovelace | Mathematician |
+| Grace Hopper | Programmer    |
+
+<!--- @@inject-end: sample.csv --->
+```
+
+### Actual Result
+
+| name         | role          |
+| ------------ | ------------- |
+| Ada Lovelace | Mathematician |
+| Grace Hopper | Programmer    |
+
+To force a `.csv`/`.tsv` file to be injected as a code block instead, use `@@inject-code: sample.csv` or `@@inject: sample.csv#lang=csv`. To force any other file to be injected as a table, use `@@inject-table: <file>`.
+
 ## Import Markdown as Code
 
 It is also possible to inject markdown:
@@ -146,6 +173,10 @@ or
 >   - `<non-markdown-file>`, `<file>` -- the file to import
 >   - `lang` -- optional language to use for the code bock.
 >   - `quote` -- optional embed as a block quote.
+> - `@@inject: <file.csv|file.tsv>` and `@@inject-table: <file>`
+>   - `<file.csv>`, `<file.tsv>` -- a comma or tab separated file, injected as a Markdown table using all of its columns.
+>   - `@@inject-table: <file>` -- force any file to be injected as a table, regardless of its extension.
+>   - Use `@@inject-code: <file.csv>` or `#lang=csv` to inject the file as a code block instead of a table.
 
 ## Import from lines from GitHub
 

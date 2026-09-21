@@ -50,6 +50,7 @@ describe('FileInjector', () => {
         ${'fixtures/code/frontmatter.md'}    | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/code/frontmatter.md'}
         ${'fixtures/quotes/README.md'}       | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/quotes/README.md'}
         ${'fixtures/headers/README.md'}      | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/headers/README.md'}
+        ${'fixtures/tables/README.md'}       | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/tables/README.md'}
     `('processFile $file $options', async ({ file, options, expectedResult, expectedFile }) => {
         const logger = createLogger();
         options.cwd = options.cwd || __root__;

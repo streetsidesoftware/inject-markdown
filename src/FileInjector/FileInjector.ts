@@ -15,11 +15,13 @@ import { fileURLToPath } from 'url';
 import type { VFile } from 'vfile';
 
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
+import { delimiterForExtension, parseDelimitedText } from '../util/csv.js';
 import { fileType } from '../util/fileType.mjs';
 import { type InjectInfo, parseHash } from '../util/hash.js';
 import { isDefined } from '../util/isDefined.js';
 import { dirToUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
 import { type Directive, type DirectiveType, parseDirective } from './Directive.js';
+import { rowsToTable } from './Table.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
 
@@ -31,6 +33,7 @@ const directivePrefix = '@@inject';
 const directiveStart = directivePrefix + ':';
 const directiveStartVerbose = directivePrefix + '-start:';
 const directiveStartCode = directivePrefix + '-code:';
+const directiveStartTable = directivePrefix + '-table:';
 const directiveEnd = directivePrefix + '-end:';
 
 const outputOptions = {
@@ -317,6 +320,8 @@ async function processFileInjections(
                 return injectMarkdownFile(dn);
             case 'code':
                 return injectCodeFile(dn);
+            case 'table':
+                return injectTableFile(dn);
         }
     }
 
@@ -340,6 +345,16 @@ async function processFileInjections(
         return injectContent(dn, root);
     }
 
+    async function injectTableFile(dn: DirectiveNode): Promise<void> {
+        const directive = dn.directive;
+        if (!directive.file || directive.type !== 'table') return;
+        const dFile = directive.file;
+        const directiveFileUrl = dFile.toUrl(fileUrl);
+        if (options.verbose) stderr.write(`\n  ${gray(dFile.href)}`);
+        const root = await readAndParseTableFile(directiveFileUrl, dn);
+        return injectContent(dn, root);
+    }
+
     async function injectContent(dn: DirectiveNode, content: ParseResult): Promise<void> {
         const directive = dn.directive;
         if (!directive.file) return;
@@ -353,7 +368,9 @@ async function processFileInjections(
             ? directiveStartVerbose
             : dn.node.value.includes(directiveStartCode)
               ? directiveStartCode
-              : directiveStart;
+              : dn.node.value.includes(directiveStartTable)
+                ? directiveStartTable
+                : directiveStart;
         const start: Html = {
             type: 'html',
             value: `<!--- ${startDirective} ${href} --->`,
@@ -363,6 +380,25 @@ async function processFileInjections(
             value: `<!--- ${directiveEnd} ${href} --->`,
         };
         parent.children.splice(index, 1, start, ...root.children, end);
+    }
+
+    async function readAndParseTableFile(fileName: URL, directive: DirectiveNode): Promise<ParseResult> {
+        const info = parseHash(fileName);
+        const lines = info.lines;
+        try {
+            const vFile = await resolveAndReadFile(fileName);
+            const content = extractLines(extractContent(vFile), lines);
+            const delimiter = delimiterForExtension(path.extname(fileName.pathname));
+            const rows = parseDelimitedText(content, delimiter);
+            return {
+                root: toRoot(rowsToTable(rows)),
+                info,
+            };
+        } catch (e) {
+            const err = toError(e);
+            file.error(err.message, directive.node.position);
+            return { root: errorToComment(err), info };
+        }
     }
 
     async function readAndParseCodeFile(fileName: URL, directive: DirectiveNode): Promise<ParseResult> {
@@ -578,6 +614,7 @@ interface DirectiveNode extends DirectiveNodeBase {
 const startTypes: Record<DirectiveType, boolean> = {
     start: true,
     code: true,
+    table: true,
     end: false,
 } as const;
 

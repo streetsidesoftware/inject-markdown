@@ -56,6 +56,46 @@ export function sayHello(name: string): string {
 
 <!--- @@inject-end: import-sample-json.md --->
 
+## Import a CSV/TSV as a Table
+
+`.csv` and `.tsv` files are injected as a Markdown table by default, using all of the columns.
+
+### Syntax
+
+```markdown
+<!--- @@inject: sample.csv --->
+```
+
+### Example
+
+<!--- @@inject-code: import-sample-csv.md --->
+
+```markdown
+<!--- @@inject: sample.csv --->
+
+| name         | role          |
+| ------------ | ------------- |
+| Ada Lovelace | Mathematician |
+| Grace Hopper | Programmer    |
+
+<!--- @@inject-end: sample.csv --->
+```
+
+<!--- @@inject-end: import-sample-csv.md --->
+
+### Actual Result
+
+<!--- @@inject: import-sample-csv.md --->
+
+| name         | role          |
+| ------------ | ------------- |
+| Ada Lovelace | Mathematician |
+| Grace Hopper | Programmer    |
+
+<!--- @@inject-end: import-sample-csv.md --->
+
+To force a `.csv`/`.tsv` file to be injected as a code block instead, use `@@inject-code: sample.csv` or `@@inject: sample.csv#lang=csv`. To force any other file to be injected as a table, use `@@inject-table: <file>`.
+
 ## Import Markdown as Code
 
 It is also possible to inject markdown:
@@ -101,6 +141,10 @@ or
 >   - `<non-markdown-file>`, `<file>` -- the file to import
 >   - `lang` -- optional language to use for the code bock.
 >   - `quote` -- optional embed as a block quote.
+> - `@@inject: <file.csv|file.tsv>` and `@@inject-table: <file>`
+>   - `<file.csv>`, `<file.tsv>` -- a comma or tab separated file, injected as a Markdown table using all of its columns.
+>   - `@@inject-table: <file>` -- force any file to be injected as a table, regardless of its extension.
+>   - Use `@@inject-code: <file.csv>` or `#lang=csv` to inject the file as a code block instead of a table.
 
 <!--- @@inject-end: chapters.md#heading=Chapter 3: Directives&quote --->
 
