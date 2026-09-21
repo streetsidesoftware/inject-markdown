@@ -12,3 +12,5 @@ cspell.json
 **/*.schema.json
 /fixtures-output/**
 .release-please-manifest.json
+# Deliberately written in a non-default Markdown style to test style detection.
+/fixtures/style-preserve/README.md

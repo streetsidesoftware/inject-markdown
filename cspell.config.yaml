@@ -19,6 +19,7 @@ words:
   - lcov
   - mdast
   - pnpm
+  - stringifying
   - unist
   - vfile
 ignoreWords: []

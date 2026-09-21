@@ -39,18 +39,19 @@ describe('FileInjector', () => {
     });
 
     test.each`
-        file                                 | options                                                  | expectedResult               | expectedFile
-        ${'fixtures/vacations/vacations.md'} | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/vacations/vacations.md'}
-        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_' }}                                | ${oc({ hasChanged: true })}  | ${'_out_/fixtures/vacations/vacations.md'}
-        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_', verbose: true }}                 | ${oc({ hasChanged: true })}  | ${'_out_/fixtures/vacations/vacations.md'}
-        ${'fixtures/vacations/vacations.md'} | ${{ outputDir: '_out_', silent: true }}                  | ${oc({ hasChanged: true })}  | ${'_out_/fixtures/vacations/vacations.md'}
-        ${'vacations.md'}                    | ${{ cwd: 'fixtures/vacations/', outputDir: '_out_' }}    | ${oc({ hasChanged: true })}  | ${'_out_/vacations.md'}
-        ${'README.md'}                       | ${{ cwd: 'fixtures/no-injections', outputDir: '_out_' }} | ${oc({ hasChanged: false })} | ${'_out_/README.md'}
-        ${'fixtures/code/README.md'}         | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/code/README.md'}
-        ${'fixtures/code/frontmatter.md'}    | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/code/frontmatter.md'}
-        ${'fixtures/quotes/README.md'}       | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/quotes/README.md'}
-        ${'fixtures/headers/README.md'}      | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/headers/README.md'}
-        ${'fixtures/tables/README.md'}       | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/tables/README.md'}
+        file                                   | options                                                  | expectedResult               | expectedFile
+        ${'fixtures/vacations/vacations.md'}   | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/vacations/vacations.md'}
+        ${'fixtures/vacations/vacations.md'}   | ${{ outputDir: '_out_' }}                                | ${oc({ hasChanged: true })}  | ${'_out_/fixtures/vacations/vacations.md'}
+        ${'fixtures/vacations/vacations.md'}   | ${{ outputDir: '_out_', verbose: true }}                 | ${oc({ hasChanged: true })}  | ${'_out_/fixtures/vacations/vacations.md'}
+        ${'fixtures/vacations/vacations.md'}   | ${{ outputDir: '_out_', silent: true }}                  | ${oc({ hasChanged: true })}  | ${'_out_/fixtures/vacations/vacations.md'}
+        ${'vacations.md'}                      | ${{ cwd: 'fixtures/vacations/', outputDir: '_out_' }}    | ${oc({ hasChanged: true })}  | ${'_out_/vacations.md'}
+        ${'README.md'}                         | ${{ cwd: 'fixtures/no-injections', outputDir: '_out_' }} | ${oc({ hasChanged: false })} | ${'_out_/README.md'}
+        ${'fixtures/code/README.md'}           | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/code/README.md'}
+        ${'fixtures/code/frontmatter.md'}      | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/code/frontmatter.md'}
+        ${'fixtures/quotes/README.md'}         | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/quotes/README.md'}
+        ${'fixtures/headers/README.md'}        | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/headers/README.md'}
+        ${'fixtures/tables/README.md'}         | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/tables/README.md'}
+        ${'fixtures/style-preserve/README.md'} | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/style-preserve/README.md'}
     `('processFile $file $options', async ({ file, options, expectedResult, expectedFile }) => {
         const logger = createLogger();
         options.cwd = options.cwd || __root__;
