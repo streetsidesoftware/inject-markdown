@@ -33,6 +33,7 @@ This directory records architecturally significant decisions for `inject-markdow
 | ---------------------------------------------- | --------------------------------------------------------------------------------------- |
 | [table-improvements/](table-improvements/)     | `header-rows`, `columns`, row windowing, and auto-alignment options for table injection |
 | [file-access-security/](file-access-security/) | Boundary restricting which local files an `@@inject` directive may read                 |
+| [template-variables/](template-variables/)     | `{@ name @}` placeholder substitution in injected content, values, sources, precedence  |
 
 ## Index (ungrouped ADRs)
 

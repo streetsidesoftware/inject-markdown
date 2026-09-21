@@ -10,6 +10,7 @@ dictionaries:
   - typescript
 words:
   - autobuild
+  - basenames
   - buildscript
   - codecov
   - codeql
@@ -25,5 +26,6 @@ words:
   - stringifying
   - unist
   - vfile
+  - worktrees
 ignoreWords: []
 import: []
