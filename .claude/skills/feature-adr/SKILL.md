@@ -1,6 +1,6 @@
 ---
 name: feature-adr
-description: "Design a new inject-markdown feature (a directive, an option, a CLI flag, a behavior change) through a structured interview, recording each decision as an ADR under docs/ADRs/<feature-slug>/ and keeping docs/glossary.md in sync. Use this whenever the user wants to design, spec out, or plan a feature before writing code — proposes a new @@inject option, wants to add a CLI flag, is unsure how an edge case should behave, or explicitly asks for an ADR, a design doc, or to \"figure out the details\" of something. Trigger even if the user doesn't say \"ADR\" or \"skill\" by name — any request to add new behavior to this tool that has more than one reasonable interpretation is a candidate. Do not use this for pure bug fixes, refactors, or requests where the behavior is already fully specified."
+description: 'Design a new inject-markdown feature (a directive, an option, a CLI flag, a behavior change) through a structured interview, recording each decision as an ADR under docs/ADRs/<feature-slug>/ and keeping docs/glossary.md in sync. Use this whenever the user wants to design, spec out, or plan a feature before writing code — proposes a new @@inject option, wants to add a CLI flag, is unsure how an edge case should behave, or explicitly asks for an ADR, a design doc, or to "figure out the details" of something. Trigger even if the user doesn''t say "ADR" or "skill" by name — any request to add new behavior to this tool that has more than one reasonable interpretation is a candidate. Do not use this for pure bug fixes, refactors, or requests where the behavior is already fully specified.'
 ---
 
 # Feature ADR interview
@@ -11,7 +11,7 @@ This is a **design-only** workflow. Do not write or modify implementation code, 
 
 ## Why interview before writing an ADR
 
-Feature requests in this repo usually arrive as a one- or two-line description of *what* ("add an option to limit rows") without the *exactly how* (1-based or 0-based? what happens past the end of the file? does it interact with the existing `lines` option?). Writing the ADR straight from the request just moves the ambiguity into a document instead of resolving it. The interview's job is to surface every place where a reasonable engineer could implement the same request three different ways, and get the user to pick one, before that ambiguity becomes a bug report.
+Feature requests in this repo usually arrive as a one- or two-line description of _what_ ("add an option to limit rows") without the _exactly how_ (1-based or 0-based? what happens past the end of the file? does it interact with the existing `lines` option?). Writing the ADR straight from the request just moves the ambiguity into a document instead of resolving it. The interview's job is to surface every place where a reasonable engineer could implement the same request three different ways, and get the user to pick one, before that ambiguity becomes a bug report.
 
 ## Workflow
 
