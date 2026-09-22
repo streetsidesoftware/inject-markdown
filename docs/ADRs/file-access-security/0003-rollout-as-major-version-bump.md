@@ -1,6 +1,6 @@
 # ADR-0003: Ship as a breaking change in the next major version
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 

@@ -10,6 +10,7 @@ export function nodeFsa(): FileSystemAdapter {
         readFile,
         mkdir: fs.mkdir,
         writeFile: fs.writeFile,
+        realpath: fs.realpath,
     };
 
     return fsa;

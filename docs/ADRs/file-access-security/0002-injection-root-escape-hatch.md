@@ -1,6 +1,6 @@
 # ADR-0002: Injection-root escape hatch (`--allow-outside-root`)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 

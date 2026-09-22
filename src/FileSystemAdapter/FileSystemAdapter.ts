@@ -11,4 +11,6 @@ export interface FileSystemAdapter {
             recursive: true;
         },
     ): Promise<string | undefined>;
+    /** Resolves symlinks, used to enforce the injection-root boundary on local file reads. */
+    realpath(path: PathLike): Promise<string>;
 }
