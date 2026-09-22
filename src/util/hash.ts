@@ -1,4 +1,5 @@
 import type { RelURL } from './url_helper.js';
+import { parseValuesFileList, parseValuesOption, type ValuesFileEntry } from './values.js';
 
 export type Range = [number, number];
 
@@ -14,6 +15,12 @@ export interface InjectInfo {
     quote?: boolean;
     /** Indicate that markdown should be injected as code. */
     code?: string;
+    /** Inline placeholder values: `values=name:val,name2:val2`. See ADR-0002. */
+    values?: Map<string, string> | undefined;
+    /** `values-file=[prefix:]path[,...]`. See ADR-0002, ADR-0007. */
+    valuesFile?: ValuesFileEntry[] | undefined;
+    /** Bare `#vars` opt-in: scan for placeholders using CLI/environment sources alone. See ADR-0002. */
+    vars?: boolean | undefined;
 }
 
 export function parseHash(url: URL | RelURL): InjectInfo {
@@ -58,6 +65,15 @@ export function parseHashString(hash: string): InjectInfo {
                 continue;
             case 'quote':
                 info.quote = parseFlagValue(value, true);
+                continue;
+            case 'values':
+                info.values = parseValuesOption(value);
+                continue;
+            case 'values-file':
+                info.valuesFile = parseValuesFileList(value);
+                continue;
+            case 'vars':
+                info.vars = parseFlagValue(value, true);
                 continue;
             case 'lines':
             case 'line':

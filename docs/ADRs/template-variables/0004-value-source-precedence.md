@@ -1,6 +1,6 @@
 # ADR-0004: Value source precedence and combination
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 

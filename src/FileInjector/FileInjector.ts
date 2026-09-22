@@ -15,10 +15,21 @@ import type { VFile } from 'vfile';
 
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { delimiterForExtension, parseDelimitedText } from '../util/csv.js';
+import { OptionError } from '../util/errors.js';
 import { fileType } from '../util/fileType.mjs';
 import { type InjectInfo, parseHash } from '../util/hash.js';
 import { isDefined } from '../util/isDefined.js';
-import { dirToUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
+import { type PlaceholderResolver, substituteInString, substituteInTree } from '../util/placeholders.js';
+import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
+import {
+    buildValuesFileLayers,
+    layersFromFlatMap,
+    parseValuesFileEntry,
+    resolveInLayers,
+    type ResolveResult,
+    type UnresolvedReason,
+    type ValueLayer,
+} from '../util/values.js';
 import { detectMarkdownStyle } from './detectStyle.js';
 import { type Directive, directiveRegExp, type DirectiveType, parseDirective } from './Directive.js';
 import { applyQuote, errorToComment, extractHeader, isHtmlNode, sanitizeImport, toCode, toRoot } from './Markdown.js';
@@ -121,10 +132,36 @@ export interface FileInjectorOptions {
      * directive-file reference is allowed to resolve into.
      */
     allowOutsideRoot?: string[] | undefined;
+
+    /**
+     * Run-wide placeholder values (`--value name=val`), last-wins on a repeated name.
+     * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md.
+     */
+    value?: Record<string, string> | undefined;
+
+    /**
+     * Run-wide placeholder values files (`--values-file [prefix:]path`), repeatable.
+     * Resolved relative to `cwd`, not subject to the injection-root boundary.
+     * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md, 0007-values-file-prefixing.md.
+     */
+    valuesFile?: string[] | undefined;
+
+    /**
+     * Environment variable names a directive may reference via `{@ env.NAME @}`.
+     * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md.
+     */
+    allowEnv?: string[] | undefined;
+
+    /**
+     * Treat an unresolved placeholder as a directive error instead of a warning.
+     * See docs/ADRs/template-variables/0005-unresolved-placeholders-and-strict-mode.md.
+     */
+    strictVars?: boolean | undefined;
 }
 
 export class FileInjector {
     private cwd: URL;
+    private cliValuesFileLayersPromise: Promise<ValueLayer[]> | undefined;
     constructor(
         readonly fs: FileSystemAdapter,
         readonly options: FileInjectorOptions,
@@ -158,8 +195,49 @@ export class FileInjector {
             outputDir: this.options.outputDir ? dirToUrl(this.options.outputDir) : undefined,
             writeOnError: this.options.writeOnError ?? false,
             stopOnErrors: this.options.stopOnErrors ?? true,
+            cliValueLayers: layersFromFlatMap(toFlatMap(this.options.value)),
+            cliValuesFileLayers: await this.resolveCliValuesFileLayers(),
+            allowEnvSet: new Set(this.options.allowEnv ?? []),
         });
     }
+
+    /** Run-wide `--values-file` entries: resolved relative to `cwd`, cached across every file in this run. */
+    private async resolveCliValuesFileLayers(): Promise<ValueLayer[]> {
+        const rawEntries = this.options.valuesFile;
+        if (!rawEntries?.length) return [];
+        this.cliValuesFileLayersPromise ??= buildValuesFileLayers(
+            this.fs,
+            rawEntries.map(parseValuesFileEntry),
+            (p) => Promise.resolve(parseRelativeUrl(p).toUrl(this.cwd)),
+            (message) => {
+                throw new OptionError(message);
+            },
+        );
+        return this.cliValuesFileLayersPromise;
+    }
+}
+
+/**
+ * ADR-0005 point 4's two unresolved cases: nothing defines the name, versus every layer that has
+ * it holds a branch rather than a leaf. The second names the kind so an author can tell a typo
+ * from a name that stopped one segment short.
+ */
+function explainUnresolved(reason: UnresolvedReason): string {
+    switch (reason) {
+        case 'object':
+            return 'resolves to an object, not a value';
+        case 'array':
+            return 'resolves to an array, not a value';
+        case 'null':
+            return 'resolves to null, not a value';
+        default:
+            return 'no value source defines it';
+    }
+}
+
+function toFlatMap(value: Record<string, string> | undefined): Map<string, string> | undefined {
+    if (!value) return undefined;
+    return new Map(Object.entries(value));
 }
 
 interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outputDir'> {
@@ -169,6 +247,12 @@ interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outpu
     outputDir: URL | undefined;
     writeOnError: boolean;
     stopOnErrors: boolean;
+    /** Run-wide `--value` entries, one layer per flag, highest precedence first. */
+    cliValueLayers: ValueLayer[];
+    /** Run-wide `--values-file` entries, one layer per entry, read once per run. */
+    cliValuesFileLayers: ValueLayer[];
+    /** Environment variable names allow-listed via `--allow-env`. */
+    allowEnvSet: Set<string>;
 }
 
 export interface ProcessFileResult {
@@ -453,7 +537,16 @@ async function processFileInjections(
             const vFile = await resolveAndReadFile(fileName);
             const content = extractLines(extractContent(vFile), lines);
             const delimiter = delimiterForExtension(path.extname(fileName.pathname));
+            // Substitution runs on the parsed cell values, per ADR-0006 point 3 — substituting into
+            // the raw text first would let a value containing the delimiter add phantom columns.
             const rows = parseDelimitedText(content, delimiter);
+            await applySubstitution(info, directive.node, (resolve, onUnresolved) => {
+                for (const row of rows) {
+                    for (let i = 0; i < row.length; ++i) {
+                        row[i] = substituteInString(row[i], resolve, onUnresolved);
+                    }
+                }
+            });
             return {
                 root: toRoot(rowsToTable(rows)),
                 info,
@@ -471,7 +564,10 @@ async function processFileInjections(
         const lines = info.lines;
         try {
             const vFile = await resolveAndReadFile(fileName);
-            const content = extractLines(extractContent(vFile), lines);
+            let content = extractLines(extractContent(vFile), lines);
+            await applySubstitution(info, directive.node, (resolve, onUnresolved) => {
+                content = substituteInString(content, resolve, onUnresolved);
+            });
             const code = toCode(lang || fileType(fileName.pathname), content.trim());
             return {
                 root: toRoot(code),
@@ -484,18 +580,21 @@ async function processFileInjections(
         }
     }
 
-    async function readAndParseMarkdownFile(fileUrl: URL, directive: DirectiveNode): Promise<ParseResult> {
-        const info = parseHash(fileUrl);
+    async function readAndParseMarkdownFile(targetUrl: URL, directive: DirectiveNode): Promise<ParseResult> {
+        const info = parseHash(targetUrl);
         const lines = info.lines;
         const heading = info.heading || '';
         try {
-            const vFile = await resolveAndReadFile(fileUrl);
+            const vFile = await resolveAndReadFile(targetUrl);
             if (lines) {
                 vFile.value = extractLines(extractContent(vFile), lines);
             }
             const fileRoot = parseMarkdownFile(vFile);
             sanitizeImport(fileRoot);
             const markdown = extractHeader(fileRoot, heading);
+            await applySubstitution(info, directive.node, (resolve, onUnresolved) => {
+                substituteInTree(markdown, resolve, onUnresolved);
+            });
             const root =
                 info.code !== undefined || info.lang !== undefined
                     ? toRoot(toCode(info.lang || 'markdown', markdown))
@@ -512,6 +611,93 @@ async function processFileInjections(
             }
             return { root: errorToComment(err), info };
         }
+    }
+
+    /**
+     * Resolve a directive's placeholder value sources ({@link InjectInfo.values}/`valuesFile`) and
+     * substitute placeholders in its content via `apply`, reporting unresolved names once per
+     * unique name (warning, or a directive error under `--strict-vars`). A directive with none of
+     * `values=`/`values-file=`/`#vars` does no scanning at all, per ADR-0002 point 4.
+     */
+    async function applySubstitution(
+        info: InjectInfo,
+        directiveNode: Html,
+        apply: (resolve: PlaceholderResolver, onUnresolved: (name: string) => void) => void,
+    ): Promise<void> {
+        const optedIn = info.values !== undefined || info.valuesFile !== undefined || info.vars === true;
+        if (!optedIn) return;
+        const directiveValuesFileLayers = info.valuesFile
+            ? await resolveDirectiveValuesFileLayers(info.valuesFile, directiveNode)
+            : [];
+        const layers = buildLayers(info, directiveValuesFileLayers);
+        const unresolved = new Set<string>();
+        apply(
+            (name) => {
+                const r = resolveName(layers, name);
+                return 'value' in r ? r.value : undefined;
+            },
+            (name) => unresolved.add(name),
+        );
+        for (const name of unresolved) {
+            // Re-resolve only the names that failed, to say which of ADR-0005 point 4's two cases it is.
+            const r = resolveName(layers, name);
+            const reason = 'unresolved' in r ? r.unresolved : 'undefined';
+            const message = `Unresolved placeholder "{@ ${name} @}": ${explainUnresolved(reason)}`;
+            if (options.strictVars) {
+                file.error(message, directiveNode.position);
+            } else {
+                file.message(message, directiveNode.position);
+            }
+        }
+    }
+
+    /** Directive `values-file=` paths resolve relative to the containing document, per ADR-0002 point 2. */
+    async function resolveDirectiveValuesFileLayers(
+        entries: NonNullable<InjectInfo['valuesFile']>,
+        directiveNode: Html,
+    ): Promise<ValueLayer[]> {
+        return buildValuesFileLayers(
+            fs,
+            entries,
+            async (p) => {
+                // Return the path the boundary approved, so the read can't follow a symlink
+                // swapped in after the check (time-of-check/time-of-use) -- the same guard
+                // `resolveAndReadFile` applies to directive file references.
+                return await resolveWithinInjectionRoot(parseRelativeUrl(p).toUrl(fileUrl));
+            },
+            (message) => file.error(message, directiveNode.position),
+        );
+    }
+
+    /**
+     * A directive's value layers in precedence order, per ADR-0004 and ADR-0008 point 2 — each
+     * group already ordered last-listed first.
+     */
+    function buildLayers(info: InjectInfo, directiveValuesFileLayers: ValueLayer[]): ValueLayer[] {
+        return [
+            ...layersFromFlatMap(info.values),
+            ...directiveValuesFileLayers,
+            ...options.cliValueLayers,
+            ...options.cliValuesFileLayers,
+        ];
+    }
+
+    /**
+     * Resolve one placeholder name. The `env.` namespace is reserved rather than layered
+     * (ADR-0003 point 4): it is answered before any value layer is consulted, so `{@ env.X @}`
+     * always means the OS environment and a value source defining a top-level `env` key stays
+     * unreachable.
+     */
+    function resolveName(layers: ValueLayer[], name: string): ResolveResult {
+        if (name === 'env' || name.startsWith('env.')) {
+            const segments = name.split('.');
+            if (segments.length !== 2) return { unresolved: 'undefined' };
+            const envName = segments[1];
+            if (!options.allowEnvSet.has(envName)) return { unresolved: 'undefined' };
+            const v = process.env[envName];
+            return v === undefined ? { unresolved: 'undefined' } : { value: v };
+        }
+        return resolveInLayers(layers, name);
     }
 
     async function resolveAndReadFile(file: URL): Promise<VFileEx> {

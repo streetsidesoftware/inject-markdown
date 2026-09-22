@@ -7,6 +7,7 @@ import { describe, expect, type MockedFunction, test, vi } from 'vitest';
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { nodeFsa } from '../FileSystemAdapter/fsa.js';
 import { createStore, normalizePath, type Store } from '../FileSystemAdapter/fsStore.mjs';
+import { OptionError } from '../util/errors.js';
 import { relativePath } from '../util/url_helper.js';
 import { FileInjector, type Logger } from './FileInjector.js';
 
@@ -306,6 +307,167 @@ describe('injection root boundary', () => {
         const r = await fi.processFile('local.md');
         expect(r.hasErrors).toBe(false);
         expect(r.file.value).toContain('Inside content.');
+    });
+});
+
+describe('template variables', () => {
+    const valuesRoot = path.join(__root__, 'fixtures/template-variables/values');
+    const cliRoot = path.join(__root__, 'fixtures/template-variables/cli-sources');
+    const strictRoot = path.join(__root__, 'fixtures/template-variables/strict-vars');
+    const boundaryRoot = path.join(__root__, 'fixtures/injection-root-boundary/root');
+    const layersRoot = path.join(__root__, 'fixtures/template-variables/layers');
+
+    function count(text: string, needle: string): number {
+        return text.split(needle).length - 1;
+    }
+
+    test('directive-level values=/values-file= sources, precedence, escaping, opt-out, and unresolved handling', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: valuesRoot, silent: true });
+        const r = await fi.processFile('README.md');
+        const written = r.file.value as string;
+
+        // Inline `values=`, auto-derived prefix, explicit prefix, and root merge all resolve `version` to "1.2.3".
+        expect(count(written, 'npm install pkg@1.2.3')).toBe(4);
+        // Inline `values=` takes precedence over `values-file=` on the same directive.
+        expect(count(written, 'npm install pkg@9.9.9')).toBe(1);
+        // Not opted in (no `values=`/`values-file=`/`vars`) and a non-scalar values-file lookup both
+        // leave the placeholder untouched, literally.
+        expect(count(written, 'npm install pkg@{@ version @}')).toBe(2);
+        // A backslash-escaped placeholder is unescaped to literal text, not substituted.
+        expect(written).toContain('Literal: {@ version @}');
+        // Opted in via bare `#vars`, but no source defines the name.
+        expect(written).toContain('Value: {@ missing @}');
+        // Markdown-tree substitution: prose, inline code, and a fenced code block.
+        expect(written).toContain('This release is version 2.0.0.');
+        expect(written).toContain('npm install pkg@2.0.0');
+        expect(written).toContain("console.log('2.0.0');");
+
+        expect(r.hasErrors).toBe(false);
+        expect(r.hasMessages).toBe(true);
+        const messages = r.file.messages.map(String).join('\n');
+        expect(messages).toContain('Unresolved placeholder "{@ missing @}"');
+        expect(messages).toContain('Unresolved placeholder "{@ version @}"');
+    });
+
+    test('CLI --value/--values-file/--allow-env, and directive values= takes precedence over --value', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, {
+            cwd: cliRoot,
+            silent: true,
+            value: { fromCli: 'CliValue', greeting: 'CLI' },
+            valuesFile: ['cliData.json'],
+            allowEnv: ['TV_TEST_VAR'],
+        });
+        const previousEnv = process.env.TV_TEST_VAR;
+        process.env.TV_TEST_VAR = 'envValue';
+        try {
+            const r = await fi.processFile('README.md');
+            expect(r.hasErrors).toBe(false);
+            const written = r.file.value as string;
+            expect(written).toContain('Value: CliValue');
+            expect(written).toContain('Town: Springfield');
+            expect(written).toContain('Env: envValue');
+            expect(written).toContain('Greeting: Directive');
+        } finally {
+            if (previousEnv === undefined) delete process.env.TV_TEST_VAR;
+            else process.env.TV_TEST_VAR = previousEnv;
+        }
+    });
+
+    test('without --allow-env, an env. reference is unresolved', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: cliRoot, silent: true });
+        const r = await fi.processFile('README.md');
+        expect(r.file.value).toContain('Env: {@ env.TV_TEST_VAR @}');
+    });
+
+    test('--strict-vars turns an unresolved placeholder into a directive error', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: strictRoot, silent: true, strictVars: true });
+        const r = await fi.processFile('README.md');
+        expect(r.hasErrors).toBe(true);
+        expect(r.file.messages.map(String).join('\n')).toContain('Unresolved placeholder "{@ missing @}"');
+    });
+
+    test('without --strict-vars, an unresolved placeholder is a warning, not an error', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: strictRoot, silent: true });
+        const r = await fi.processFile('README.md');
+        expect(r.hasErrors).toBe(false);
+        expect(r.hasMessages).toBe(true);
+    });
+
+    test('layers union per leaf: prefixed and root-merged values-file entries (ADR-0008)', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: layersRoot, silent: true });
+        const r = await fi.processFile('README.md');
+        const written = r.file.value as string;
+        // Last-listed wins on the shared name, but the earlier entry's own names survive —
+        // including a nested branch both files define.
+        expect(written).toContain('v=fromB a=A b=B deepA=yes deepB=yes');
+        expect(written).toContain('v=fromB a=A b=B deepA=yes');
+        // A branch, an array and a null are all unresolved, each naming its kind.
+        const messages = r.file.messages.map(String).join('\n');
+        expect(messages).toContain('"{@ branch.engines @}": resolves to an object, not a value');
+        expect(messages).toContain('"{@ branch.list @}": resolves to an array, not a value');
+        expect(messages).toContain('"{@ branch.nulled @}": resolves to null, not a value');
+        expect(messages).toContain('"{@ missingName @}": no value source defines it');
+        expect(r.hasErrors).toBe(false);
+    });
+
+    test('--value keeps both names when one is a prefix of another', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, {
+            cwd: layersRoot,
+            silent: true,
+            value: { a: '1', 'a.b': '2' },
+        });
+        const r = await fi.processFile('cli-nested.md');
+        // One folded tree would lose `a` to `a.b`; one layer per flag keeps both.
+        expect(r.file.value).toContain('a=1 ab=2');
+        expect(r.hasErrors).toBe(false);
+    });
+
+    test('a non-scalar in a higher-precedence source falls through to a lower one', async () => {
+        const fsa = createFSA();
+        // The directive's `values=x.y:...` creates an object at `x` as a side effect of the dotted
+        // name. The lower-precedence CLI `--value x=...` scalar must still resolve `{@ x @}`.
+        const fi = new FileInjector(fsa, { cwd: layersRoot, silent: true, value: { x: 'fromCli' } });
+        const r = await fi.processFile('fallthrough.md');
+        expect(r.file.value).toContain('x=fromCli xy=fromDirective');
+        expect(r.hasErrors).toBe(false);
+    });
+
+    test('an unreadable --values-file raises an OptionError, not a document error', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: valuesRoot, silent: true, valuesFile: ['does-not-exist.json'] });
+        await expect(fi.processFile('README.md')).rejects.toThrow(OptionError);
+        await expect(fi.processFile('README.md')).rejects.toThrow('Failed to read values file');
+    });
+
+    test('a table value containing the delimiter stays in its own cell', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, {
+            cwd: path.join(__root__, 'fixtures/template-variables/table'),
+            silent: true,
+        });
+        const r = await fi.processFile('README.md');
+        const written = r.file.value as string;
+        // Substitution runs per parsed cell (ADR-0006 point 3), so `1,2` must not add a column.
+        expect(written).toContain('| pkg   | 1,2           |');
+        expect(written).not.toContain('| 1     | 2 |');
+        // An unresolved placeholder in a cell is left as written.
+        expect(written).toContain('{@ missing @}');
+    });
+
+    test('a directive values-file= reference outside the injection root is blocked', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
+        const r = await fi.processFile('values-file-escape.md');
+        expect(r.hasErrors).toBe(true);
+        expect(r.file.messages.map(String).join('\n')).toContain('is outside the injection root');
+        expect(r.file.value).not.toContain('TOP SECRET');
     });
 });
 

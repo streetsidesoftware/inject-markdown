@@ -1,6 +1,6 @@
 # ADR-0008: Value layering and per-leaf resolution
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-22
 **Deciders:** Jason Dent
 

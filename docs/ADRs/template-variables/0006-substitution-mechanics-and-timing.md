@@ -1,6 +1,6 @@
 # ADR-0006: Substitution mechanics and timing
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 

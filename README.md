@@ -33,27 +33,39 @@ Usage: inject-markdown [options] <files...>
 Inject file content into markdown files.
 
 Arguments:
-  files                       Files to scan for injected content.
+  files                          Files to scan for injected content.
 
 Options:
-  --no-must-find-files        No error if files are not found.
-  --output-dir <dir>          Output Directory
-  --cwd <dir>                 Current Directory
-  --allow-outside-root <dir>  Allow local @@inject references to resolve into
-                              <dir>, outside the injection root (cwd).
-                              Repeatable.
-  --clean                     Remove the injected content.
-  --no-inject-only            Update the whole file.
-  --verbose                   Verbose output.
-  --silent                    Only output errors.
-  --no-stop-on-errors         Do not stop if an error occurs.
-  --write-on-error            write the file even if an injection error occurs.
-  --color                     Force color.
-  --no-color                  Do not use color.
-  --no-summary                Do not show the summary
-  --dry-run                   Process the files, but do not write.
-  -V, --version               output the version number
-  -h, --help                  display help for command
+  --no-must-find-files           No error if files are not found.
+  --output-dir <dir>             Output Directory
+  --cwd <dir>                    Current Directory
+  --allow-outside-root <dir>     Allow local @@inject references to resolve into
+                                 <dir>, outside the injection root (cwd).
+                                 Repeatable.
+  --value <name=val>             Set a run-wide {@ name @} placeholder value.
+                                 Repeatable; a later --value for the same name
+                                 wins.
+  --values-file <[prefix:]path>  Add a run-wide JSON file of {@ name @}
+                                 placeholder values, resolved relative to --cwd.
+                                 Repeatable.
+  --allow-env <name>             Allow a directive to reference the OS
+                                 environment variable <name> via {@ env.name @}.
+                                 Repeatable.
+  --strict-vars                  Treat an unresolved {@ name @} placeholder as a
+                                 directive error.
+  --clean                        Remove the injected content.
+  --no-inject-only               Update the whole file.
+  --verbose                      Verbose output.
+  --silent                       Only output errors.
+  --no-stop-on-errors            Do not stop if an error occurs.
+  --write-on-error               write the file even if an injection error
+                                 occurs.
+  --color                        Force color.
+  --no-color                     Do not use color.
+  --no-summary                   Do not show the summary
+  --dry-run                      Process the files, but do not write.
+  -V, --version                  output the version number
+  -h, --help                     display help for command
 ```
 
 <!--- @@inject-end: content/help.txt --->
@@ -210,17 +222,45 @@ async function version(): Promise<string> {
 
 <!--- cspell:dictionaries typescript --->
 
+## Template Variables
+
+Injected content may contain `{@ name @}` placeholders, resolved against values the _directive_ supplies (not the file being injected) and substituted in at injection time — e.g. an injected snippet containing `npm install my-package@{@ version @}` becomes `npm install my-package@1.2.3` in the output. This isn't a full template engine: no conditionals or loops, just name-to-value substitution. Write `\{@ name @}` to show the syntax literally without triggering substitution.
+
+A directive only scans its content for placeholders if it carries `values=`, `values-file=`, or the bare `vars` flag; without one of those, `{@ ... @}` text passes through untouched. An unresolved placeholder — nothing defines its name, or every source that has it holds an object, an array or `null` there — is left untouched with a warning saying which; pass `--strict-vars` to make that a directive error instead.
+
+```markdown
+<!--- @@inject-code: install.md#values=version:1.2.3 --->
+```
+
+```markdown
+npm install my-package@1.2.3
+```
+
+Values can also come from a JSON file (`values.json`: `{"version": "1.2.3"}`), namespaced by default under a prefix derived from the file's name (`{@ values.version @}`), or merged directly at the root with a leading `:` (`{@ version @}`):
+
+```markdown
+<!--- @@inject-code: install.md#values-file=values.json --->
+<!--- @@inject-code: install.md#values-file=:values.json --->
+```
+
+Run-wide values are available to any directive that opts in via `values=`, `values-file=`, or the bare `vars` flag — `--value <name=val>` (repeatable), `--values-file [prefix:]path` (repeatable JSON files, same `[prefix:]path` syntax as the directive-level option), and `--allow-env <NAME>` (repeatable, exposed as `{@ env.NAME @}`) — with a directive's own `values=`/`values-file=` taking precedence on a name collision.
+
+Overriding is per name, not per file. Given a `values.json` of `{"version": "1.2.3", "name": "my-package"}`, a single `--value values.version=2.0.0` changes just that one name and `{@ values.name @}` still comes from the file — and the same holds when two values files are listed together, so a later one patches the earlier rather than replacing it. `--strict-vars` turns an unresolved placeholder into a directive error instead of a warning.
+
 ## Per Injections Options
 
 The hash `#` portion of the file URL is used to set injection options. Each option is separated by a `&`.
 
-| Option    | Code | Markdown | Description                                               |
-| --------- | ---- | -------- | --------------------------------------------------------- |
-| `heading` | ❌   | ✅       | Used to extract a section from a markdown file.           |
-| `code`    | ❌   | ✅       | Convert the injected markdown into a Code Block.          |
-| `lang`    | ✅   | ✅       | Used to set the language of the code block.               |
-| `quote`   | ✅   | ✅       | Used to inject the file as a block quote.                 |
-| `L1-L10`  | ✅   | ✅       | Used to inject only specified lines from the source file. |
+| Option        | Code | Markdown | Description                                                             |
+| ------------- | ---- | -------- | ----------------------------------------------------------------------- |
+| `heading`     | ❌   | ✅       | Used to extract a section from a markdown file.                         |
+| `code`        | ❌   | ✅       | Convert the injected markdown into a Code Block.                        |
+| `lang`        | ✅   | ✅       | Used to set the language of the code block.                             |
+| `quote`       | ✅   | ✅       | Used to inject the file as a block quote.                               |
+| `L1-L10`      | ✅   | ✅       | Used to inject only specified lines from the source file.               |
+| `values`      | ✅   | ✅       | Inline `{@ name @}` placeholder values: `name:val,name2:val2`.          |
+| `values-file` | ✅   | ✅       | JSON file(s) of placeholder values: `[prefix:]path[,...]`.              |
+| `vars`        | ✅   | ✅       | Opt into placeholder scanning using only CLI/environment value sources. |
 
 ### Example 1
 
