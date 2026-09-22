@@ -32,6 +32,7 @@ The motivating shape is a directive that loads two files and wants one name from
    7. the `env.` namespace
 
    A directive alias therefore redefines a name the same directive's own `values-file=` supplies — which is what the Context example needs — while a CLI alias never overrides anything the directive said. This extends [ADR-0004](0004-value-source-precedence.md) rather than replacing it: the directive-over-CLI ordering is unchanged, and an alias is simply the most specific thing a given tier can say about a name.
+
 4. **Resolution is by rewriting, lazily.** An alias does not hold a value and is not a [value layer](../../glossary.md#value-layer) ([ADR-0008](0008-value-layering-and-resolution.md)). Resolving `new` means resolving `target` through the normal layer walk at that moment, so an alias always reflects whatever the layers currently say.
 5. **Chains follow; cycles are reported.** If a target is itself an aliased name, resolution follows through. A name repeating on the path is a cycle: the placeholder is unresolved and the message names the cycle, rather than looping.
 6. **A target may be any name, including `env.`** — `--value-alias token=env.DEPLOY_TOKEN` resolves through the reserved namespace and so remains subject to `--allow-env` ([ADR-0003](0003-cli-and-env-value-sources.md) point 4). The alias is indirection over the same resolver, so the allow-list is enforced without a second rule.
@@ -46,7 +47,7 @@ The motivating shape is a directive that loads two files and wants one name from
 - **One hop, no chaining** — rejected: it makes an alias over an aliased name fail silently, which is hard to see in a directive that reads perfectly well. Cycle detection is a visited set in the resolver, which is cheap next to that.
 - **Restricting the new name to a single segment** — rejected as an exception to the naming grammar that authors would have to remember, for no gain; a dotted new name is just another namespace.
 - **Excluding `env.` as a target** — rejected: it would need a special case in the alias rule, and the allow-list already decides what is reachable, so nothing is gained by blocking the indirection.
-- **Plural `values-alias=`**, grouping visually with `values=`/`values-file=` — rejected: each entry maps exactly one name to one name, so the plural would misdescribe it.
+- **Plural `values-alias=`**, grouping visually with `values=`/`values-file=` — rejected: each entry maps exactly one name to one name, so the plural would be inaccurate.
 - **Copying the value instead** (`values=version:1.2.3`) — the status quo, and the thing this replaces: it duplicates a value that already exists in a file the directive is loading anyway, and nothing keeps the copy honest.
 
 ## Consequences

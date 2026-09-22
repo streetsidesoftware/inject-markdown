@@ -12,5 +12,7 @@ ADRs for template variable substitution: `{@ name @}` placeholders inside inject
 | [0006](0006-substitution-mechanics-and-timing.md)       | Substitution mechanics and timing                | Proposed |
 | [0007](0007-values-file-prefixing.md)                   | `values-file=` multi-file imports and prefixing  | Proposed |
 | [0008](0008-value-layering-and-resolution.md)           | Value layering and per-leaf resolution           | Proposed |
+| [0009](0009-prefix-grammar-and-drive-letters.md)        | Values-file prefix grammar and Windows drive letters | Proposed |
+| [0010](0010-value-alias.md)                             | `value-alias=` redefining a name to point at another | Proposed |
 
 See also: [../../glossary.md](../../glossary.md).

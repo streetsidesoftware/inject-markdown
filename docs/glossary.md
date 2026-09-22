@@ -96,7 +96,19 @@ A CLI flag making an unresolved placeholder a directive error (via `file.error()
 The namespace a `values-file=`/`--values-file` entry's keys are placed under, addressed via a dotted [placeholder name](#placeholder-name) (e.g. `{@ package.version @}`). Auto-derived from the file's basename by default, settable explicitly (`prefix:path`), or opted out of via [root merge](#root-merge-path) (`:path`). See [ADR-0007](ADRs/template-variables/0007-values-file-prefixing.md).
 
 **Auto-derived prefix**
-The default values-file prefix, computed by stripping the extension from a `values-file=`/`--values-file` entry's basename (`package.json` → `package`). A directive error if the result isn't a valid placeholder-name segment (`[A-Za-z0-9_-]+`) — no automatic sanitizing. See [ADR-0007](ADRs/template-variables/0007-values-file-prefixing.md).
+The default values-file prefix, computed by stripping a leading Windows drive (`c:package.json` → `package`) and the extension from a `values-file=`/`--values-file` entry's basename. Always a single segment: a directive error if the result isn't a valid placeholder-name segment (`[A-Za-z0-9_-]+`) — no automatic sanitizing, and no nesting on a dotted filename. See [ADR-0007](ADRs/template-variables/0007-values-file-prefixing.md), [ADR-0009](ADRs/template-variables/0009-prefix-grammar-and-drive-letters.md).
+
+**Explicit prefix**
+The namespace written before the colon in a `values-file=`/`--values-file` entry (`pkg:package.json`). Matches `[A-Za-z0-9._-]{2,}` — two characters or more, so a Windows drive letter is never parsed as one — and may be dotted, in which case it nests (`pkg.build:data.json` → `{@ pkg.build.* @}`). See [ADR-0009](ADRs/template-variables/0009-prefix-grammar-and-drive-letters.md).
 
 **Root merge (`:path`)**
 A `values-file=`/`--values-file` entry written with an empty prefix (a leading colon, no name before it), contributing that file's keys directly to the root namespace instead of under an auto-derived or explicit prefix — the opt-out for a directive that wants bare placeholder names from a single file. It is an ordinary [value layer](#value-layer) with no prefix, so two root-merged entries resolve per leaf rather than the later one replacing the earlier. See [ADR-0007](ADRs/template-variables/0007-values-file-prefixing.md), [ADR-0008](ADRs/template-variables/0008-value-layering-and-resolution.md).
+
+**Value alias**
+A mapping from one [placeholder name](#placeholder-name) to another, declared with the `value-alias=` directive option or the `--value-alias` CLI option. It holds no value of its own: resolving the aliased name resolves the target through the normal layer walk, so it always reflects what the sources currently say. Ranks above the values of its own tier, so a directive alias redefines a name that directive's own `values-file=` supplies. See [ADR-0010](ADRs/template-variables/0010-value-alias.md).
+
+**`value-alias=` option**
+A directive hash option declaring aliases as comma-separated `new:target` pairs (`value-alias=version:release.latest.version`). Opts the directive into placeholder scanning, like `values=`/`values-file=`/`vars`. See [ADR-0010](ADRs/template-variables/0010-value-alias.md).
+
+**`--value-alias`**
+A repeatable CLI option (`--value-alias <new>=<target>`) declaring a run-wide [value alias](#value-alias). Ranks above `--value`/`--values-file` but below anything the directive declares. See [ADR-0010](ADRs/template-variables/0010-value-alias.md).

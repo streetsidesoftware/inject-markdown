@@ -17,7 +17,7 @@ The feature request specifies that unresolved placeholders remain untouched in t
    - no layer mentions the name at all — typically a typo or a missing value source;
    - one or more layers hold the name, but every one of them holds an object, an array or `null` — typically a name pointing at a branch instead of a leaf (`{@ package.engines @}` where `{@ package.engines.node @}` was meant).
 
-   The second wording names the offending kind (object/array/null) so the author can tell "I misspelled this" from "I stopped one segment short". `--strict-vars` turns either into a directive error, with the same distinction preserved in the error text.
+   The second wording names the offending kind (object/array/null) so the author can tell "I misspelled this" from "I stopped one segment short". [ADR-0010](0010-value-alias.md) point 9 adds a third case — the name is aliased and the alias's target does not resolve — whose message names both sides. `--strict-vars` turns any of them into a directive error, with the same distinction preserved in the error text.
 
 ## Options Considered
 

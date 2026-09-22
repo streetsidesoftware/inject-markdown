@@ -18,6 +18,7 @@ words:
   - footgun
   - frontmatter
   - globby
+  - HKLM
   - lcov
   - mdast
   - pnpm

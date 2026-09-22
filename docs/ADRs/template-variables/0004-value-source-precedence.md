@@ -18,6 +18,8 @@ Lookup order, most specific wins:
 4. CLI `--values-file`
 5. Environment (`env.` namespace only — not merged into the same flat space as 1–4; see [ADR-0003](0003-cli-and-env-value-sources.md) point 4)
 
+[ADR-0010](0010-value-alias.md) point 3 extends this list with aliases, which rank above the values of their own tier — directive `value-alias=` above 1, CLI `--value-alias` above 3 — leaving the relative order of the ranks above unchanged.
+
 A name resolves to the value from the first source in this list that defines it _as a scalar_. This is evaluated per lookup, not per directive as a whole: a directive can pull `version` from its own inline `values=` while falling through to CLI `--value` for `buildDate`, in the same content.
 
 This order ranks _sources_. It does not by itself say what happens when two sources each define part of the same dotted namespace, or when two entries within one source collide — [ADR-0008](0008-value-layering-and-resolution.md) settles that, and refines "the first source that defines it" into "the first layer that holds it as a scalar".

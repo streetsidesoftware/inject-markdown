@@ -10,11 +10,11 @@
 
 The collision is not a read failure — it is silent and wrong:
 
-| entry | parsed as | effect |
-| ------------------------- | ------------------------------- | ----------------------------------------------- |
-| `c:package.json` | prefix `c`, path `package.json` | reads a real `package.json` under namespace `c` |
-| `C:\data\values.json` | prefix `C`, path `\data\values.json` | reads the wrong absolute path |
-| `C:/data/values.json` | prefix `C`, path `/data/values.json` | reads the wrong absolute path |
+| entry                 | parsed as                            | effect                                          |
+| --------------------- | ------------------------------------ | ----------------------------------------------- |
+| `c:package.json`      | prefix `c`, path `package.json`      | reads a real `package.json` under namespace `c` |
+| `C:\data\values.json` | prefix `C`, path `\data\values.json` | reads the wrong absolute path                   |
+| `C:/data/values.json` | prefix `C`, path `/data/values.json` | reads the wrong absolute path                   |
 
 `c` and `C` are valid placeholder-name segments, so nothing rejects them. The first row is the worst case: it reads a file that exists and namespaces it under a prefix the author never wrote, with no error at all. Windows is in the test matrix, and `--values-file` is the option most likely to be given an absolute path.
 
