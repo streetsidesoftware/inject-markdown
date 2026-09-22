@@ -43,6 +43,8 @@ A refusal is explicit on stderr — naming the policy and `--allow-remote-host` 
 
 This split is deliberate, and it is a different answer from the one [file-access-security/ADR-0001](../file-access-security/0001-injection-root-boundary.md) reaches for local references. There, the check could be reordered so its verdict never depended on the target existing, and the denial could then say everything. Here it cannot: deciding the policy _requires_ resolving the name, so any explicit refusal reveals that the name resolved and that it was internal. Someone who can add a directive to a CI-built pull request could otherwise map the runner's network one hostname per directive. The operator running the tool already knows their own network and needs the diagnosis; the document is the artifact the pull-request author reads back, so it carries the same generic failure as any other unreachable URL.
 
+This is the group's one exception to the denial-reporting rule, which [ADR-0005](0005-threat-model-and-safe-usage.md) states in full — including the assumption it depends on, that the pull-request author does not read the build log.
+
 ## Options Considered
 
 - **Off by default, behind `--allow-remote`** — rejected: the strongest posture, and it mirrors the allowlist pattern well, but it breaks a documented headline feature that this project's own README depends on, stacked on top of the 6.0.0 break already shipped. The guardrails close the concrete exposure without that cost.
