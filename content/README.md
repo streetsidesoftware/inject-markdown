@@ -106,6 +106,24 @@ export function sayHello(name: string): string {
 
 To force a `.csv`/`.tsv` file to be injected as a code block instead, use `@@inject-code: sample.csv` or `@@inject: sample.csv#lang=csv`. To force any other file to be injected as a table, use `@@inject-table: <file>`.
 
+### Table options
+
+Options go in the `#` fragment of the file reference and combine with `&`, e.g. `<!--- @@inject: data.csv#columns=Name,Price:&num-rows=20 --->`.
+
+| Option                                    | Description                                                                                                                                                                                                                                                                                                                                                       |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `header-rows=N`                           | Number of leading rows used as the header (default `1`). A bare `header-rows` means `1`. With `0`, every row is data and the header shows column numbers. With more than one, each column's header cells are joined with `<br />`.                                                                                                                                |
+| `columns=<ref>,...`                       | Select and order the output columns. A `<ref>` is a 1-based column number or a header name (case-sensitive; with several header rows, the column's non-empty header cells joined by a space). Add alignment with a colon: `:Name` left, `Name:` right, `:Name:` center. Wrap the whole value in double quotes to use literal spaces: `columns="Unit Price,Qty:"`. |
+| `start-row=N`                             | First data row to include, counting from 1 after the header rows (default `1`).                                                                                                                                                                                                                                                                                   |
+| `num-rows=N`                              | Maximum number of data rows to include (default `10000`).                                                                                                                                                                                                                                                                                                         |
+| `end-row=N`                               | Last data row to include.                                                                                                                                                                                                                                                                                                                                         |
+| `header-format=none\|title\|upper\|lower` | Change the case of the header text for display (default `none`).                                                                                                                                                                                                                                                                                                  |
+| `column-names=<label>,...`                | Replace header labels by output position. An empty entry keeps that header: `column-names=",,Return Date"`. Labels are used exactly as written.                                                                                                                                                                                                                   |
+
+A column with no explicit alignment is right-aligned automatically when at least 90% of its non-empty data cells look like numbers or currency (`1,234.56`, `1.234,56`, `-$5`, `12%`; symbols `$ € £ ¥`).
+
+An unknown column name, an out-of-range column number, or a malformed option value is an error. A row window past the end of the data produces a table with only the header.
+
 ## Import Markdown as Code
 
 It is also possible to inject markdown:
@@ -155,6 +173,7 @@ or
 >   - `<file.csv>`, `<file.tsv>` -- a comma or tab separated file, injected as a Markdown table using all of its columns.
 >   - `@@inject-table: <file>` -- force any file to be injected as a table, regardless of its extension.
 >   - Use `@@inject-code: <file.csv>` or `#lang=csv` to inject the file as a code block instead of a table.
+>   - `header-rows`, `columns`, `start-row`, `num-rows`, `end-row`, `header-format`, `column-names` -- optional table options.
 
 <!--- @@inject-end: chapters.md#heading=Chapter 3: Directives&quote --->
 

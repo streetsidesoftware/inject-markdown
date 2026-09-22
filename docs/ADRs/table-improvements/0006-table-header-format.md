@@ -1,6 +1,6 @@
 # ADR-0006: `header-format` option
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 

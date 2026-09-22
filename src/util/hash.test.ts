@@ -48,6 +48,13 @@ describe('hash', () => {
             params: m('vars'),
         });
     });
+
+    test('table options are collected raw, and a bare key is not a heading', () => {
+        expect(parseHashString('#header-rows&columns=%22First%20Name,Age:%22&num-rows=5')).toEqual({
+            table: { 'header-rows': '', columns: '"First Name,Age:"', 'num-rows': '5' },
+            params: m('header-rows', 'columns=%22First%20Name,Age:%22', 'num-rows=5'),
+        });
+    });
 });
 
 function m(...entries: ([string, string | string[]] | string)[]): Map<string, string | string[]> {

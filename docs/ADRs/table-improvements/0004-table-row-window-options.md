@@ -1,6 +1,6 @@
 # ADR-0004: Row window options (`start-row`, `end-row`, `num-rows`)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 

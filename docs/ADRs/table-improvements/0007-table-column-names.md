@@ -1,6 +1,6 @@
 # ADR-0007: `column-names` option
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 

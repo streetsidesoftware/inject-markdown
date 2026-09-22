@@ -34,7 +34,7 @@ import { detectMarkdownStyle } from './detectStyle.js';
 import { type Directive, directiveRegExp, type DirectiveType, parseDirective } from './Directive.js';
 import { applyQuote, errorToComment, extractHeader, isHtmlNode, sanitizeImport, toCode, toRoot } from './Markdown.js';
 import { applyPatches, indentContinuationLines, lineIndent, type Patch, stringifyFragment } from './patchContent.js';
-import { rowsToTable } from './Table.js';
+import { parseTableOptions, rowsToTable } from './Table.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
 
@@ -534,6 +534,7 @@ async function processFileInjections(
         const info = parseHash(fileName);
         const lines = info.lines;
         try {
+            const tableOptions = parseTableOptions(info.table);
             const vFile = await resolveAndReadFile(fileName);
             const content = extractLines(extractContent(vFile), lines);
             const delimiter = delimiterForExtension(path.extname(fileName.pathname));
@@ -548,7 +549,7 @@ async function processFileInjections(
                 }
             });
             return {
-                root: toRoot(rowsToTable(rows)),
+                root: toRoot(rowsToTable(rows, tableOptions)),
                 info,
             };
         } catch (e) {
@@ -976,8 +977,9 @@ function hasEofNewLine(content: string): boolean {
     return content[content.length - 1] === '\n';
 }
 
+/** Undo URL encoding of spaces and quotes so a directive keeps its authored `columns="A B"` form. */
 function normalizeHref(href: string): string {
-    return href.replace(/%20/g, ' ');
+    return href.replace(/%20/g, ' ').replace(/%22/g, '"');
 }
 
 function extractLines(content: string, lines: [number, number] | undefined): string {

@@ -111,11 +111,11 @@ function splitTopLevel(s: string, sep: string): string[] {
     return parts.map((p) => p.trim()).filter((p) => p.length > 0);
 }
 
-function isQuoted(s: string): boolean {
+export function isQuoted(s: string): boolean {
     return s.length >= 2 && s.startsWith('"') && s.endsWith('"');
 }
 
-function unquote(s: string): string {
+export function unquote(s: string): string {
     return isQuoted(s) ? s.slice(1, -1) : s;
 }
 

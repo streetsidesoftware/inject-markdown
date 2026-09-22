@@ -21,6 +21,29 @@ export interface InjectInfo {
     valuesFile?: ValuesFileEntry[] | undefined;
     /** Bare `#vars` opt-in: scan for placeholders using CLI/environment sources alone. See ADR-0002. */
     vars?: boolean | undefined;
+    /** Raw table-shaping options, validated by `parseTableOptions`. See table-improvements ADR-0001. */
+    table?: RawTableOptions | undefined;
+}
+
+/** Hash keys that shape a table injection. See table-improvements ADRs 0002-0007. */
+export const tableOptionKeys = [
+    'header-rows',
+    'columns',
+    'num-rows',
+    'start-row',
+    'end-row',
+    'header-format',
+    'column-names',
+] as const;
+
+export type TableOptionKey = (typeof tableOptionKeys)[number];
+
+export type RawTableOptions = Partial<Record<TableOptionKey, string>>;
+
+const tableOptionKeySet = new Set<string>(tableOptionKeys);
+
+function isTableOptionKey(key: string): key is TableOptionKey {
+    return tableOptionKeySet.has(key);
 }
 
 export function parseHash(url: URL | RelURL): InjectInfo {
@@ -55,6 +78,11 @@ export function parseHashString(hash: string): InjectInfo {
 
     for (const [key, value] of params.entries()) {
         addParam(key, value);
+        if (isTableOptionKey(key)) {
+            info.table ??= {};
+            info.table[key] = value;
+            continue;
+        }
         switch (key) {
             case 'code':
             case 'lang':
