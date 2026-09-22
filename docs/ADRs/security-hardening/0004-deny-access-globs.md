@@ -40,7 +40,7 @@ Two further rules, both load-bearing:
 
 Empty. No patterns unless the operator supplies them — the tool stays out of the business of deciding what is sensitive.
 
-A denial is reported exactly as the injection-root denial is: fatal, and worded `Access denied`, naming the pattern that matched so the operator can act on it. A deny match is a pure glob evaluation over a path, so — unlike ADR-0003's destination policy — saying why reveals nothing that the person who authored the pattern does not already know.
+A denial is reported exactly as the injection-root denial is: fatal, and worded `Access denied`, naming the pattern that matched so the operator can act on it. A deny match is a pure glob evaluation over a path, so — unlike ADR-0003's destination policy — saying why reveals nothing that the person who authored the pattern does not already know. See [ADR-0005](0005-threat-model-and-safe-usage.md) for the rule this follows.
 
 ## Options Considered
 
