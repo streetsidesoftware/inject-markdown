@@ -10,7 +10,7 @@ import remarkStringify, { type Options as StringifyOptions } from 'remark-string
 import { unified } from 'unified';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import type { VFile } from 'vfile';
 
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
@@ -510,8 +510,10 @@ async function processFileInjections(
 
     async function resolveAndReadFile(file: URL): Promise<VFileEx> {
         try {
-            await assertWithinInjectionRoot(file);
-            return await readFile(fs, file);
+            // Read the path the boundary check approved, not `file`, so the read can't follow a
+            // symlink swapped in after the check (time-of-check/time-of-use).
+            const readFrom = await resolveWithinInjectionRoot(file);
+            return await readFile(fs, file, 'utf8', readFrom);
         } catch {
             // console.log('resolveAndReadFile: (%s) %o', file.href, e);
             throw new Error(`Failed to read "${relativePathNormalized(file)}"`);
@@ -522,9 +524,11 @@ async function processFileInjections(
      * Local (`file:`) references must resolve inside the injection root (`cwd`) or one of
      * `allowOutsideRoot`'s directories; remote fetches are unaffected. Real paths are compared
      * so a symlink inside the root pointing outside it can't be used to escape.
+     * @returns the URL to read from: the symlink-resolved target for a local file, `target` as-is
+     * for a remote reference.
      */
-    async function assertWithinInjectionRoot(target: URL): Promise<void> {
-        if (target.protocol !== 'file:') return;
+    async function resolveWithinInjectionRoot(target: URL): Promise<URL> {
+        if (target.protocol !== 'file:') return target;
         const roots = await (injectionRootsPromise ??= resolveInjectionRoots(
             fs,
             options.cwd,
@@ -534,6 +538,7 @@ async function processFileInjections(
         if (!roots.some((root) => isWithinRoot(root, realTarget))) {
             throw new Error(`Outside the injection root: "${relativePathNormalized(target)}"`);
         }
+        return pathToFileURL(realTarget);
     }
 
     function parseMarkdownFile(file: VFileEx): Root {
@@ -713,8 +718,18 @@ function collectInjectionNodesAndParse(root: Root): DirectiveNodeBase[] {
     return dNodes;
 }
 
-async function readFile(fs: FileSystemAdapter, path: URL, encoding: BufferEncoding = 'utf8'): Promise<VFileEx> {
-    const value = await fs.readFile(path, encoding);
+/**
+ * @param path - the reference as written, kept as the resulting file's identity (it carries the
+ *   directive's `#` options and drives extension-based decisions downstream).
+ * @param readFrom - the location to actually read; defaults to `path`.
+ */
+async function readFile(
+    fs: FileSystemAdapter,
+    path: URL,
+    encoding: BufferEncoding = 'utf8',
+    readFrom: URL = path,
+): Promise<VFileEx> {
+    const value = await fs.readFile(readFrom, encoding);
     const data: FileData = {
         encoding,
         fileUrl: path,

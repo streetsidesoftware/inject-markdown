@@ -247,6 +247,18 @@ describe('injection root boundary', () => {
         expect(r.file.value).toContain('TOP SECRET');
     });
 
+    test('reads the symlink-resolved path the boundary check approved', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
+        const r = await fi.processFile('symlink-inside.md');
+        expect(r.hasErrors).toBe(false);
+        expect(r.file.value).toContain('Inside content.');
+        // The read must target the realpath, not the symlink that was checked.
+        const readPaths = fsa.readFile.mock.calls.map(([p]) => fileURLToPath(p as URL));
+        expect(readPaths).toContain(path.join(boundaryRoot, 'inside.md'));
+        expect(readPaths).not.toContain(path.join(boundaryRoot, 'link-to-inside.md'));
+    });
+
     test('an unresolvable allowOutsideRoot entry is dropped, not fatal to in-root reads', async () => {
         const fsa = createFSA();
         const fi = new FileInjector(fsa, {
