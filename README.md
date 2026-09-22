@@ -64,7 +64,7 @@ Options:
 
 ## Injection Root
 
-A local (`file:`) directive reference must resolve inside the **injection root** — the directory set by `--cwd` (default: the current directory). A reference that resolves outside it, including via a symlink, is a read error; this protects against a directive in a processed Markdown file disclosing files outside the intended project tree (e.g. `.env`, SSH keys) into generated output. Remote (`http(s)`) references are unaffected.
+A local (`file:`) directive reference must resolve inside the **injection root** — the directory set by `--cwd` (default: the current directory). A reference that resolves outside it, including via a symlink, is denied with a fatal `Access denied` error; this protects against a directive in a processed Markdown file disclosing files outside the intended project tree (e.g. `.env`, SSH keys) into generated output. The denial is worded and reported identically whether or not the referenced file exists, so it can't be used to probe the machine running the tool. Remote (`http(s)`) references are unaffected.
 
 For a legitimate reference outside the injection root — e.g. a monorepo doc at `packages/docs/README.md` injecting a code sample from a sibling `packages/shared/src/example.ts` — pass `--allow-outside-root <dir>` (repeatable) naming each additional directory that's allowed. Like `--cwd`, each `<dir>` is resolved relative to the directory `inject-markdown` is invoked from, not relative to `--cwd`:
 

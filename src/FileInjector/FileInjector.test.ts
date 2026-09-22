@@ -222,7 +222,9 @@ describe('injection root boundary', () => {
         const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
         const r = await fi.processFile('escape.md');
         expect(r.hasErrors).toBe(true);
-        expect(r.file.messages.map(String).join('\n')).toContain('Failed to read "../outside/secret.md"');
+        expect(r.file.messages.map(String).join('\n')).toContain(
+            'Access denied: "../outside/secret.md" is outside the injection root',
+        );
         expect(r.file.value).not.toContain('TOP SECRET');
     });
 
@@ -231,7 +233,9 @@ describe('injection root boundary', () => {
         const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
         const r = await fi.processFile('symlink-escape.md');
         expect(r.hasErrors).toBe(true);
-        expect(r.file.messages.map(String).join('\n')).toContain('Failed to read "link-to-outside/secret.md"');
+        expect(r.file.messages.map(String).join('\n')).toContain(
+            'Access denied: "link-to-outside/secret.md" is outside the injection root',
+        );
         expect(r.file.value).not.toContain('TOP SECRET');
     });
 
@@ -253,8 +257,22 @@ describe('injection root boundary', () => {
         const r = await fi.processFile('escape-markdown.md');
         // Fatal, unlike a merely missing markdown file, so `--stop-on-errors` applies.
         expect(r.hasErrors).toBe(true);
-        expect(r.file.messages.map(String).join('\n')).toContain('Failed to read "../outside/secret.md"');
+        expect(r.file.messages.map(String).join('\n')).toContain(
+            'Access denied: "../outside/secret.md" is outside the injection root',
+        );
         expect(r.file.value).not.toContain('TOP SECRET');
+    });
+
+    test('denies an out-of-root reference identically whether or not it exists', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
+        const r = await fi.processFile('escape-missing.md');
+        // Same severity and wording as the existing-file case, so the denial says nothing about
+        // which paths are present on the machine running the tool.
+        expect(r.hasErrors).toBe(true);
+        expect(r.file.messages.map(String).join('\n')).toContain(
+            'Access denied: "../outside/does-not-exist.md" is outside the injection root',
+        );
     });
 
     test('a missing in-root markdown reference stays a warning', async () => {
