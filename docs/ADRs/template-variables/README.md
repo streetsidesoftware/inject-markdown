@@ -14,5 +14,6 @@ ADRs for template variable substitution: `{@ name @}` placeholders inside inject
 | [0008](0008-value-layering-and-resolution.md)           | Value layering and per-leaf resolution               | Accepted |
 | [0009](0009-prefix-grammar-and-drive-letters.md)        | Values-file prefix grammar and Windows drive letters | Accepted |
 | [0010](0010-value-alias.md)                             | `value-alias=` redefining a name to point at another | Accepted |
+| [0011](0011-repeated-hash-keys.md)                      | Repeated directive hash keys                         | Proposed |
 
 See also: [../../glossary.md](../../glossary.md).
