@@ -20,7 +20,14 @@ Every local (`file:`) directive-file reference must resolve to a path inside the
 2. Resolves both that path and the injection root through `fs.realpath`, closing the symlink-escape case: a symlink inside the root pointing outside it (e.g. `docs/link-to-etc` → `/etc`) is caught because its real path falls outside the root.
 3. Rejects the reference if its real path is not equal to, or inside, the real injection root.
 
-A rejected reference is a fatal error on the `VFile`, reported and handled exactly like today's "Failed to read" failure in `resolveAndReadFile` (respects `--stop-on-errors` / `--write-on-error`) — from the processing pipeline's point of view, a file outside the root doesn't exist.
+A rejected reference is a fatal error on the `VFile`, handled like today's "Failed to read" failure in `resolveAndReadFile` (respects `--stop-on-errors` / `--write-on-error`).
+
+The check runs as two gates, in this order:
+
+1. A **textual** check of the resolved path against the roots as given, touching no filesystem.
+2. `fs.realpath` on both sides, catching a symlink inside the root that points outside it.
+
+The textual gate goes first so a denial never depends on the target existing. Reaching the second gate means the reference is already textually in-root, so the symlink it may reject is one the processed tree itself contains, and neither gate's denial reveals anything about the wider filesystem.
 
 This check applies only to local file references. Remote (`http(s)`) fetches in `fsa.ts` are unaffected — out of scope for this decision; see [../README.md](../README.md) Groups description.
 
@@ -35,4 +42,5 @@ This check applies only to local file references. Remote (`http(s)`) fetches in 
 - Breaking change: any existing user relying on injecting from outside `cwd` (deliberately or not) gets a fatal error after upgrading. Shipped as part of a semver-major bump; see [ADR-0003](0003-rollout-as-major-version-bump.md).
 - An escape hatch is needed for legitimate outside-root references (e.g. monorepo sibling packages) — see [ADR-0002](0002-injection-root-escape-hatch.md).
 - Every call site that resolves a directive's file URL to a local path (`readAndParseMarkdownFile`, `readAndParseCodeFile`, `readAndParseTableFile`) funnels through the shared `resolveAndReadFile` in `src/FileInjector/FileInjector.ts` — the check belongs there once, not duplicated per call site.
-- `fs.realpath` requires the path to exist; a reference that is both outside the root _and_ nonexistent still needs a sensible error (existing "Failed to read" wording covers this — an implementation detail, not a new user-facing distinction).
+- A denial is worded `Access denied: "<ref>" is outside the injection root; use --allow-outside-root to permit it.`, distinct from the "Failed to read" of a file that is missing or unreadable. Naming the boundary and the escape hatch matters most on upgrade, when an existing outside-root reference starts failing and "Failed to read" would send the user hunting for a file that is present. The tool runs with the invoking user's own privileges, so the message discloses nothing they could not already read.
+- `fs.realpath` requires the path to exist, so the textual gate — not the `realpath` one — is what rejects a reference that is both outside the root _and_ nonexistent. That ordering is load-bearing: were `realpath` first, the severity and wording of the failure would differ by whether the path existed, letting anyone able to add a directive (e.g. via a pull request built by CI) probe the build machine for the presence of arbitrary paths.

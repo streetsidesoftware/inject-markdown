@@ -41,6 +41,8 @@ describe('app', () => {
         ${['fixtures/with-errors/*.md', '--color']}
         ${['escape.md', '--cwd=fixtures/injection-root-boundary/root']}
         ${['symlink-escape.md', '--cwd=fixtures/injection-root-boundary/root']}
+        ${['escape-markdown.md', '--cwd=fixtures/injection-root-boundary/root']}
+        ${['escape-missing.md', '--cwd=fixtures/injection-root-boundary/root']}
     `('run with errors $args', async ({ args }) => {
         const command = new Command();
         const argv = createArgv(args, '--output-dir=temp');

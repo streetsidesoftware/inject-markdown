@@ -222,7 +222,9 @@ describe('injection root boundary', () => {
         const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
         const r = await fi.processFile('escape.md');
         expect(r.hasErrors).toBe(true);
-        expect(r.file.messages.map(String).join('\n')).toContain('Failed to read "../outside/secret.md"');
+        expect(r.file.messages.map(String).join('\n')).toContain(
+            'Access denied: "../outside/secret.md" is outside the injection root',
+        );
         expect(r.file.value).not.toContain('TOP SECRET');
     });
 
@@ -231,7 +233,9 @@ describe('injection root boundary', () => {
         const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
         const r = await fi.processFile('symlink-escape.md');
         expect(r.hasErrors).toBe(true);
-        expect(r.file.messages.map(String).join('\n')).toContain('Failed to read "link-to-outside/secret.md"');
+        expect(r.file.messages.map(String).join('\n')).toContain(
+            'Access denied: "link-to-outside/secret.md" is outside the injection root',
+        );
         expect(r.file.value).not.toContain('TOP SECRET');
     });
 
@@ -245,6 +249,51 @@ describe('injection root boundary', () => {
         const r = await fi.processFile('escape.md');
         expect(r.hasErrors).toBe(false);
         expect(r.file.value).toContain('TOP SECRET');
+    });
+
+    test('rejects an out-of-root markdown reference as a fatal error', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
+        const r = await fi.processFile('escape-markdown.md');
+        // Fatal, unlike a merely missing markdown file, so `--stop-on-errors` applies.
+        expect(r.hasErrors).toBe(true);
+        expect(r.file.messages.map(String).join('\n')).toContain(
+            'Access denied: "../outside/secret.md" is outside the injection root',
+        );
+        expect(r.file.value).not.toContain('TOP SECRET');
+    });
+
+    test('denies an out-of-root reference identically whether or not it exists', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
+        const r = await fi.processFile('escape-missing.md');
+        // Same severity and wording as the existing-file case, so the denial says nothing about
+        // which paths are present on the machine running the tool.
+        expect(r.hasErrors).toBe(true);
+        expect(r.file.messages.map(String).join('\n')).toContain(
+            'Access denied: "../outside/does-not-exist.md" is outside the injection root',
+        );
+    });
+
+    test('a missing in-root markdown reference stays a warning', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
+        const r = await fi.processFile('missing-inside.md');
+        expect(r.hasErrors).toBe(false);
+        expect(r.hasMessages).toBe(true);
+        expect(r.file.messages.map(String).join('\n')).toContain('Failed to read "does-not-exist.md"');
+    });
+
+    test('reads the symlink-resolved path the boundary check approved', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
+        const r = await fi.processFile('symlink-inside.md');
+        expect(r.hasErrors).toBe(false);
+        expect(r.file.value).toContain('Inside content.');
+        // The read must target the realpath, not the symlink that was checked.
+        const readPaths = fsa.readFile.mock.calls.map(([p]) => fileURLToPath(p as URL));
+        expect(readPaths).toContain(path.join(boundaryRoot, 'inside.md'));
+        expect(readPaths).not.toContain(path.join(boundaryRoot, 'link-to-inside.md'));
     });
 
     test('an unresolvable allowOutsideRoot entry is dropped, not fatal to in-root reads', async () => {
