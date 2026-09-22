@@ -45,10 +45,25 @@ A display-only casing transform (`none`/`title`/`upper`/`lower`) applied to rend
 A comma-separated list, positional against the output column order, that overrides individual header labels verbatim (bypassing `header-format`). An empty entry keeps that column's existing header; it never affects column selection or `columns` name matching. See [ADR-0007](ADRs/table-improvements/0007-table-column-names.md).
 
 **Injection root**
-The directory (default: `cwd`) that every local (`file:`) `@@inject`-family directive's resolved, realpath'd target must stay inside; a reference resolving outside it is a fatal error. Applies only to local file reads, not remote `http(s)` fetches. See [ADR-0001](ADRs/file-access-security/0001-injection-root-boundary.md).
+The directory (default: `cwd`) that every local (`file:`) `@@inject`-family directive's resolved, realpath'd target must stay inside; a reference resolving outside it is a fatal error. Applies only to local file reads, not remote `http(s)` fetches. It also bounds which files are discovered and processed, not only which may be read. See [ADR-0001](ADRs/file-access-security/0001-injection-root-boundary.md) and [security-hardening/ADR-0002](ADRs/security-hardening/0002-injection-root-bounds-file-discovery.md).
 
 **`--allow-outside-root`**
-A repeatable CLI option (and matching `FileInjectorOptions.allowOutsideRoot`) naming specific extra directories a directive may resolve into, on top of the injection root. See [ADR-0002](ADRs/file-access-security/0002-injection-root-escape-hatch.md).
+A repeatable CLI option (and matching `FileInjectorOptions.allowOutsideRoot`) naming specific extra directories a directive may resolve into, on top of the injection root. Never widens which files are discovered, and never overrides a `--deny-access` match. See [ADR-0002](ADRs/file-access-security/0002-injection-root-escape-hatch.md).
+
+**Dynamic pattern**
+A `files` argument containing glob metacharacters, as opposed to a plain path naming one file. Results of a dynamic pattern are bounded by the injection root; an explicitly named file is processed wherever it lives, because the operator naming it is not the untrusted input the boundary defends against. See [security-hardening/ADR-0002](ADRs/security-hardening/0002-injection-root-bounds-file-discovery.md).
+
+**`--deny-access`**
+A repeatable CLI option (and matching `FileInjectorOptions.denyAccess`) of globs that refuse a directive read even inside the injection root — the operator-supplied answer to secrets that continuous integration writes into the tree. Empty by default; a match always wins over `--allow-outside-root`. See [security-hardening/ADR-0004](ADRs/security-hardening/0004-deny-access-globs.md).
+
+**Deny pattern base**
+What a `--deny-access` glob is matched against: the target's path relative to the injection root, except for a pattern beginning with `**/`, which is matched against the absolute path and so reaches anywhere the tool could otherwise read, including `--allow-outside-root` directories. Patterns match dotfiles, and are tested against both the textually resolved path and the realpath. See [security-hardening/ADR-0004](ADRs/security-hardening/0004-deny-access-globs.md).
+
+**Destination policy**
+The rule refusing a remote fetch whose host resolves to a loopback, link-local, or private address, applied to every redirect hop rather than to the literal URL alone. Closes the cloud-metadata and internal-service cases. See [security-hardening/ADR-0003](ADRs/security-hardening/0003-remote-reference-guardrails.md).
+
+**`--allow-remote-host`**
+A repeatable CLI option naming hosts exempt from the destination policy, for an internal documentation server that is a legitimate source. A redirect hop to a host not itself listed is still refused. See [security-hardening/ADR-0003](ADRs/security-hardening/0003-remote-reference-guardrails.md).
 
 **Placeholder**
 A `{@ name @}` marker inside injected content, replaced with a value resolved against sources the _directive_ (not the injected file) supplies. Whitespace inside the delimiters is optional and trimmed; a leading backslash (`\{@ ... @}`) escapes it to literal text. Not a full template engine — no conditionals or loops. See [ADR-0001](ADRs/template-variables/0001-placeholder-syntax.md).
