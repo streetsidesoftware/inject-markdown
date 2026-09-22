@@ -172,34 +172,65 @@ export function isScalar(v: JsonValue | undefined): v is JsonScalar {
     return v !== undefined && v !== null && (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean');
 }
 
-/** Build a nested value tree from a flat map of dotted `name -> value` pairs (e.g. inline `values=`/`--value`). */
-export function treeFromFlatMap(pairs: ReadonlyMap<string, string> | undefined): JsonObject | undefined {
-    if (!pairs || !pairs.size) return undefined;
-    const tree = emptyTree();
-    for (const [name, value] of pairs) setPath(tree, name, value);
-    return tree;
+/**
+ * One assignment's worth of values, per ADR-0008 point 1. Layers are never combined; resolution
+ * walks an ordered list of them.
+ */
+export type ValueLayer = JsonObject;
+
+/**
+ * How a name failed to resolve, so the caller can report which of ADR-0005 point 4's two cases it
+ * is: nothing defines the name at all, or every layer holding it holds a branch rather than a leaf.
+ */
+export type UnresolvedReason = 'undefined' | 'object' | 'array' | 'null';
+
+export type ResolveResult = { value: string } | { unresolved: UnresolvedReason };
+
+/**
+ * One layer per `name -> value` pair (e.g. inline `values=`/`--value`), highest precedence first.
+ * Per-pair rather than one folded tree so `--value a=1 --value a.b=2` keeps both names, per
+ * ADR-0008 point 1; the last-listed pair wins because it lands first in the returned order.
+ */
+export function layersFromFlatMap(pairs: ReadonlyMap<string, string> | undefined): ValueLayer[] {
+    if (!pairs?.size) return [];
+    const layers: ValueLayer[] = [];
+    for (const [name, value] of pairs) {
+        const layer = emptyTree();
+        setPath(layer, name, value);
+        layers.push(layer);
+    }
+    return layers.reverse();
 }
 
-function mergeRoot(target: JsonObject, data: JsonValue): void {
-    if (typeof data !== 'object' || data === null || Array.isArray(data)) return;
-    for (const [k, v] of Object.entries(data)) target[k] = v;
+/** Walk an ordered layer list, taking the first layer holding `name` as a scalar, per ADR-0008 point 3. */
+export function resolveInLayers(layers: readonly ValueLayer[], name: string): ResolveResult {
+    let blocked: UnresolvedReason | undefined;
+    for (const layer of layers) {
+        const v = getPath(layer, name);
+        if (v === undefined) continue;
+        if (isScalar(v)) return { value: String(v) };
+        // A non-scalar or null never resolves and never stops the search (ADR-0008 points 3-4);
+        // remember the most specific one seen so the warning can name it.
+        blocked ??= v === null ? 'null' : Array.isArray(v) ? 'array' : 'object';
+    }
+    return { unresolved: blocked ?? 'undefined' };
 }
 
 /**
- * Read and merge a list of `values-file=`/`--values-file` entries into one value tree, per ADR-0007.
- * Later entries win on a prefix/root-key collision. A per-entry read/parse failure or invalid
+ * Read a list of `values-file=`/`--values-file` entries into one layer each, per ADR-0007 and
+ * ADR-0008, highest precedence (last-listed) first. A per-entry read/parse failure or invalid
  * auto-derived prefix is reported via `onError` and that entry is skipped, rather than failing the
  * whole list.
  */
-export async function buildValuesFileTree(
+export async function buildValuesFileLayers(
     fs: FileSystemAdapter,
     entries: ValuesFileEntry[],
     resolvePath: (path: string) => Promise<PathLike>,
     onError: (message: string) => void,
     encoding: BufferEncoding = 'utf8',
-): Promise<JsonObject | undefined> {
-    if (!entries.length) return undefined;
-    const tree = emptyTree();
+): Promise<ValueLayer[]> {
+    if (!entries.length) return [];
+    const layers: ValueLayer[] = [];
     for (const entry of entries) {
         let data: JsonValue;
         try {
@@ -212,7 +243,12 @@ export async function buildValuesFileTree(
             continue;
         }
         if (entry.prefixKind === 'root') {
-            mergeRoot(tree, data);
+            // A root entry contributes its own keys, so it is only usable as a layer if it is an
+            // object; an array or scalar at the top level has no names to offer.
+            if (typeof data !== 'object' || data === null || Array.isArray(data)) continue;
+            const layer = emptyTree();
+            for (const [k, v] of Object.entries(data)) layer[k] = v;
+            layers.push(layer);
             continue;
         }
         const prefix =
@@ -223,7 +259,9 @@ export async function buildValuesFileTree(
             );
             continue;
         }
-        tree[prefix] = data;
+        const layer = emptyTree();
+        layer[prefix] = data;
+        layers.push(layer);
     }
-    return tree;
+    return layers.reverse();
 }

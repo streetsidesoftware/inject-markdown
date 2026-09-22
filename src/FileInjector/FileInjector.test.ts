@@ -266,6 +266,7 @@ describe('template variables', () => {
     const cliRoot = path.join(__root__, 'fixtures/template-variables/cli-sources');
     const strictRoot = path.join(__root__, 'fixtures/template-variables/strict-vars');
     const boundaryRoot = path.join(__root__, 'fixtures/injection-root-boundary/root');
+    const layersRoot = path.join(__root__, 'fixtures/template-variables/layers');
 
     function count(text: string, needle: string): number {
         return text.split(needle).length - 1;
@@ -346,6 +347,47 @@ describe('template variables', () => {
         const r = await fi.processFile('README.md');
         expect(r.hasErrors).toBe(false);
         expect(r.hasMessages).toBe(true);
+    });
+
+    test('layers union per leaf: prefixed and root-merged values-file entries (ADR-0008)', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: layersRoot, silent: true });
+        const r = await fi.processFile('README.md');
+        const written = r.file.value as string;
+        // Last-listed wins on the shared name, but the earlier entry's own names survive —
+        // including a nested branch both files define.
+        expect(written).toContain('v=fromB a=A b=B deepA=yes deepB=yes');
+        expect(written).toContain('v=fromB a=A b=B deepA=yes');
+        // A branch, an array and a null are all unresolved, each naming its kind.
+        const messages = r.file.messages.map(String).join('\n');
+        expect(messages).toContain('"{@ branch.engines @}": resolves to an object, not a value');
+        expect(messages).toContain('"{@ branch.list @}": resolves to an array, not a value');
+        expect(messages).toContain('"{@ branch.nulled @}": resolves to null, not a value');
+        expect(messages).toContain('"{@ missingName @}": no value source defines it');
+        expect(r.hasErrors).toBe(false);
+    });
+
+    test('--value keeps both names when one is a prefix of another', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, {
+            cwd: layersRoot,
+            silent: true,
+            value: { a: '1', 'a.b': '2' },
+        });
+        const r = await fi.processFile('cli-nested.md');
+        // One folded tree would lose `a` to `a.b`; one layer per flag keeps both.
+        expect(r.file.value).toContain('a=1 ab=2');
+        expect(r.hasErrors).toBe(false);
+    });
+
+    test('a non-scalar in a higher-precedence source falls through to a lower one', async () => {
+        const fsa = createFSA();
+        // The directive's `values=x.y:...` creates an object at `x` as a side effect of the dotted
+        // name. The lower-precedence CLI `--value x=...` scalar must still resolve `{@ x @}`.
+        const fi = new FileInjector(fsa, { cwd: layersRoot, silent: true, value: { x: 'fromCli' } });
+        const r = await fi.processFile('fallthrough.md');
+        expect(r.file.value).toContain('x=fromCli xy=fromDirective');
+        expect(r.hasErrors).toBe(false);
     });
 
     test('an unreadable --values-file raises an OptionError, not a document error', async () => {

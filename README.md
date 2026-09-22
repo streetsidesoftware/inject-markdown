@@ -226,7 +226,7 @@ async function version(): Promise<string> {
 
 Injected content may contain `{@ name @}` placeholders, resolved against values the _directive_ supplies (not the file being injected) and substituted in at injection time — e.g. an injected snippet containing `npm install my-package@{@ version @}` becomes `npm install my-package@1.2.3` in the output. This isn't a full template engine: no conditionals or loops, just name-to-value substitution. Write `\{@ name @}` to show the syntax literally without triggering substitution.
 
-A directive only scans its content for placeholders if it carries `values=`, `values-file=`, or the bare `vars` flag; without one of those, `{@ ... @}` text passes through untouched. An unresolved placeholder — no source defines its name, or it resolves to a JSON object/array — is left untouched with a warning; pass `--strict-vars` to make that a directive error instead.
+A directive only scans its content for placeholders if it carries `values=`, `values-file=`, or the bare `vars` flag; without one of those, `{@ ... @}` text passes through untouched. An unresolved placeholder — nothing defines its name, or every source that has it holds an object, an array or `null` there — is left untouched with a warning saying which; pass `--strict-vars` to make that a directive error instead.
 
 ```markdown
 <!--- @@inject-code: install.md#values=version:1.2.3 --->
@@ -243,7 +243,9 @@ Values can also come from a JSON file (`values.json`: `{"version": "1.2.3"}`), n
 <!--- @@inject-code: install.md#values-file=:values.json --->
 ```
 
-Run-wide values are available to any directive that opts in via `values=`, `values-file=`, or the bare `vars` flag — `--value <name=val>` (repeatable), `--values-file [prefix:]path` (repeatable JSON files, same `[prefix:]path` syntax as the directive-level option), and `--allow-env <NAME>` (repeatable, exposed as `{@ env.NAME @}`) — with a directive's own `values=`/`values-file=` taking precedence on a name collision. `--strict-vars` turns an unresolved placeholder into a directive error instead of a warning.
+Run-wide values are available to any directive that opts in via `values=`, `values-file=`, or the bare `vars` flag — `--value <name=val>` (repeatable), `--values-file [prefix:]path` (repeatable JSON files, same `[prefix:]path` syntax as the directive-level option), and `--allow-env <NAME>` (repeatable, exposed as `{@ env.NAME @}`) — with a directive's own `values=`/`values-file=` taking precedence on a name collision.
+
+Overriding is per name, not per file. Given a `values.json` of `{"version": "1.2.3", "name": "my-package"}`, a single `--value values.version=2.0.0` changes just that one name and `{@ values.name @}` still comes from the file — and the same holds when two values files are listed together, so a later one patches the earlier rather than replacing it. `--strict-vars` turns an unresolved placeholder into a directive error instead of a warning.
 
 ## Per Injections Options
 

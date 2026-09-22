@@ -22,12 +22,13 @@ import { isDefined } from '../util/isDefined.js';
 import { type PlaceholderResolver, substituteInString, substituteInTree } from '../util/placeholders.js';
 import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
 import {
-    buildValuesFileTree,
-    getPath,
-    isScalar,
-    type JsonObject,
+    buildValuesFileLayers,
+    layersFromFlatMap,
     parseValuesFileEntry,
-    treeFromFlatMap,
+    resolveInLayers,
+    type ResolveResult,
+    type UnresolvedReason,
+    type ValueLayer,
 } from '../util/values.js';
 import { detectMarkdownStyle } from './detectStyle.js';
 import { type Directive, directiveRegExp, type DirectiveType, parseDirective } from './Directive.js';
@@ -160,7 +161,7 @@ export interface FileInjectorOptions {
 
 export class FileInjector {
     private cwd: URL;
-    private cliValuesFileTreePromise: Promise<JsonObject | undefined> | undefined;
+    private cliValuesFileLayersPromise: Promise<ValueLayer[]> | undefined;
     constructor(
         readonly fs: FileSystemAdapter,
         readonly options: FileInjectorOptions,
@@ -194,17 +195,17 @@ export class FileInjector {
             outputDir: this.options.outputDir ? dirToUrl(this.options.outputDir) : undefined,
             writeOnError: this.options.writeOnError ?? false,
             stopOnErrors: this.options.stopOnErrors ?? true,
-            cliValuesTree: treeFromFlatMap(toFlatMap(this.options.value)),
-            cliValuesFileTree: await this.resolveCliValuesFileTree(),
+            cliValueLayers: layersFromFlatMap(toFlatMap(this.options.value)),
+            cliValuesFileLayers: await this.resolveCliValuesFileLayers(),
             allowEnvSet: new Set(this.options.allowEnv ?? []),
         });
     }
 
     /** Run-wide `--values-file` entries: resolved relative to `cwd`, cached across every file in this run. */
-    private async resolveCliValuesFileTree(): Promise<JsonObject | undefined> {
+    private async resolveCliValuesFileLayers(): Promise<ValueLayer[]> {
         const rawEntries = this.options.valuesFile;
-        if (!rawEntries?.length) return undefined;
-        this.cliValuesFileTreePromise ??= buildValuesFileTree(
+        if (!rawEntries?.length) return [];
+        this.cliValuesFileLayersPromise ??= buildValuesFileLayers(
             this.fs,
             rawEntries.map(parseValuesFileEntry),
             (p) => Promise.resolve(parseRelativeUrl(p).toUrl(this.cwd)),
@@ -212,7 +213,25 @@ export class FileInjector {
                 throw new OptionError(message);
             },
         );
-        return this.cliValuesFileTreePromise;
+        return this.cliValuesFileLayersPromise;
+    }
+}
+
+/**
+ * ADR-0005 point 4's two unresolved cases: nothing defines the name, versus every layer that has
+ * it holds a branch rather than a leaf. The second names the kind so an author can tell a typo
+ * from a name that stopped one segment short.
+ */
+function explainUnresolved(reason: UnresolvedReason): string {
+    switch (reason) {
+        case 'object':
+            return 'resolves to an object, not a value';
+        case 'array':
+            return 'resolves to an array, not a value';
+        case 'null':
+            return 'resolves to null, not a value';
+        default:
+            return 'no value source defines it';
     }
 }
 
@@ -228,10 +247,10 @@ interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outpu
     outputDir: URL | undefined;
     writeOnError: boolean;
     stopOnErrors: boolean;
-    /** Run-wide `--value` entries, merged into a value tree. */
-    cliValuesTree: JsonObject | undefined;
-    /** Run-wide `--values-file` entries, read and merged into a value tree once per run. */
-    cliValuesFileTree: JsonObject | undefined;
+    /** Run-wide `--value` entries, one layer per flag, highest precedence first. */
+    cliValueLayers: ValueLayer[];
+    /** Run-wide `--values-file` entries, one layer per entry, read once per run. */
+    cliValuesFileLayers: ValueLayer[];
     /** Environment variable names allow-listed via `--allow-env`. */
     allowEnvSet: Set<string>;
 }
@@ -601,14 +620,23 @@ async function processFileInjections(
     ): Promise<void> {
         const optedIn = info.values !== undefined || info.valuesFile !== undefined || info.vars === true;
         if (!optedIn) return;
-        const directiveValuesFileTree = info.valuesFile
-            ? await resolveDirectiveValuesFileTree(info.valuesFile, directiveNode)
-            : undefined;
-        const resolve = buildResolver(info, directiveValuesFileTree);
+        const directiveValuesFileLayers = info.valuesFile
+            ? await resolveDirectiveValuesFileLayers(info.valuesFile, directiveNode)
+            : [];
+        const layers = buildLayers(info, directiveValuesFileLayers);
         const unresolved = new Set<string>();
-        apply(resolve, (name) => unresolved.add(name));
+        apply(
+            (name) => {
+                const r = resolveName(layers, name);
+                return 'value' in r ? r.value : undefined;
+            },
+            (name) => unresolved.add(name),
+        );
         for (const name of unresolved) {
-            const message = `Unresolved placeholder "{@ ${name} @}"`;
+            // Re-resolve only the names that failed, to say which of ADR-0005 point 4's two cases it is.
+            const r = resolveName(layers, name);
+            const reason = 'unresolved' in r ? r.unresolved : 'undefined';
+            const message = `Unresolved placeholder "{@ ${name} @}": ${explainUnresolved(reason)}`;
             if (options.strictVars) {
                 file.error(message, directiveNode.position);
             } else {
@@ -618,11 +646,11 @@ async function processFileInjections(
     }
 
     /** Directive `values-file=` paths resolve relative to the containing document, per ADR-0002 point 2. */
-    async function resolveDirectiveValuesFileTree(
+    async function resolveDirectiveValuesFileLayers(
         entries: NonNullable<InjectInfo['valuesFile']>,
         directiveNode: Html,
-    ): Promise<JsonObject | undefined> {
-        return buildValuesFileTree(
+    ): Promise<ValueLayer[]> {
+        return buildValuesFileLayers(
             fs,
             entries,
             async (p) => {
@@ -634,27 +662,35 @@ async function processFileInjections(
         );
     }
 
-    /** Combine a directive's value sources with precedence, per ADR-0004. */
-    function buildResolver(info: InjectInfo, directiveValuesFileTree: JsonObject | undefined): PlaceholderResolver {
-        const directiveValuesTree = treeFromFlatMap(info.values);
-        const trees = [directiveValuesTree, directiveValuesFileTree, options.cliValuesTree, options.cliValuesFileTree];
-        return (name: string): string | undefined => {
-            if (name === 'env' || name.startsWith('env.')) {
-                const segments = name.split('.');
-                if (segments.length !== 2) return undefined;
-                const envName = segments[1];
-                if (!options.allowEnvSet.has(envName)) return undefined;
-                return process.env[envName];
-            }
-            for (const tree of trees) {
-                if (!tree) continue;
-                const v = getPath(tree, name);
-                if (v !== undefined) {
-                    return isScalar(v) ? String(v) : undefined;
-                }
-            }
-            return undefined;
-        };
+    /**
+     * A directive's value layers in precedence order, per ADR-0004 and ADR-0008 point 2 — each
+     * group already ordered last-listed first.
+     */
+    function buildLayers(info: InjectInfo, directiveValuesFileLayers: ValueLayer[]): ValueLayer[] {
+        return [
+            ...layersFromFlatMap(info.values),
+            ...directiveValuesFileLayers,
+            ...options.cliValueLayers,
+            ...options.cliValuesFileLayers,
+        ];
+    }
+
+    /**
+     * Resolve one placeholder name. The `env.` namespace is reserved rather than layered
+     * (ADR-0003 point 4): it is answered before any value layer is consulted, so `{@ env.X @}`
+     * always means the OS environment and a value source defining a top-level `env` key stays
+     * unreachable.
+     */
+    function resolveName(layers: ValueLayer[], name: string): ResolveResult {
+        if (name === 'env' || name.startsWith('env.')) {
+            const segments = name.split('.');
+            if (segments.length !== 2) return { unresolved: 'undefined' };
+            const envName = segments[1];
+            if (!options.allowEnvSet.has(envName)) return { unresolved: 'undefined' };
+            const v = process.env[envName];
+            return v === undefined ? { unresolved: 'undefined' } : { value: v };
+        }
+        return resolveInLayers(layers, name);
     }
 
     async function resolveAndReadFile(file: URL): Promise<VFileEx> {
