@@ -6,11 +6,11 @@
 
 ## Context
 
-[file-access-security/ADR-0001](../file-access-security/0001-injection-root-boundary.md) stops a directive reading outside the injection root. It says nothing about what sits *inside* it, and continuous integration routinely puts secrets there: an `.npmrc` carrying a publish token, a `.env` written by a setup step, a service-account JSON or `kubeconfig` dropped into the workspace, a `.git/config` rewritten with an authenticated remote. Under the same threat model — a directive is attacker-supplied text — every one of those is still readable and still lands in the generated document.
+[file-access-security/ADR-0001](../file-access-security/0001-injection-root-boundary.md) stops a directive reading outside the injection root. It says nothing about what sits _inside_ it, and continuous integration routinely puts secrets there: an `.npmrc` carrying a publish token, a `.env` written by a setup step, a service-account JSON or `kubeconfig` dropped into the workspace, a `.git/config` rewritten with an authenticated remote. Under the same threat model — a directive is attacker-supplied text — every one of those is still readable and still lands in the generated document.
 
-Running with `--cwd docs/` rather than the repository root narrows the exposure and is worth recommending, but it only helps when the documentation happens to live in its own subtree, and it says nothing about a secret that lands *within* that subtree.
+Running with `--cwd docs/` rather than the repository root narrows the exposure and is worth recommending, but it only helps when the documentation happens to live in its own subtree, and it says nothing about a secret that lands _within_ that subtree.
 
-ADR-0001 considered and rejected a denylist of sensitive filename patterns. That rejection was specific: a list *the tool maintains* is never complete, and it cannot substitute for a boundary because an escape like `../../../etc/passwd` reaches things no pattern happens to name. Neither objection applies to a list the **operator** supplies on top of an intact boundary. The operator knows which paths in their own tree are sensitive; the tool does not, and should not guess.
+ADR-0001 considered and rejected a denylist of sensitive filename patterns. That rejection was specific: a list _the tool maintains_ is never complete, and it cannot substitute for a boundary because an escape like `../../../etc/passwd` reaches things no pattern happens to name. Neither objection applies to a list the **operator** supplies on top of an intact boundary. The operator knows which paths in their own tree are sensitive; the tool does not, and should not guess.
 
 ## Decision
 
@@ -45,7 +45,7 @@ A denial is reported exactly as the injection-root denial is: fatal, and worded 
 ## Options Considered
 
 - **A denylist the tool ships and maintains** (`.env*`, `id_rsa*`, `*.pem`, …), whether as the default for this option or hard-coded — rejected: this is the never-complete list ADR-0001 argued against, and it would silently break anyone legitimately injecting from a dotfile. An operator-supplied list has neither problem.
-- **Covering file discovery as well as reads** — rejected: `--deny-access 'internal/**'` stopping those files being *rewritten* is defensible, but it overloads one name with two grants. ADR-0002 already bounds discovery, and an operator who wants files excluded from the working set can narrow the glob they pass.
+- **Covering file discovery as well as reads** — rejected: `--deny-access 'internal/**'` stopping those files being _rewritten_ is defensible, but it overloads one name with two grants. ADR-0002 already bounds discovery, and an operator who wants files excluded from the working set can narrow the glob they pass.
 - **`.gitignore`-style ordered allow/deny evaluation** — rejected: familiar, and it permits re-opening a subpath of a broad deny, at the cost of making reachability depend on argument order. For a security control, order-independence is worth more than expressiveness.
 - **Guidance only — recommend `--cwd docs/` and document the residue** — rejected as insufficient on its own: it depends on a repository layout not every project has, and offers nothing for a secret inside the documentation subtree. The guidance is still worth giving, and [ADR-0005](0005-threat-model-and-safe-usage.md) gives it; this option is what makes it actionable.
 

@@ -19,12 +19,15 @@ words:
   - frontmatter
   - globby
   - HKLM
+  - kubeconfig
   - lcov
   - mdast
+  - metacharacters
   - pnpm
   - restringify
   - setext
   - stringifying
+  - syscall
   - unist
   - vfile
   - worktrees

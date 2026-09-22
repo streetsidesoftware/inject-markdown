@@ -10,8 +10,8 @@
 
 ```ts
 async function fetchUrl(url: URL): Promise<string> {
-    const response = await fetch(mapUrl(url));
-    return await response.text();
+  const response = await fetch(mapUrl(url));
+  return await response.text();
 }
 ```
 
@@ -41,7 +41,7 @@ A 30 second overall timeout and a 10 MB cap on the response body, as fixed const
 
 A refusal is explicit on stderr — naming the policy and `--allow-remote-host` — and generic in the error comment written into the document.
 
-This split is deliberate, and it is a different answer from the one [file-access-security/ADR-0001](../file-access-security/0001-injection-root-boundary.md) reaches for local references. There, the check could be reordered so its verdict never depended on the target existing, and the denial could then say everything. Here it cannot: deciding the policy *requires* resolving the name, so any explicit refusal reveals that the name resolved and that it was internal. Someone who can add a directive to a CI-built pull request could otherwise map the runner's network one hostname per directive. The operator running the tool already knows their own network and needs the diagnosis; the document is the artifact the pull-request author reads back, so it carries the same generic failure as any other unreachable URL.
+This split is deliberate, and it is a different answer from the one [file-access-security/ADR-0001](../file-access-security/0001-injection-root-boundary.md) reaches for local references. There, the check could be reordered so its verdict never depended on the target existing, and the denial could then say everything. Here it cannot: deciding the policy _requires_ resolving the name, so any explicit refusal reveals that the name resolved and that it was internal. Someone who can add a directive to a CI-built pull request could otherwise map the runner's network one hostname per directive. The operator running the tool already knows their own network and needs the diagnosis; the document is the artifact the pull-request author reads back, so it carries the same generic failure as any other unreachable URL.
 
 ## Options Considered
 

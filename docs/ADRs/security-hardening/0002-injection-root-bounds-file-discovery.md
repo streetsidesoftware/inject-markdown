@@ -10,9 +10,9 @@
 
 ```ts
 const options: Mutable<GlobbyOptions> = {
-    ignore: excludes, // ['node_modules']
-    onlyFiles: true,
-    cwd: cwdToUse,
+  ignore: excludes, // ['node_modules']
+  onlyFiles: true,
+  cwd: cwdToUse
 };
 ```
 

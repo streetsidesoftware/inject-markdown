@@ -6,7 +6,7 @@
 
 ## Context
 
-Four ADRs in this group and the three in [file-access-security/](../file-access-security/) each close something specific. None of them says what `inject-markdown` does and does not defend against, which is the question someone evaluating it for a continuous-integration pipeline actually has. Two exposures in particular are deliberately *not* closed in code, and a reader has no way to learn that from the ADRs, which are organized by decision rather than by risk:
+Four ADRs in this group and the three in [file-access-security/](../file-access-security/) each close something specific. None of them says what `inject-markdown` does and does not defend against, which is the question someone evaluating it for a continuous-integration pipeline actually has. Two exposures in particular are deliberately _not_ closed in code, and a reader has no way to learn that from the ADRs, which are organized by decision rather than by risk:
 
 - **Secrets inside the injection root.** The boundary is the tree; anything a setup step writes into it stays readable by a directive. [ADR-0004](0004-deny-access-globs.md) gives the operator a way to deny specific paths, but it is opt-in and protects nobody who does not configure it.
 - **Output poisoning.** Injected content is spliced verbatim and Markdown permits raw HTML, so content pulled from a compromised or typo-squatted remote — or from a file an attacker controls — carries whatever markup it likes into the generated document. Rendered to a site, that is stored cross-site scripting.
@@ -15,7 +15,7 @@ Four ADRs in this group and the three in [file-access-security/](../file-access-
 
 ## Decision
 
-Expand `SECURITY.md` with a threat model and safe-usage section, and link to it from the Injection Root section of `content/README.md` (which regenerates into `README.md`). The ADRs stay the record of *why* each decision was made; `SECURITY.md` becomes the single page describing what is and is not defended, for someone who will never open `docs/ADRs/`.
+Expand `SECURITY.md` with a threat model and safe-usage section, and link to it from the Injection Root section of `content/README.md` (which regenerates into `README.md`). The ADRs stay the record of _why_ each decision was made; `SECURITY.md` becomes the single page describing what is and is not defended, for someone who will never open `docs/ADRs/`.
 
 It states the threat model the tool is built against: a directive is text in a Markdown file, so anyone who can open a pull request touching a processed document can supply one, and the machine running the tool is usually continuous integration holding real credentials. It then covers what is defended — the injection root and its escape hatch, the discovery boundary, remote destination policy and limits, bounded parsing — and, in the same voice and at the same length, what is not:
 
