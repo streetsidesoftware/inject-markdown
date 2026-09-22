@@ -11,5 +11,6 @@ ADRs for template variable substitution: `{@ name @}` placeholders inside inject
 | [0005](0005-unresolved-placeholders-and-strict-mode.md) | Unresolved placeholders and strict mode          | Proposed |
 | [0006](0006-substitution-mechanics-and-timing.md)       | Substitution mechanics and timing                | Proposed |
 | [0007](0007-values-file-prefixing.md)                   | `values-file=` multi-file imports and prefixing  | Proposed |
+| [0008](0008-value-layering-and-resolution.md)           | Value layering and per-leaf resolution           | Proposed |
 
 See also: [../../glossary.md](../../glossary.md).
