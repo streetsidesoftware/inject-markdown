@@ -70,6 +70,16 @@ export async function app(program = defaultCommand): Promise<Command> {
             'Allow a directive to reference the OS environment variable <name> via {@ env.name @}. Repeatable.',
             (name: string, names: string[] = []) => [...names, name],
         )
+        .option(
+            '--value-alias <new=target>',
+            'Resolve the {@ new @} placeholder as if it were {@ target @}. Repeatable; a later --value-alias for the same name wins.',
+            (entry: string, acc: Record<string, string> = Object.create(null)) => {
+                const idx = entry.indexOf('=');
+                if (idx < 0) return acc;
+                acc[entry.slice(0, idx).trim()] = entry.slice(idx + 1).trim();
+                return acc;
+            },
+        )
         .option('--strict-vars', 'Treat an unresolved {@ name @} placeholder as a directive error.')
         .option('--clean', 'Remove the injected content.')
         .addOption(new CommanderOption('--inject-only', 'Only update the injected content.').default(true).hideHelp())

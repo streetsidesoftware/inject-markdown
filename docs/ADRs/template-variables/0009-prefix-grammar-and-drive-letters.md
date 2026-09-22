@@ -1,6 +1,6 @@
 # ADR-0009: Values-file prefix grammar and Windows drive letters
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-22
 **Deciders:** Jason Dent
 

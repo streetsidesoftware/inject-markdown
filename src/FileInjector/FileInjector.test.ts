@@ -316,6 +316,7 @@ describe('template variables', () => {
     const strictRoot = path.join(__root__, 'fixtures/template-variables/strict-vars');
     const boundaryRoot = path.join(__root__, 'fixtures/injection-root-boundary/root');
     const layersRoot = path.join(__root__, 'fixtures/template-variables/layers');
+    const aliasRoot = path.join(__root__, 'fixtures/template-variables/alias');
 
     function count(text: string, needle: string): number {
         return text.split(needle).length - 1;
@@ -437,6 +438,61 @@ describe('template variables', () => {
         const r = await fi.processFile('fallthrough.md');
         expect(r.file.value).toContain('x=fromCli xy=fromDirective');
         expect(r.hasErrors).toBe(false);
+    });
+
+    test('value-alias= redefines, chains, detects cycles and names both sides (ADR-0010)', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: aliasRoot, silent: true });
+        const r = await fi.processFile('README.md');
+        const written = r.file.value as string;
+        // The alias outranks its own tier's values: `version` comes from releases.json, not from
+        // the root-merged package.json, while `name` still does.
+        expect(written).toContain('name=demo version=2.5.0 date=2026-09-22');
+        // a -> b -> release.latest.version
+        expect(written).toContain('a=2.5.0');
+        const messages = r.file.messages.map(String).join('\n');
+        expect(messages).toContain('"{@ loop @}": alias cycle through "round"');
+        expect(messages).toContain('"{@ gone @}": aliased to "no.such.name": no value source defines it');
+        expect(r.hasErrors).toBe(false);
+    });
+
+    test('a directive alias outranks a CLI alias, and a CLI alias outranks --value', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, {
+            cwd: aliasRoot,
+            silent: true,
+            valueAlias: { version: 'name' },
+            value: { version: 'fromCliValue' },
+        });
+        const r = await fi.processFile('README.md');
+        // The directive's own alias wins over the CLI alias and over --value.
+        expect(r.file.value).toContain('version=2.5.0');
+    });
+
+    test('an alias may target the reserved env. namespace, still gated by --allow-env', async () => {
+        const fsa = createFSA();
+        const previous = process.env.TV_ALIAS_VAR;
+        process.env.TV_ALIAS_VAR = 'fromEnv';
+        try {
+            const allowed = new FileInjector(fsa, {
+                cwd: aliasRoot,
+                silent: true,
+                valueAlias: { token: 'env.TV_ALIAS_VAR' },
+                allowEnv: ['TV_ALIAS_VAR'],
+            });
+            expect((await allowed.processFile('README.md')).file.value).toContain('token=fromEnv');
+
+            const denied = new FileInjector(fsa, {
+                cwd: aliasRoot,
+                silent: true,
+                valueAlias: { token: 'env.TV_ALIAS_VAR' },
+            });
+            // Without --allow-env the alias resolves through the namespace and finds nothing.
+            expect((await denied.processFile('README.md')).file.value).toContain('token={@ token @}');
+        } finally {
+            if (previous === undefined) delete process.env.TV_ALIAS_VAR;
+            else process.env.TV_ALIAS_VAR = previous;
+        }
     });
 
     test('an unreadable --values-file raises an OptionError, not a document error', async () => {

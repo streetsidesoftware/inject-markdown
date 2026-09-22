@@ -16,7 +16,16 @@ export interface ValuesFileEntry {
     path: string;
 }
 
-const validPlaceholderSegment = /^[A-Za-z0-9_-]+$/;
+const validPlaceholderSegment = /^[A-Za-z0-9_][A-Za-z0-9_-]*$/;
+
+/**
+ * A values-file prefix, per ADR-0009 point 1: the placeholder-name grammar plus a two-character
+ * minimum, which is what keeps a one-character Windows drive letter from ever being read as one.
+ */
+const validValuesFilePrefix = /^(?=.{2,})[A-Za-z0-9_][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_][A-Za-z0-9_-]*)*$/;
+
+/** A leading `<letter>:`, which is a Windows drive and not part of the basename (ADR-0009 point 5). */
+const driveLetterPrefix = /^[A-Za-z]:/;
 
 /**
  * Segments that would reach `Object.prototype` if walked or written. They match the ADR-0001
@@ -24,9 +33,21 @@ const validPlaceholderSegment = /^[A-Za-z0-9_-]+$/;
  */
 const unsafeSegments = new Set(['__proto__', 'constructor', 'prototype']);
 
-/** A placeholder-name segment: `[A-Za-z0-9_-]+`, per ADR-0001, excluding prototype-reaching names. */
+/**
+ * A placeholder-name segment: `[A-Za-z0-9_][A-Za-z0-9_-]*`, per ADR-0001 point 2 — a hyphen may
+ * appear inside a segment but never at its start — excluding prototype-reaching names.
+ */
 export function isValidPlaceholderSegment(name: string): boolean {
     return validPlaceholderSegment.test(name) && !unsafeSegments.has(name);
+}
+
+/**
+ * A `values-file=`/`--values-file` explicit prefix, per ADR-0009 point 1. Two characters or more,
+ * dot-separated segments with none empty and none starting with `-` or `.`, and no path
+ * separators — so `C:`, `..`, `.env` and `-foo` are all paths rather than prefixes.
+ */
+export function isValidValuesFilePrefix(name: string): boolean {
+    return validValuesFilePrefix.test(name) && !name.split('.').some((seg) => unsafeSegments.has(seg));
 }
 
 /** A value tree, with no prototype: a `__proto__` key can never reach `Object.prototype`. */
@@ -73,11 +94,14 @@ export function parseValuesFileEntry(raw: string): ValuesFileEntry {
     if (isQuoted(entry)) {
         return { prefixKind: 'auto', path: unquote(entry) };
     }
+    // The colon separates only when what precedes it is a prefix (ADR-0009 point 1). Anything
+    // else -- a drive letter, `..`, a path-shaped head -- leaves the whole entry a path.
     const idx = entry.indexOf(':');
-    if (idx >= 0) {
+    if (idx > 0) {
         const prefixName = entry.slice(0, idx).trim();
-        const path = unquote(entry.slice(idx + 1).trim());
-        return { prefixKind: 'explicit', prefixName, path };
+        if (isValidValuesFilePrefix(prefixName)) {
+            return { prefixKind: 'explicit', prefixName, path: unquote(entry.slice(idx + 1).trim()) };
+        }
     }
     return { prefixKind: 'auto', path: unquote(entry) };
 }
@@ -119,9 +143,13 @@ function unquote(s: string): string {
     return isQuoted(s) ? s.slice(1, -1) : s;
 }
 
-/** Strip a path's final extension and directory to derive its auto prefix, per ADR-0007 point 2. */
+/**
+ * Strip a path's Windows drive, directory and final extension to derive its auto prefix, per
+ * ADR-0007 point 2 and ADR-0009 point 5. The drive goes first, so `c:package.json` derives
+ * `package` rather than the unusable `c:package`.
+ */
 export function deriveAutoPrefixFromPath(p: string): string {
-    const normalized = p.replace(/\\/g, '/');
+    const normalized = p.replace(driveLetterPrefix, '').replace(/\\/g, '/');
     const slashIdx = normalized.lastIndexOf('/');
     const base = slashIdx >= 0 ? normalized.slice(slashIdx + 1) : normalized;
     const dotIdx = base.lastIndexOf('.');
@@ -182,7 +210,7 @@ export type ValueLayer = JsonObject;
  * How a name failed to resolve, so the caller can report which of ADR-0005 point 4's two cases it
  * is: nothing defines the name at all, or every layer holding it holds a branch rather than a leaf.
  */
-export type UnresolvedReason = 'undefined' | 'object' | 'array' | 'null';
+export type UnresolvedReason = 'undefined' | 'object' | 'array' | 'null' | 'cycle';
 
 export type ResolveResult = { value: string } | { unresolved: UnresolvedReason };
 
@@ -251,16 +279,19 @@ export async function buildValuesFileLayers(
             layers.push(layer);
             continue;
         }
-        const prefix =
-            entry.prefixKind === 'explicit' ? (entry.prefixName ?? '') : deriveAutoPrefixFromPath(entry.path);
-        if (!isValidPlaceholderSegment(prefix)) {
+        const explicit = entry.prefixKind === 'explicit';
+        const prefix = explicit ? (entry.prefixName ?? '') : deriveAutoPrefixFromPath(entry.path);
+        // An explicit prefix was already checked by `parseValuesFileEntry` -- the colon would not
+        // have separated otherwise. An auto-derived one stays a single segment (ADR-0009 point 4).
+        if (!explicit && !isValidPlaceholderSegment(prefix)) {
             onError(
                 `Invalid values-file prefix "${prefix}" derived from "${entry.path}". Use an explicit prefix or ":${entry.path}" to merge at the root.`,
             );
             continue;
         }
         const layer = emptyTree();
-        layer[prefix] = data;
+        // `setPath` so a dotted explicit prefix nests, per ADR-0009 point 3.
+        setPath(layer, prefix, data);
         layers.push(layer);
     }
     return layers.reverse();

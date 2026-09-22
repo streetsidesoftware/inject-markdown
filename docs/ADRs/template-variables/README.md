@@ -4,7 +4,7 @@ ADRs for template variable substitution: `{@ name @}` placeholders inside inject
 
 | ADR                                                     | Title                                                | Status   |
 | ------------------------------------------------------- | ---------------------------------------------------- | -------- |
-| [0001](0001-placeholder-syntax.md)                      | Placeholder syntax and encoding conventions          | Proposed |
+| [0001](0001-placeholder-syntax.md)                      | Placeholder syntax and encoding conventions          | Accepted |
 | [0002](0002-directive-value-sources.md)                 | Directive-level value sources and opt-in trigger     | Accepted |
 | [0003](0003-cli-and-env-value-sources.md)               | CLI and environment value sources                    | Accepted |
 | [0004](0004-value-source-precedence.md)                 | Value source precedence and combination              | Accepted |
@@ -12,7 +12,7 @@ ADRs for template variable substitution: `{@ name @}` placeholders inside inject
 | [0006](0006-substitution-mechanics-and-timing.md)       | Substitution mechanics and timing                    | Accepted |
 | [0007](0007-values-file-prefixing.md)                   | `values-file=` multi-file imports and prefixing      | Accepted |
 | [0008](0008-value-layering-and-resolution.md)           | Value layering and per-leaf resolution               | Accepted |
-| [0009](0009-prefix-grammar-and-drive-letters.md)        | Values-file prefix grammar and Windows drive letters | Proposed |
-| [0010](0010-value-alias.md)                             | `value-alias=` redefining a name to point at another | Proposed |
+| [0009](0009-prefix-grammar-and-drive-letters.md)        | Values-file prefix grammar and Windows drive letters | Accepted |
+| [0010](0010-value-alias.md)                             | `value-alias=` redefining a name to point at another | Accepted |
 
 See also: [../../glossary.md](../../glossary.md).

@@ -54,3 +54,24 @@ describe('substituteInTree', () => {
         expect((tree.children[3] as { value: string }).value).toBe('<!-- 1.2.3 -->');
     });
 });
+
+describe('name grammar (ADR-0001)', () => {
+    const resolve = (name: string) => (name === 'ok' || name === 'a-b' ? 'X' : undefined);
+
+    test.each`
+        text            | expected        | why
+        ${'{@ ok @}'}   | ${'X'}          | ${'plain name'}
+        ${'{@ a-b @}'}  | ${'X'}          | ${'hyphen inside a segment'}
+        ${'{@ -foo @}'} | ${'{@ -foo @}'} | ${'leading hyphen is not a placeholder'}
+        ${'{@ a.-b @}'} | ${'{@ a.-b @}'} | ${'segment starting with a hyphen'}
+        ${'{@ .foo @}'} | ${'{@ .foo @}'} | ${'leading dot'}
+    `('$why', ({ text, expected }: Record<string, string>) => {
+        expect(substituteInString(text, resolve, () => undefined)).toBe(expected);
+    });
+
+    test('a name that is not a placeholder reports nothing unresolved', () => {
+        const unresolved: string[] = [];
+        substituteInString('{@ -foo @}', resolve, (n) => unresolved.push(n));
+        expect(unresolved).toEqual([]);
+    });
+});

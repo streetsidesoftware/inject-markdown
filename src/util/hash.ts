@@ -21,6 +21,8 @@ export interface InjectInfo {
     valuesFile?: ValuesFileEntry[] | undefined;
     /** Bare `#vars` opt-in: scan for placeholders using CLI/environment sources alone. See ADR-0002. */
     vars?: boolean | undefined;
+    /** `value-alias=new:target,...`, redefining a name to point at another. See ADR-0010. */
+    valueAlias?: Map<string, string> | undefined;
 }
 
 export function parseHash(url: URL | RelURL): InjectInfo {
@@ -74,6 +76,10 @@ export function parseHashString(hash: string): InjectInfo {
                 continue;
             case 'vars':
                 info.vars = parseFlagValue(value, true);
+                continue;
+            case 'value-alias':
+                // Same `name:target` list shape as `values=` (ADR-0010 point 1).
+                info.valueAlias = parseValuesOption(value);
                 continue;
             case 'lines':
             case 'line':

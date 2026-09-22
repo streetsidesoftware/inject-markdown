@@ -1,0 +1,1 @@
+name={@ name @} version={@ version @} date={@ release.latest.date @}

@@ -21,6 +21,9 @@ Options:
   --allow-env <name>             Allow a directive to reference the OS
                                  environment variable <name> via {@ env.name @}.
                                  Repeatable.
+  --value-alias <new=target>     Resolve the {@ new @} placeholder as if it were
+                                 {@ target @}. Repeatable; a later --value-alias
+                                 for the same name wins.
   --strict-vars                  Treat an unresolved {@ name @} placeholder as a
                                  directive error.
   --clean                        Remove the injected content.

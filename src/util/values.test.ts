@@ -7,6 +7,7 @@ import {
     getPath,
     isScalar,
     isValidPlaceholderSegment,
+    isValidValuesFilePrefix,
     type JsonObject,
     layersFromFlatMap,
     parseValuesFileEntry,
@@ -326,4 +327,77 @@ describe('resolveInLayers', () => {
         expect(resolveInLayers(layers, 'n')).toEqual({ value: '42' });
         expect(resolveInLayers(layers, 'b')).toEqual({ value: 'false' });
     });
+});
+
+describe('prefix grammar (ADR-0009)', () => {
+    test.each`
+        entry                     | kind          | prefix         | path
+        ${'pkg:data.json'}        | ${'explicit'} | ${'pkg'}       | ${'data.json'}
+        ${'pkg.build:data.json'}  | ${'explicit'} | ${'pkg.build'} | ${'data.json'}
+        ${'C:\\data\\v.json'}     | ${'auto'}     | ${undefined}   | ${'C:\\data\\v.json'}
+        ${'C:/data/v.json'}       | ${'auto'}     | ${undefined}   | ${'C:/data/v.json'}
+        ${'c:package.json'}       | ${'auto'}     | ${undefined}   | ${'c:package.json'}
+        ${'v:data.json'}          | ${'auto'}     | ${undefined}   | ${'v:data.json'}
+        ${'..:x.json'}            | ${'auto'}     | ${undefined}   | ${'..:x.json'}
+        ${'-foo:x.json'}          | ${'auto'}     | ${undefined}   | ${'-foo:x.json'}
+        ${'\\\\?\\C:\\d\\v.json'} | ${'auto'}     | ${undefined}   | ${'\\\\?\\C:\\d\\v.json'}
+        ${':root.json'}           | ${'root'}     | ${undefined}   | ${'root.json'}
+    `('$entry -> $kind', ({ entry, kind, prefix, path }: Record<string, string | undefined>) => {
+        const e = parseValuesFileEntry(entry as string);
+        expect(e.prefixKind).toBe(kind);
+        expect(e.prefixName).toBe(prefix);
+        expect(e.path).toBe(path);
+    });
+
+    test.each`
+        name             | valid
+        ${'pkg'}         | ${true}
+        ${'build-info'}  | ${true}
+        ${'pkg.build'}   | ${true}
+        ${'_x'}          | ${true}
+        ${'a'}           | ${false}
+        ${'C'}           | ${false}
+        ${'..'}          | ${false}
+        ${'...'}         | ${false}
+        ${'.env'}        | ${false}
+        ${'-foo'}        | ${false}
+        ${'a.'}          | ${false}
+        ${'a..b'}        | ${false}
+        ${'pkg.-x'}      | ${false}
+        ${'__proto__'}   | ${false}
+        ${'a.__proto__'} | ${false}
+    `('isValidValuesFilePrefix($name) === $valid', ({ name, valid }: { name: string; valid: boolean }) => {
+        expect(isValidValuesFilePrefix(name)).toBe(valid);
+    });
+
+    test.each`
+        path                           | prefix
+        ${'c:package.json'}            | ${'package'}
+        ${'C:\\data\\values.json'}     | ${'values'}
+        ${'C:/data/values.json'}       | ${'values'}
+        ${'d:values.json'}             | ${'values'}
+        ${'../shared/build-info.json'} | ${'build-info'}
+    `('deriveAutoPrefixFromPath($path) strips the drive -> $prefix', ({ path, prefix }: Record<string, string>) => {
+        expect(deriveAutoPrefixFromPath(path)).toBe(prefix);
+    });
+
+    test('an auto-derived prefix stays a single segment (ADR-0007 point 5 stands)', () => {
+        expect(isValidPlaceholderSegment(deriveAutoPrefixFromPath('v1.2.json'))).toBe(false);
+        expect(isValidPlaceholderSegment(deriveAutoPrefixFromPath('data.local.json'))).toBe(false);
+    });
+
+    test.each`
+        segment   | valid
+        ${'foo'}  | ${true}
+        ${'a-b'}  | ${true}
+        ${'_a'}   | ${true}
+        ${'foo-'} | ${true}
+        ${'-foo'} | ${false}
+        ${'.foo'} | ${false}
+    `(
+        'isValidPlaceholderSegment($segment) === $valid (ADR-0001)',
+        ({ segment, valid }: { segment: string; valid: boolean }) => {
+            expect(isValidPlaceholderSegment(segment)).toBe(valid);
+        },
+    );
 });
