@@ -374,7 +374,7 @@ async function processFileInjections(
         const dFile = directive.file;
         const directiveFileUrl = dFile.toUrl(fileUrl);
         if (options.verbose) stderr.write(`\n  ${gray(dFile.href)}`);
-        const root = await readAndParseMarkdownFile(directiveFileUrl);
+        const root = await readAndParseMarkdownFile(directiveFileUrl, dn);
         return injectContent(dn, root, ctx);
     }
 
@@ -484,7 +484,7 @@ async function processFileInjections(
         }
     }
 
-    async function readAndParseMarkdownFile(fileUrl: URL): Promise<ParseResult> {
+    async function readAndParseMarkdownFile(fileUrl: URL, directive: DirectiveNode): Promise<ParseResult> {
         const info = parseHash(fileUrl);
         const lines = info.lines;
         const heading = info.heading || '';
@@ -503,7 +503,13 @@ async function processFileInjections(
             return { root, info };
         } catch (e) {
             const err = toError(e);
-            file.message(err.message);
+            // A merely missing markdown file stays a warning, but a boundary rejection is fatal
+            // (ADR-0001) so `--stop-on-errors` applies and a failed run is visible in CI.
+            if (err instanceof OutsideInjectionRootError) {
+                file.error(err.message, directive.node.position);
+            } else {
+                file.message(err.message);
+            }
             return { root: errorToComment(err), info };
         }
     }
@@ -514,9 +520,12 @@ async function processFileInjections(
             // symlink swapped in after the check (time-of-check/time-of-use).
             const readFrom = await resolveWithinInjectionRoot(file);
             return await readFile(fs, file, 'utf8', readFrom);
-        } catch {
+        } catch (e) {
             // console.log('resolveAndReadFile: (%s) %o', file.href, e);
-            throw new Error(`Failed to read "${relativePathNormalized(file)}"`);
+            // Worded the same either way: to the rest of the pipeline, a file outside the root
+            // doesn't exist. Only the severity assigned by the caller differs.
+            const message = `Failed to read "${relativePathNormalized(file)}"`;
+            throw e instanceof OutsideInjectionRootError ? new OutsideInjectionRootError(message) : new Error(message);
         }
     }
 
@@ -536,7 +545,7 @@ async function processFileInjections(
         ));
         const realTarget = await fs.realpath(target);
         if (!roots.some((root) => isWithinRoot(root, realTarget))) {
-            throw new Error(`Outside the injection root: "${relativePathNormalized(target)}"`);
+            throw new OutsideInjectionRootError(`Outside the injection root: "${relativePathNormalized(target)}"`);
         }
         return pathToFileURL(realTarget);
     }
@@ -803,6 +812,12 @@ async function resolveInjectionRoots(
     );
     return [root, ...extras.filter(isDefined)];
 }
+
+/**
+ * A reference that resolved outside the injection root, as opposed to one that simply couldn't be
+ * read. Lets a caller treat the boundary rejection as fatal where a missing file is not.
+ */
+class OutsideInjectionRootError extends Error {}
 
 function isWithinRoot(root: string, target: string): boolean {
     const rel = path.relative(root, target);

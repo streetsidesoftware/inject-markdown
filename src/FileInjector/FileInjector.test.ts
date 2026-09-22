@@ -247,6 +247,25 @@ describe('injection root boundary', () => {
         expect(r.file.value).toContain('TOP SECRET');
     });
 
+    test('rejects an out-of-root markdown reference as a fatal error', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
+        const r = await fi.processFile('escape-markdown.md');
+        // Fatal, unlike a merely missing markdown file, so `--stop-on-errors` applies.
+        expect(r.hasErrors).toBe(true);
+        expect(r.file.messages.map(String).join('\n')).toContain('Failed to read "../outside/secret.md"');
+        expect(r.file.value).not.toContain('TOP SECRET');
+    });
+
+    test('a missing in-root markdown reference stays a warning', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
+        const r = await fi.processFile('missing-inside.md');
+        expect(r.hasErrors).toBe(false);
+        expect(r.hasMessages).toBe(true);
+        expect(r.file.messages.map(String).join('\n')).toContain('Failed to read "does-not-exist.md"');
+    });
+
     test('reads the symlink-resolved path the boundary check approved', async () => {
         const fsa = createFSA();
         const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
