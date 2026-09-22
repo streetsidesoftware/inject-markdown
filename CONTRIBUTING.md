@@ -39,6 +39,10 @@ Test files live at `src/**/*.test.{ts,mts}`; snapshots are in `src/**/__snapshot
 
 Integration-style test against real fixture files: `pnpm test:bin` (runs the built CLI over `fixtures/`, writing to `fixtures-output/`).
 
+`fixtures-output/` is committed. It is the rendered result of a real run, so a change in behavior shows up as a readable Markdown diff in the pull request rather than as an escaped blob inside a `.snap` file — which is the point of keeping it. Regenerate it with `pnpm test:bin` and commit the result alongside the change that caused it; `autofix.ci` regenerates and commits it on a pull request if you forget. Prettier ignores the directory (see `.prettierignore`) so the formatter never rewrites what the tool produced.
+
+The `injection-root-boundary/` fixtures are excluded from that run. They test a boundary that is relative to the injection root, so they are only meaningful under their own narrower `--cwd`; processed under `fixtures/` the "outside" directory is inside the root, and the output would show a secret being injected legitimately while reading as a security failure. They are covered by `FileInjector.test.ts` instead, which sets the root they need.
+
 ## Updating README.md
 
 `README.md` is itself built by `inject-markdown` from files in `content/` and `static/`. Never edit content between `<!--- @@inject: ... --->` and `<!--- @@inject-end: ... --->` markers directly in `README.md`. Edit the source in `content/` or `static/`, then regenerate:
