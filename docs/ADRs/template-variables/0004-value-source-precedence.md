@@ -31,5 +31,4 @@ This order ranks _sources_. It does not by itself say what happens when two sour
 ## Consequences
 
 - The resolver tries sources in order rather than doing one deep merge. Fall-through is per _leaf_, not per source: a name missing from a higher-precedence source is looked for in the next one, so `--values-file package.json --value package.engines.node=26.0` overrides exactly that one leaf and leaves `package.version` and `package.engines.npm` resolving from the file. See [ADR-0008](0008-value-layering-and-resolution.md).
-- An earlier draft of this ADR stated the opposite here — that a name "either comes entirely from one source's value tree or falls through to the next source, never a blend of two". That never matched the implementation and is corrected above; [ADR-0008](0008-value-layering-and-resolution.md) records the full model.
 - New glossary term: **Value source precedence**.

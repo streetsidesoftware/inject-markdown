@@ -8,7 +8,7 @@
 
 [ADR-0004](0004-value-source-precedence.md) fixes the order in which value _sources_ are consulted, and [ADR-0007](0007-values-file-prefixing.md) point 6 says a later `values-file=`/`--values-file` entry wins over an earlier one on a prefix collision. Neither says what "wins" means when the collision is partial — when two sources each define _part_ of the same dotted namespace.
 
-The implementation merged into `main` answers that question three different ways, which a review of the feature surfaced:
+The implementation answers that question three different ways, which a review of the feature surfaced before it shipped:
 
 - **Across sources** it already falls through per leaf, because `getPath` returns `undefined` for a missing leaf and `buildResolver` then tries the next source. `--values-file package.json --value package.engines.node=26.0` correctly yields `26.0` for `package.engines.node` while `package.engines.npm` and `package.version` still come from `package.json`.
 - **Within one values-file list** it replaces wholesale: `buildValuesFileTree` does `tree[prefix] = data`, so `--values-file p:a.json --values-file p:b.json` discards everything in `a.json`, including keys `b.json` never mentions.
