@@ -27,6 +27,27 @@ describe('hash', () => {
     `('parseHashString($hash)', ({ hash, expected }) => {
         expect(parseHashString(hash)).toEqual(expected);
     });
+
+    test('#values=name:1.2.3', () => {
+        expect(parseHashString('#values=name:1.2.3')).toEqual({
+            values: new Map([['name', '1.2.3']]),
+            params: m('values=name:1.2.3'),
+        });
+    });
+
+    test('#values-file=pkg:package.json', () => {
+        expect(parseHashString('#values-file=pkg:package.json')).toEqual({
+            valuesFile: [{ prefixKind: 'explicit', prefixName: 'pkg', path: 'package.json' }],
+            params: m('values-file=pkg:package.json'),
+        });
+    });
+
+    test('#vars (bare flag)', () => {
+        expect(parseHashString('#vars')).toEqual({
+            vars: true,
+            params: m('vars'),
+        });
+    });
 });
 
 function m(...entries: ([string, string | string[]] | string)[]): Map<string, string | string[]> {

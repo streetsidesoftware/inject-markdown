@@ -3,24 +3,36 @@ Usage: inject-markdown [options] <files...>
 Inject file content into markdown files.
 
 Arguments:
-  files                       Files to scan for injected content.
+  files                          Files to scan for injected content.
 
 Options:
-  --no-must-find-files        No error if files are not found.
-  --output-dir <dir>          Output Directory
-  --cwd <dir>                 Current Directory
-  --allow-outside-root <dir>  Allow local @@inject references to resolve into
-                              <dir>, outside the injection root (cwd).
-                              Repeatable.
-  --clean                     Remove the injected content.
-  --no-inject-only            Update the whole file.
-  --verbose                   Verbose output.
-  --silent                    Only output errors.
-  --no-stop-on-errors         Do not stop if an error occurs.
-  --write-on-error            write the file even if an injection error occurs.
-  --color                     Force color.
-  --no-color                  Do not use color.
-  --no-summary                Do not show the summary
-  --dry-run                   Process the files, but do not write.
-  -V, --version               output the version number
-  -h, --help                  display help for command
+  --no-must-find-files           No error if files are not found.
+  --output-dir <dir>             Output Directory
+  --cwd <dir>                    Current Directory
+  --allow-outside-root <dir>     Allow local @@inject references to resolve into
+                                 <dir>, outside the injection root (cwd).
+                                 Repeatable.
+  --value <name=val>             Set a run-wide {@ name @} placeholder value.
+                                 Repeatable; a later --value for the same name
+                                 wins.
+  --values-file <[prefix:]path>  Add a run-wide JSON file of {@ name @}
+                                 placeholder values, resolved relative to --cwd.
+                                 Repeatable.
+  --allow-env <name>             Allow a directive to reference the OS
+                                 environment variable <name> via {@ env.name @}.
+                                 Repeatable.
+  --strict-vars                  Treat an unresolved {@ name @} placeholder as a
+                                 directive error.
+  --clean                        Remove the injected content.
+  --no-inject-only               Update the whole file.
+  --verbose                      Verbose output.
+  --silent                       Only output errors.
+  --no-stop-on-errors            Do not stop if an error occurs.
+  --write-on-error               write the file even if an injection error
+                                 occurs.
+  --color                        Force color.
+  --no-color                     Do not use color.
+  --no-summary                   Do not show the summary
+  --dry-run                      Process the files, but do not write.
+  -V, --version                  output the version number
+  -h, --help                     display help for command

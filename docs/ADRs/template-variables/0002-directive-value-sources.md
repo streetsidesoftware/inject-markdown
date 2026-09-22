@@ -1,6 +1,6 @@
 # ADR-0002: Directive-level value sources and opt-in trigger
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 

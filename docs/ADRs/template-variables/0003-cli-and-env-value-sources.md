@@ -1,6 +1,6 @@
 # ADR-0003: CLI and environment value sources
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 

@@ -18,7 +18,16 @@ import { delimiterForExtension, parseDelimitedText } from '../util/csv.js';
 import { fileType } from '../util/fileType.mjs';
 import { type InjectInfo, parseHash } from '../util/hash.js';
 import { isDefined } from '../util/isDefined.js';
-import { dirToUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
+import { type PlaceholderResolver, substituteInString, substituteInTree } from '../util/placeholders.js';
+import { dirToUrl, parseRelativeUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
+import {
+    buildValuesFileTree,
+    getPath,
+    isScalar,
+    type JsonObject,
+    parseValuesFileEntry,
+    treeFromFlatMap,
+} from '../util/values.js';
 import { detectMarkdownStyle } from './detectStyle.js';
 import { type Directive, directiveRegExp, type DirectiveType, parseDirective } from './Directive.js';
 import { applyQuote, errorToComment, extractHeader, isHtmlNode, sanitizeImport, toCode, toRoot } from './Markdown.js';
@@ -121,10 +130,36 @@ export interface FileInjectorOptions {
      * directive-file reference is allowed to resolve into.
      */
     allowOutsideRoot?: string[] | undefined;
+
+    /**
+     * Run-wide placeholder values (`--value name=val`), last-wins on a repeated name.
+     * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md.
+     */
+    value?: Record<string, string> | undefined;
+
+    /**
+     * Run-wide placeholder values files (`--values-file [prefix:]path`), repeatable.
+     * Resolved relative to `cwd`, not subject to the injection-root boundary.
+     * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md, 0007-values-file-prefixing.md.
+     */
+    valuesFile?: string[] | undefined;
+
+    /**
+     * Environment variable names a directive may reference via `{@ env.NAME @}`.
+     * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md.
+     */
+    allowEnv?: string[] | undefined;
+
+    /**
+     * Treat an unresolved placeholder as a directive error instead of a warning.
+     * See docs/ADRs/template-variables/0005-unresolved-placeholders-and-strict-mode.md.
+     */
+    strictVars?: boolean | undefined;
 }
 
 export class FileInjector {
     private cwd: URL;
+    private cliValuesFileTreePromise: Promise<JsonObject | undefined> | undefined;
     constructor(
         readonly fs: FileSystemAdapter,
         readonly options: FileInjectorOptions,
@@ -158,8 +193,31 @@ export class FileInjector {
             outputDir: this.options.outputDir ? dirToUrl(this.options.outputDir) : undefined,
             writeOnError: this.options.writeOnError ?? false,
             stopOnErrors: this.options.stopOnErrors ?? true,
+            cliValuesTree: treeFromFlatMap(toFlatMap(this.options.value)),
+            cliValuesFileTree: await this.resolveCliValuesFileTree(),
+            allowEnvSet: new Set(this.options.allowEnv ?? []),
         });
     }
+
+    /** Run-wide `--values-file` entries: resolved relative to `cwd`, cached across every file in this run. */
+    private async resolveCliValuesFileTree(): Promise<JsonObject | undefined> {
+        const rawEntries = this.options.valuesFile;
+        if (!rawEntries?.length) return undefined;
+        this.cliValuesFileTreePromise ??= buildValuesFileTree(
+            this.fs,
+            rawEntries.map(parseValuesFileEntry),
+            (p) => Promise.resolve(parseRelativeUrl(p).toUrl(this.cwd)),
+            (message) => {
+                throw new Error(message);
+            },
+        );
+        return this.cliValuesFileTreePromise;
+    }
+}
+
+function toFlatMap(value: Record<string, string> | undefined): Map<string, string> | undefined {
+    if (!value) return undefined;
+    return new Map(Object.entries(value));
 }
 
 interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outputDir'> {
@@ -169,6 +227,12 @@ interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outpu
     outputDir: URL | undefined;
     writeOnError: boolean;
     stopOnErrors: boolean;
+    /** Run-wide `--value` entries, merged into a value tree. */
+    cliValuesTree: JsonObject | undefined;
+    /** Run-wide `--values-file` entries, read and merged into a value tree once per run. */
+    cliValuesFileTree: JsonObject | undefined;
+    /** Environment variable names allow-listed via `--allow-env`. */
+    allowEnvSet: Set<string>;
 }
 
 export interface ProcessFileResult {
@@ -374,7 +438,7 @@ async function processFileInjections(
         const dFile = directive.file;
         const directiveFileUrl = dFile.toUrl(fileUrl);
         if (options.verbose) stderr.write(`\n  ${gray(dFile.href)}`);
-        const root = await readAndParseMarkdownFile(directiveFileUrl);
+        const root = await readAndParseMarkdownFile(directiveFileUrl, dn);
         return injectContent(dn, root, ctx);
     }
 
@@ -451,7 +515,10 @@ async function processFileInjections(
         const lines = info.lines;
         try {
             const vFile = await resolveAndReadFile(fileName);
-            const content = extractLines(extractContent(vFile), lines);
+            let content = extractLines(extractContent(vFile), lines);
+            await applySubstitution(info, directive.node, (resolve, onUnresolved) => {
+                content = substituteInString(content, resolve, onUnresolved);
+            });
             const delimiter = delimiterForExtension(path.extname(fileName.pathname));
             const rows = parseDelimitedText(content, delimiter);
             return {
@@ -471,7 +538,10 @@ async function processFileInjections(
         const lines = info.lines;
         try {
             const vFile = await resolveAndReadFile(fileName);
-            const content = extractLines(extractContent(vFile), lines);
+            let content = extractLines(extractContent(vFile), lines);
+            await applySubstitution(info, directive.node, (resolve, onUnresolved) => {
+                content = substituteInString(content, resolve, onUnresolved);
+            });
             const code = toCode(lang || fileType(fileName.pathname), content.trim());
             return {
                 root: toRoot(code),
@@ -484,18 +554,21 @@ async function processFileInjections(
         }
     }
 
-    async function readAndParseMarkdownFile(fileUrl: URL): Promise<ParseResult> {
-        const info = parseHash(fileUrl);
+    async function readAndParseMarkdownFile(targetUrl: URL, directive: DirectiveNode): Promise<ParseResult> {
+        const info = parseHash(targetUrl);
         const lines = info.lines;
         const heading = info.heading || '';
         try {
-            const vFile = await resolveAndReadFile(fileUrl);
+            const vFile = await resolveAndReadFile(targetUrl);
             if (lines) {
                 vFile.value = extractLines(extractContent(vFile), lines);
             }
             const fileRoot = parseMarkdownFile(vFile);
             sanitizeImport(fileRoot);
             const markdown = extractHeader(fileRoot, heading);
+            await applySubstitution(info, directive.node, (resolve, onUnresolved) => {
+                substituteInTree(markdown, resolve, onUnresolved);
+            });
             const root =
                 info.code !== undefined || info.lang !== undefined
                     ? toRoot(toCode(info.lang || 'markdown', markdown))
@@ -506,6 +579,75 @@ async function processFileInjections(
             file.message(err.message);
             return { root: errorToComment(err), info };
         }
+    }
+
+    /**
+     * Resolve a directive's placeholder value sources ({@link InjectInfo.values}/`valuesFile`) and
+     * substitute placeholders in its content via `apply`, reporting unresolved names once per
+     * unique name (warning, or a directive error under `--strict-vars`). A directive with none of
+     * `values=`/`values-file=`/`#vars` does no scanning at all, per ADR-0002 point 4.
+     */
+    async function applySubstitution(
+        info: InjectInfo,
+        directiveNode: Html,
+        apply: (resolve: PlaceholderResolver, onUnresolved: (name: string) => void) => void,
+    ): Promise<void> {
+        const optedIn = info.values !== undefined || info.valuesFile !== undefined || info.vars === true;
+        if (!optedIn) return;
+        const directiveValuesFileTree = info.valuesFile
+            ? await resolveDirectiveValuesFileTree(info.valuesFile, directiveNode)
+            : undefined;
+        const resolve = buildResolver(info, directiveValuesFileTree);
+        const unresolved = new Set<string>();
+        apply(resolve, (name) => unresolved.add(name));
+        for (const name of unresolved) {
+            const message = `Unresolved placeholder "{@ ${name} @}"`;
+            if (options.strictVars) {
+                file.error(message, directiveNode.position);
+            } else {
+                file.message(message, directiveNode.position);
+            }
+        }
+    }
+
+    /** Directive `values-file=` paths resolve relative to the containing document, per ADR-0002 point 2. */
+    async function resolveDirectiveValuesFileTree(
+        entries: NonNullable<InjectInfo['valuesFile']>,
+        directiveNode: Html,
+    ): Promise<JsonObject | undefined> {
+        return buildValuesFileTree(
+            fs,
+            entries,
+            async (p) => {
+                const url = parseRelativeUrl(p).toUrl(fileUrl);
+                await assertWithinInjectionRoot(url);
+                return url;
+            },
+            (message) => file.error(message, directiveNode.position),
+        );
+    }
+
+    /** Combine a directive's value sources with precedence, per ADR-0004. */
+    function buildResolver(info: InjectInfo, directiveValuesFileTree: JsonObject | undefined): PlaceholderResolver {
+        const directiveValuesTree = treeFromFlatMap(info.values);
+        const trees = [directiveValuesTree, directiveValuesFileTree, options.cliValuesTree, options.cliValuesFileTree];
+        return (name: string): string | undefined => {
+            if (name === 'env' || name.startsWith('env.')) {
+                const segments = name.split('.');
+                if (segments.length !== 2) return undefined;
+                const envName = segments[1];
+                if (!options.allowEnvSet.has(envName)) return undefined;
+                return process.env[envName];
+            }
+            for (const tree of trees) {
+                if (!tree) continue;
+                const v = getPath(tree, name);
+                if (v !== undefined) {
+                    return isScalar(v) ? String(v) : undefined;
+                }
+            }
+            return undefined;
+        };
     }
 
     async function resolveAndReadFile(file: URL): Promise<VFileEx> {
