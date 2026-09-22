@@ -27,6 +27,26 @@ It states the threat model the tool is built against: a directive is text in a M
 
 **A DNS rebinding window remains** on remote fetches, per [ADR-0003](0003-remote-reference-guardrails.md).
 
+### How a denial reports itself
+
+Record, here rather than in any one of them, the rule the group's denials follow:
+
+> A denial says as much as it safely can. It is explicit — naming what was refused and the option that would permit it — **except** where deciding the denial required observing something the untrusted party must not learn. In that case the reason goes to the operator's console and the document carries a generic failure.
+
+Applied to the three denials that exist today:
+
+| Denial                                                                                                                | Console  | Generated document |
+| --------------------------------------------------------------------------------------------------------------------- | -------- | ------------------ |
+| Outside the injection root ([file-access-security/ADR-0001](../file-access-security/0001-injection-root-boundary.md)) | Explicit | Explicit           |
+| `--deny-access` match ([ADR-0004](0004-deny-access-globs.md))                                                         | Explicit | Explicit           |
+| Remote destination refused ([ADR-0003](0003-remote-reference-guardrails.md))                                          | Explicit | Generic            |
+
+The first two can be explicit because their verdicts reveal nothing: the injection-root check is ordered so it does not depend on the target existing, and a `--deny-access` match is a glob evaluated over a path, telling the reader only what whoever wrote the pattern already knew. The third cannot: deciding it _requires_ resolving the name, so an explicit refusal necessarily says "this name resolved, and it resolved to something internal" — one bit of the runner's network per directive, to someone who only had to open a pull request.
+
+Without this written down the group looks merely inconsistent, and the next denial added has three precedents to infer from rather than a rule to apply. The rule is the thing to keep; the table is a snapshot.
+
+**The exception rests on an assumption worth testing.** It holds only where the pull-request author reads the generated document but not the build log. Where continuous-integration logs are public — which they often are — that distinction is fictional, the split buys nothing, and the honest choices narrow to explicit everywhere (accepting the DNS oracle) or generic everywhere (losing the operator the diagnosis). If that turns out to be the common way this tool runs, [ADR-0003](0003-remote-reference-guardrails.md)'s reporting decision should be revisited on those terms rather than left standing on a premise that does not hold.
+
 ## Options Considered
 
 - **A section in `content/README.md`** instead — rejected: highest visibility, but the README is already long and this is operator guidance rather than usage. A pointer from the Injection Root section gets the discoverability without the bulk.
@@ -38,5 +58,7 @@ It states the threat model the tool is built against: a directive is text in a M
 
 - Someone evaluating the tool can find, in one place, both the guarantees and the gaps, without reading eight ADRs.
 - Writing the non-goals down makes them harder to quietly erode later, and gives a reviewer something to point at when a future change would widen one.
+- A denial added later has a stated rule to apply, instead of three precedents to reverse-engineer. The rule also makes the one exception auditable: a reviewer can ask what observation forced it.
+- [ADR-0003](0003-remote-reference-guardrails.md) is the only decision requiring the console and the document to say different things. `resolveAndReadFile` currently throws a single `Error` whose message reaches both, so that one exception is what will force a second reporting channel into the code.
 - `SECURITY.md` becomes a file that has to be kept current. A decision that changes what is defended now has a second place to update, and the ADR describing it should say so.
 - The guidance recommends configuration (`--cwd`, `--deny-access`, pinned URLs) that the tool does not apply by default. That is the honest description of the current posture rather than a gap in the document.
