@@ -15,6 +15,7 @@ import type { VFile } from 'vfile';
 
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { delimiterForExtension, parseDelimitedText } from '../util/csv.js';
+import { OptionError } from '../util/errors.js';
 import { fileType } from '../util/fileType.mjs';
 import { type InjectInfo, parseHash } from '../util/hash.js';
 import { isDefined } from '../util/isDefined.js';
@@ -208,7 +209,7 @@ export class FileInjector {
             rawEntries.map(parseValuesFileEntry),
             (p) => Promise.resolve(parseRelativeUrl(p).toUrl(this.cwd)),
             (message) => {
-                throw new Error(message);
+                throw new OptionError(message);
             },
         );
         return this.cliValuesFileTreePromise;
@@ -515,12 +516,18 @@ async function processFileInjections(
         const lines = info.lines;
         try {
             const vFile = await resolveAndReadFile(fileName);
-            let content = extractLines(extractContent(vFile), lines);
-            await applySubstitution(info, directive.node, (resolve, onUnresolved) => {
-                content = substituteInString(content, resolve, onUnresolved);
-            });
+            const content = extractLines(extractContent(vFile), lines);
             const delimiter = delimiterForExtension(path.extname(fileName.pathname));
+            // Substitution runs on the parsed cell values, per ADR-0006 point 3 — substituting into
+            // the raw text first would let a value containing the delimiter add phantom columns.
             const rows = parseDelimitedText(content, delimiter);
+            await applySubstitution(info, directive.node, (resolve, onUnresolved) => {
+                for (const row of rows) {
+                    for (let i = 0; i < row.length; ++i) {
+                        row[i] = substituteInString(row[i], resolve, onUnresolved);
+                    }
+                }
+            });
             return {
                 root: toRoot(rowsToTable(rows)),
                 info,

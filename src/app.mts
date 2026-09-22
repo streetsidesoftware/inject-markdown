@@ -7,6 +7,7 @@ import * as path from 'path';
 
 import { type Options, processGlobs } from './processor/process.mjs';
 import { formatSummary } from './reporting/formatSummary.mjs';
+import { OptionError } from './util/errors.js';
 
 async function version(): Promise<string> {
     const pathSelf = fileURLToPath(import.meta.url);
@@ -52,7 +53,7 @@ export async function app(program = defaultCommand): Promise<Command> {
         .option(
             '--value <name=val>',
             'Set a run-wide {@ name @} placeholder value. Repeatable; a later --value for the same name wins.',
-            (entry: string, acc: Record<string, string> = {}) => {
+            (entry: string, acc: Record<string, string> = Object.create(null)) => {
                 const idx = entry.indexOf('=');
                 if (idx < 0) return acc;
                 acc[entry.slice(0, idx).trim()] = entry.slice(idx + 1);
@@ -90,7 +91,12 @@ export async function app(program = defaultCommand): Promise<Command> {
             // console.log('Options: %o', optionsCli);
             program.showHelpAfterError(false);
             const option = fixOptions(optionsCli);
-            const result = await processGlobs(files, option);
+            // A bad `--values-file` is operator input, not a document error: report it as a CLI
+            // message rather than letting it escape as an uncaught exception.
+            const result = await processGlobs(files, option).catch((e) => {
+                if (e instanceof OptionError) program.error(chalk.red(e.message));
+                throw e;
+            });
             const showSummary = (!optionsCli.silent && !!result.numberOfFiles) || optionsCli.summary === true;
             if (showSummary) console.error(chalk.white(formatSummary(result)));
             if (!result.numberOfFiles && optionsCli.mustFindFiles) {

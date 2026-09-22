@@ -7,6 +7,7 @@ import { describe, expect, type MockedFunction, test, vi } from 'vitest';
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { nodeFsa } from '../FileSystemAdapter/fsa.js';
 import { createStore, normalizePath, type Store } from '../FileSystemAdapter/fsStore.mjs';
+import { OptionError } from '../util/errors.js';
 import { relativePath } from '../util/url_helper.js';
 import { FileInjector, type Logger } from './FileInjector.js';
 
@@ -345,6 +346,28 @@ describe('template variables', () => {
         const r = await fi.processFile('README.md');
         expect(r.hasErrors).toBe(false);
         expect(r.hasMessages).toBe(true);
+    });
+
+    test('an unreadable --values-file raises an OptionError, not a document error', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: valuesRoot, silent: true, valuesFile: ['does-not-exist.json'] });
+        await expect(fi.processFile('README.md')).rejects.toThrow(OptionError);
+        await expect(fi.processFile('README.md')).rejects.toThrow('Failed to read values file');
+    });
+
+    test('a table value containing the delimiter stays in its own cell', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, {
+            cwd: path.join(__root__, 'fixtures/template-variables/table'),
+            silent: true,
+        });
+        const r = await fi.processFile('README.md');
+        const written = r.file.value as string;
+        // Substitution runs per parsed cell (ADR-0006 point 3), so `1,2` must not add a column.
+        expect(written).toContain('| pkg   | 1,2           |');
+        expect(written).not.toContain('| 1     | 2 |');
+        // An unresolved placeholder in a cell is left as written.
+        expect(written).toContain('{@ missing @}');
     });
 
     test('a directive values-file= reference outside the injection root is blocked', async () => {

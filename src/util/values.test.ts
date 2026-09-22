@@ -205,3 +205,63 @@ describe('buildValuesFileTree', () => {
         expect(onError).toHaveBeenCalledWith(expect.stringContaining('Failed to read values file'));
     });
 });
+
+describe('prototype safety', () => {
+    // Directive text is untrusted input (ADR-0003): no placeholder name may reach `Object.prototype`.
+    test.each`
+        name
+        ${'__proto__.polluted'}
+        ${'a.__proto__.polluted'}
+        ${'constructor.prototype.polluted'}
+    `('setPath drops the prototype-reaching name $name', ({ name }: { name: string }) => {
+        const tree = treeFromFlatMap(new Map([[name, 'pwned']]));
+        expect(getPath(tree, name)).toBe(undefined);
+        expect(({} as Record<string, unknown>).polluted).toBe(undefined);
+        expect(Object.prototype).not.toHaveProperty('polluted');
+    });
+
+    test('treeFromFlatMap builds a null-prototype tree', () => {
+        const tree = treeFromFlatMap(new Map([['a.b', '1']]));
+        expect(Object.getPrototypeOf(tree)).toBe(null);
+        expect(Object.getPrototypeOf(getPath(tree, 'a') as object)).toBe(null);
+    });
+
+    test.each`
+        name
+        ${'toString'}
+        ${'constructor'}
+        ${'a.toString'}
+    `('getPath does not resolve the inherited name $name', ({ name }: { name: string }) => {
+        // `JSON.parse` results still inherit from `Object.prototype`, so the guard has to be in
+        // `getPath`, not only in how the tree is built.
+        const tree = JSON.parse('{"a":{}}') as JsonObject;
+        expect(getPath(tree, name)).toBe(undefined);
+    });
+
+    test.each`
+        segment
+        ${'__proto__'}
+        ${'constructor'}
+        ${'prototype'}
+    `('isValidPlaceholderSegment rejects $segment as a values-file prefix', ({ segment }: { segment: string }) => {
+        expect(isValidPlaceholderSegment(segment)).toBe(false);
+    });
+
+    test('a `__proto__` key in a values file stays an inert own key', async () => {
+        const fs: FileSystemAdapter = {
+            readFile: vi.fn(async () => '{"__proto__":{"polluted":"pwned"},"ok":1}'),
+            writeFile: vi.fn(),
+            mkdir: vi.fn(),
+            realpath: vi.fn(async (p: string | URL) => String(p)),
+        };
+        const tree = await buildValuesFileTree(
+            fs,
+            [{ prefixKind: 'root', path: 'data.json' }],
+            async (p) => `/root/${p}`,
+            vi.fn(),
+        );
+        expect(getPath(tree, 'ok')).toBe(1);
+        expect(({} as Record<string, unknown>).polluted).toBe(undefined);
+        expect(Object.prototype).not.toHaveProperty('polluted');
+    });
+});

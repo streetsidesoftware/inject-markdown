@@ -18,9 +18,20 @@ export interface ValuesFileEntry {
 
 const validPlaceholderSegment = /^[A-Za-z0-9_-]+$/;
 
-/** A placeholder-name segment: `[A-Za-z0-9_-]+`, per ADR-0001. */
+/**
+ * Segments that would reach `Object.prototype` if walked or written. They match the ADR-0001
+ * grammar, so they have to be rejected by name rather than by the character class.
+ */
+const unsafeSegments = new Set(['__proto__', 'constructor', 'prototype']);
+
+/** A placeholder-name segment: `[A-Za-z0-9_-]+`, per ADR-0001, excluding prototype-reaching names. */
 export function isValidPlaceholderSegment(name: string): boolean {
-    return validPlaceholderSegment.test(name);
+    return validPlaceholderSegment.test(name) && !unsafeSegments.has(name);
+}
+
+/** A value tree, with no prototype: a `__proto__` key can never reach `Object.prototype`. */
+function emptyTree(): JsonObject {
+    return Object.create(null) as JsonObject;
 }
 
 /**
@@ -117,26 +128,36 @@ export function deriveAutoPrefixFromPath(p: string): string {
     return dotIdx > 0 ? base.slice(0, dotIdx) : base;
 }
 
-/** Walk a dotted placeholder name into a value tree. `undefined` means the name is not defined. */
+/**
+ * Walk a dotted placeholder name into a value tree. `undefined` means the name is not defined.
+ * Only own properties count: a `values-file=` tree comes from `JSON.parse` and still inherits from
+ * `Object.prototype`, so `{@ toString @}` must not resolve to an inherited member.
+ */
 export function getPath(tree: JsonObject | undefined, name: string): JsonValue | undefined {
     if (!tree) return undefined;
     let cur: JsonValue | undefined = tree;
     for (const seg of name.split('.')) {
         if (typeof cur !== 'object' || cur === null || Array.isArray(cur)) return undefined;
+        if (!Object.hasOwn(cur, seg)) return undefined;
         cur = cur[seg];
     }
     return cur;
 }
 
-/** Set a dotted placeholder name into a value tree, creating intermediate objects as needed. */
+/**
+ * Set a dotted placeholder name into a value tree, creating intermediate objects as needed.
+ * A name containing a prototype-reaching segment is dropped: directive text is untrusted input
+ * (ADR-0003), and `values=__proto__.x:y` must not be able to write to `Object.prototype`.
+ */
 export function setPath(tree: JsonObject, name: string, value: JsonValue): void {
     const segments = name.split('.');
+    if (segments.some((seg) => unsafeSegments.has(seg))) return;
     let cur = tree;
     for (let i = 0; i < segments.length - 1; ++i) {
         const seg = segments[i];
-        const next = cur[seg];
+        const next = Object.hasOwn(cur, seg) ? cur[seg] : undefined;
         if (typeof next !== 'object' || next === null || Array.isArray(next)) {
-            const obj: JsonObject = {};
+            const obj = emptyTree();
             cur[seg] = obj;
             cur = obj;
         } else {
@@ -154,7 +175,7 @@ export function isScalar(v: JsonValue | undefined): v is JsonScalar {
 /** Build a nested value tree from a flat map of dotted `name -> value` pairs (e.g. inline `values=`/`--value`). */
 export function treeFromFlatMap(pairs: ReadonlyMap<string, string> | undefined): JsonObject | undefined {
     if (!pairs || !pairs.size) return undefined;
-    const tree: JsonObject = {};
+    const tree = emptyTree();
     for (const [name, value] of pairs) setPath(tree, name, value);
     return tree;
 }
@@ -178,7 +199,7 @@ export async function buildValuesFileTree(
     encoding: BufferEncoding = 'utf8',
 ): Promise<JsonObject | undefined> {
     if (!entries.length) return undefined;
-    const tree: JsonObject = {};
+    const tree = emptyTree();
     for (const entry of entries) {
         let data: JsonValue;
         try {
