@@ -5,6 +5,8 @@ ignorePaths:
   - temp
   - coverage
   - '*.snap'
+  # Verbatim HTTP response bodies captured from pinned URLs, not project prose.
+  - fixtures/remote-responses
 dictionaryDefinitions: []
 dictionaries:
   - typescript
