@@ -10,7 +10,7 @@ import remarkStringify, { type Options as StringifyOptions } from 'remark-string
 import { unified } from 'unified';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import type { VFile } from 'vfile';
 
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
@@ -286,7 +286,7 @@ async function processFileInjections(
     const fileUrl = file.data.fileUrl;
     const content = extractContent(file);
     const lineEnding = detectLineEnding(content);
-    let injectionRootsPromise: Promise<string[]> | undefined;
+    let injectionRootsPromise: Promise<InjectionRoots> | undefined;
     setColor();
     const logger = options.logger;
     // console.log('File: %s\nOptions: %o', file.path, options);
@@ -602,7 +602,13 @@ async function processFileInjections(
             return { root, info };
         } catch (e) {
             const err = toError(e);
-            file.message(err.message);
+            // A merely missing markdown file stays a warning, but a boundary rejection is fatal
+            // (ADR-0001) so `--stop-on-errors` applies and a failed run is visible in CI.
+            if (err instanceof OutsideInjectionRootError) {
+                file.error(err.message, directive.node.position);
+            } else {
+                file.message(err.message);
+            }
             return { root: errorToComment(err), info };
         }
     }
@@ -654,9 +660,10 @@ async function processFileInjections(
             fs,
             entries,
             async (p) => {
-                const url = parseRelativeUrl(p).toUrl(fileUrl);
-                await assertWithinInjectionRoot(url);
-                return url;
+                // Return the path the boundary approved, so the read can't follow a symlink
+                // swapped in after the check (time-of-check/time-of-use) -- the same guard
+                // `resolveAndReadFile` applies to directive file references.
+                return await resolveWithinInjectionRoot(parseRelativeUrl(p).toUrl(fileUrl));
             },
             (message) => file.error(message, directiveNode.position),
         );
@@ -695,30 +702,49 @@ async function processFileInjections(
 
     async function resolveAndReadFile(file: URL): Promise<VFileEx> {
         try {
-            await assertWithinInjectionRoot(file);
-            return await readFile(fs, file);
-        } catch {
+            // Read the path the boundary check approved, not `file`, so the read can't follow a
+            // symlink swapped in after the check (time-of-check/time-of-use).
+            const readFrom = await resolveWithinInjectionRoot(file);
+            return await readFile(fs, file, 'utf8', readFrom);
+        } catch (e) {
             // console.log('resolveAndReadFile: (%s) %o', file.href, e);
-            throw new Error(`Failed to read "${relativePathNormalized(file)}"`);
+            // A denial already names the boundary and the way around it; every other failure is
+            // reported as a plain read failure, without saying why.
+            if (e instanceof OutsideInjectionRootError) throw e;
+            throw new Error(`Failed to read "${relativePathNormalized(file)}"`, { cause: e });
         }
     }
 
     /**
      * Local (`file:`) references must resolve inside the injection root (`cwd`) or one of
-     * `allowOutsideRoot`'s directories; remote fetches are unaffected. Real paths are compared
-     * so a symlink inside the root pointing outside it can't be used to escape.
+     * `allowOutsideRoot`'s directories; remote fetches are unaffected.
+     * @returns the URL to read from: the symlink-resolved target for a local file, `target` as-is
+     * for a remote reference.
      */
-    async function assertWithinInjectionRoot(target: URL): Promise<void> {
-        if (target.protocol !== 'file:') return;
+    async function resolveWithinInjectionRoot(target: URL): Promise<URL> {
+        if (target.protocol !== 'file:') return target;
         const roots = await (injectionRootsPromise ??= resolveInjectionRoots(
             fs,
             options.cwd,
             options.allowOutsideRoot,
         ));
+        // Textual gate first. Its verdict never depends on the target existing, so a denial can't
+        // be used to probe which paths are present on the machine running the tool.
+        assertWithinRoots(roots.textual, fileURLToPath(target), target);
+        // Then the real path, which catches a symlink inside the root pointing outside it. Getting
+        // here means the reference is textually in-root, so the symlink is one the tree already
+        // contains — no denial below reveals anything about the wider filesystem.
         const realTarget = await fs.realpath(target);
-        if (!roots.some((root) => isWithinRoot(root, realTarget))) {
-            throw new Error(`Outside the injection root: "${relativePathNormalized(target)}"`);
-        }
+        assertWithinRoots(roots.real, realTarget, target);
+        return pathToFileURL(realTarget);
+    }
+
+    function assertWithinRoots(roots: string[], candidate: string, target: URL): void {
+        if (roots.some((root) => isWithinRoot(root, candidate))) return;
+        throw new OutsideInjectionRootError(
+            `Access denied: "${relativePathNormalized(target)}" is outside the injection root;` +
+                ' use --allow-outside-root to permit it.',
+        );
     }
 
     function parseMarkdownFile(file: VFileEx): Root {
@@ -898,8 +924,18 @@ function collectInjectionNodesAndParse(root: Root): DirectiveNodeBase[] {
     return dNodes;
 }
 
-async function readFile(fs: FileSystemAdapter, path: URL, encoding: BufferEncoding = 'utf8'): Promise<VFileEx> {
-    const value = await fs.readFile(path, encoding);
+/**
+ * @param path - the reference as written, kept as the resulting file's identity (it carries the
+ *   directive's `#` options and drives extension-based decisions downstream).
+ * @param readFrom - the location to actually read; defaults to `path`.
+ */
+async function readFile(
+    fs: FileSystemAdapter,
+    path: URL,
+    encoding: BufferEncoding = 'utf8',
+    readFrom: URL = path,
+): Promise<VFileEx> {
+    const value = await fs.readFile(readFrom, encoding);
     const data: FileData = {
         encoding,
         fileUrl: path,
@@ -955,24 +991,39 @@ function refersToTheSameFile(a: RelURL | URL | undefined, b: RelURL | URL | unde
     return a === b || (a && !b) || a?.pathname === b?.pathname;
 }
 
+interface InjectionRoots {
+    /** The roots as given, for the check that must not touch the filesystem. */
+    textual: string[];
+    /** The same roots symlink-resolved, for the check that catches symlink escapes. */
+    real: string[];
+}
+
 /**
- * Real (symlink-resolved) paths of the injection root and any `allowOutsideRoot` directories.
- * An unresolvable `allowOutsideRoot` entry (e.g. a typo'd path) is dropped rather than failing
- * the whole set — it couldn't have matched a directive's resolved target anyway, and letting it
- * reject here would otherwise turn every read in the file into a misleading "Failed to read" for
- * files that are actually inside the (still-valid) injection root.
+ * The injection root and any `allowOutsideRoot` directories, in both forms the boundary check
+ * needs. An unresolvable `allowOutsideRoot` entry (e.g. a typo'd path) is dropped from `real`
+ * rather than failing the whole set — it couldn't have matched a directive's resolved target
+ * anyway, and letting it reject here would otherwise deny every read in the file, including ones
+ * inside the (still-valid) injection root.
  */
 async function resolveInjectionRoots(
     fs: FileSystemAdapter,
     cwd: URL,
     allowOutsideRoot: string[] | undefined,
-): Promise<string[]> {
+): Promise<InjectionRoots> {
+    const extraDirs = (allowOutsideRoot ?? []).map((dir) => dirToUrl(dir));
     const root = await fs.realpath(cwd);
-    const extras = await Promise.all(
-        (allowOutsideRoot ?? []).map((dir) => fs.realpath(dirToUrl(dir)).catch(() => undefined)),
-    );
-    return [root, ...extras.filter(isDefined)];
+    const extras = await Promise.all(extraDirs.map((dir) => fs.realpath(dir).catch(() => undefined)));
+    return {
+        textual: [cwd, ...extraDirs].map((dir) => fileURLToPath(dir)),
+        real: [root, ...extras.filter(isDefined)],
+    };
 }
+
+/**
+ * A reference that resolved outside the injection root, as opposed to one that simply couldn't be
+ * read. Lets a caller treat the boundary rejection as fatal where a missing file is not.
+ */
+class OutsideInjectionRootError extends Error {}
 
 function isWithinRoot(root: string, target: string): boolean {
     const rel = path.relative(root, target);
