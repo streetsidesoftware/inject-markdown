@@ -1,6 +1,6 @@
 # ADR-0011: Repeated directive hash keys
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-22
 **Deciders:** Jason Dent
 

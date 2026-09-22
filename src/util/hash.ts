@@ -69,17 +69,17 @@ export function parseHashString(hash: string): InjectInfo {
                 info.quote = parseFlagValue(value, true);
                 continue;
             case 'values':
-                info.values = parseValuesOption(value);
+                info.values = mergePairs(info.values, parseValuesOption(value));
                 continue;
             case 'values-file':
-                info.valuesFile = parseValuesFileList(value);
+                info.valuesFile = [...(info.valuesFile ?? []), ...parseValuesFileList(value)];
                 continue;
             case 'vars':
                 info.vars = parseFlagValue(value, true);
                 continue;
             case 'value-alias':
                 // Same `name:target` list shape as `values=` (ADR-0010 point 1).
-                info.valueAlias = parseValuesOption(value);
+                info.valueAlias = mergePairs(info.valueAlias, parseValuesOption(value));
                 continue;
             case 'lines':
             case 'line':
@@ -119,6 +119,17 @@ export function parseHashString(hash: string): InjectInfo {
     }
 
     return info;
+}
+
+/**
+ * Accumulate a repeated list-valued key in document order, per ADR-0011 point 1 — the same result
+ * as writing one comma-separated list. A repeated name still last-wins, which is what `Map.set`
+ * already does within a single occurrence.
+ */
+function mergePairs(existing: Map<string, string> | undefined, next: Map<string, string>): Map<string, string> {
+    if (!existing) return next;
+    for (const [name, value] of next) existing.set(name, value);
+    return existing;
 }
 
 function isRange(a: number[] | unknown): a is Range {

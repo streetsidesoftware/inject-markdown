@@ -440,6 +440,18 @@ describe('template variables', () => {
         expect(r.hasErrors).toBe(false);
     });
 
+    test('a repeated hash key accumulates, matching the comma list (ADR-0011)', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: aliasRoot, silent: true });
+        // Same directive as README.md's first section, spelled with `values-file=` repeated
+        // instead of comma-separated. Before ADR-0011 the first entry was dropped silently,
+        // so `name` — which only package.json supplies — was unresolved.
+        const r = await fi.processFile('repeated.md');
+        expect(r.file.value).toContain('name=demo version=2.5.0 date=2026-09-22');
+        expect(r.hasErrors).toBe(false);
+        expect(r.hasMessages).toBe(false);
+    });
+
     test('value-alias= redefines, chains, detects cycles and names both sides (ADR-0010)', async () => {
         const fsa = createFSA();
         const fi = new FileInjector(fsa, { cwd: aliasRoot, silent: true });

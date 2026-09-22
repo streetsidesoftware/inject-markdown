@@ -207,6 +207,8 @@ Values can also come from a JSON file (`values.json`: `{"version": "1.2.3"}`), n
 
 A `value-alias=` entry points one name at another instead of supplying a value: `value-alias=version:release.latest.version` makes `{@ version @}` mean whatever `{@ release.latest.version @}` means, following the sources as they change. It also opts the directive in, it outranks the values the same directive supplies (so it can redefine a name a values file already has), and an alias whose target points at nothing leaves the placeholder untouched with a warning naming both sides.
 
+Any of `values=`, `values-file=` and `value-alias=` may be written more than once in the same directive; the occurrences accumulate, exactly as if their contents had been one comma-separated list. That is also how to give an entry that contains a literal comma without quoting it. Every other option keeps the last value written.
+
 A values file's prefix is two characters or more, so a Windows drive letter is never mistaken for one — `--values-file C:\data\values.json` is a path, and its prefix is derived from the basename as `values`. A prefix may be dotted, in which case it nests: `values-file=pkg.build:data.json` is read as `{@ pkg.build.* @}`.
 
 Run-wide values are available to any directive that opts in via `values=`, `values-file=`, `value-alias=`, or the bare `vars` flag — `--value <name=val>` (repeatable), `--values-file [prefix:]path` (repeatable JSON files, same `[prefix:]path` syntax as the directive-level option), and `--allow-env <NAME>` (repeatable, exposed as `{@ env.NAME @}`) — with a directive's own `values=`/`values-file=` taking precedence on a name collision.
