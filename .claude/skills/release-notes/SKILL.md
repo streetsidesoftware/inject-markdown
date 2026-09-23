@@ -13,7 +13,7 @@ Release Please derives the version bump and changelog purely from squash-merge c
 
 ## When to use vs. neighboring conventions
 
-CONTRIBUTING.md's "Commits & pull requests" section governs what type a *new* PR should use going in. This skill is for the case that section is meant to prevent but sometimes doesn't catch in time: a PR already merged under the wrong type. Use this to fix the record after the fact, not as a substitute for getting the type right at merge time.
+CONTRIBUTING.md's "Commits & pull requests" section governs what type a _new_ PR should use going in. This skill is for the case that section is meant to prevent but sometimes doesn't catch in time: a PR already merged under the wrong type. Use this to fix the record after the fact, not as a substitute for getting the type right at merge time.
 
 ## Workflow
 
@@ -57,4 +57,4 @@ Preserve everything else in the body untouched — this is an append/replace of 
 
 The override only takes effect the next time Release Please runs — it does not retroactively update an already-open release PR. Check `.github/workflows/release-please.yml` for `workflow_dispatch` (present in this repo); if it's there, offer to trigger it directly — `gh workflow run release-please.yml` — and point the user at the run (`gh run list --workflow=release-please.yml --limit 1`) so they can watch the release PR regenerate. Confirm before triggering, since it updates a PR other people may be watching.
 
-Never hand-edit the release PR's body directly to "fix" an entry — it's fully regenerated from source on every run, so a direct edit is silently overwritten the next time Release Please executes. The override always goes on the *source* PR, never the release PR.
+Never hand-edit the release PR's body directly to "fix" an entry — it's fully regenerated from source on every run, so a direct edit is silently overwritten the next time Release Please executes. The override always goes on the _source_ PR, never the release PR.
