@@ -26,7 +26,7 @@ An author reading left to right expects `release.json` — declared last — to 
    - The alias's _target_ still resolves lazily against the whole sequence ([ADR-0010](0010-value-alias.md) point 4), so a values file declared after the alias can satisfy it.
    - An alias that decides a name and whose target does not resolve leaves the placeholder unresolved; resolution does not fall back to older layers for the name ([ADR-0010](0010-value-alias.md) point 9). Cycles are reported as before (point 5).
 6. **The `env.` namespace stays outside the sequence.** It is still answered before any declaration is consulted ([ADR-0003](0003-cli-and-env-value-sources.md) point 4), so no declaration can define or shadow `env.*`. Earlier ADRs listed it last in the order; it was never ranked, and this ADR stops describing it as if it were.
-7. **Released as a fix in 6.x.** Template variables shipped in 6.0.0 on the same day this was decided. The type ranking is treated as a defect in the released order, not a contract, so this ships as `fix:` with no transition warning and a release-notes entry calling out the changed order.
+7. **Not a breaking change; released in 6.x.** Template variables shipped in 6.0.0 on the same day this was decided. The type ranking is treated as a defect in the released order, not a contract, so this ships without a major bump or a transition warning, and with a release-notes entry calling out the changed order. It lands in the same `feat:` release as [ADR-0013](0013-singular-value-option.md)'s `value=`.
 
 ## Options Considered
 
