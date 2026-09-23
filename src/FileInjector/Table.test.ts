@@ -67,4 +67,33 @@ describe('rowsToTable', () => {
             { type: 'inlineCode', value: '{"x":1}' },
         ]);
     });
+
+    describe('header-rows (ADR-0002)', () => {
+        const texts = (table: ReturnType<typeof rowsToTable>) =>
+            table.children[0].children.map((c) => c.children.map((n) => ('value' in n ? n.value : '')).join(''));
+
+        test('joins header rows per column with <br />, skipping blank cells', () => {
+            const table = rowsToTable(
+                [
+                    ['Date', 'Name', 'Name'],
+                    ['', 'First', 'Last'],
+                    ['d', 'Ada', 'L'],
+                ],
+                { headerRows: 2 },
+            );
+            expect(texts(table)).toEqual(['Date', 'Name<br />First', 'Name<br />Last']);
+            expect(table.children).toHaveLength(2);
+        });
+
+        test('header-rows=0 numbers the columns and keeps every row as data', () => {
+            const table = rowsToTable([['a', 'b'], ['c']], { headerRows: 0 });
+            expect(texts(table)).toEqual(['1', '2']);
+            expect(table.children).toHaveLength(3);
+        });
+
+        test('with markdown, each header part is parsed', () => {
+            const table = rowsToTable([['**a**'], ['b']], { headerRows: 2, markdown: true });
+            expect(table.children[0].children[0].children.map((n) => n.type)).toEqual(['strong', 'html', 'text']);
+        });
+    });
 });

@@ -40,3 +40,11 @@
 --->
 
 <!--- @@inject-end: ok.json#L1-L1 --->
+
+<!--- @@inject-table: ok.json#header-rows=2 --->
+
+<!---
+  header-rows=2 can not be used on a JSON table; its keys form one header row.
+--->
+
+<!--- @@inject-end: ok.json#header-rows=2 --->

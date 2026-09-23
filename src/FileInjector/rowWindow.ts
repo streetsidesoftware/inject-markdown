@@ -32,6 +32,15 @@ export function applyRowWindow<T>(rows: T[], window: RowWindow): T[] {
     return rows.slice(window.first - 1, window.last);
 }
 
+/**
+ * Resolve `header-rows` (ADR-0002): bare or empty means 1. Throws on a value that isn't a whole
+ * number.
+ */
+export function resolveHeaderRows(value: string | undefined): number {
+    if (value === undefined || value === '') return 1;
+    return parseCount('header-rows', value) ?? 1;
+}
+
 function parseCount(name: string, value: string | undefined): number | undefined {
     if (value === undefined) return undefined;
     if (!/^\d+$/.test(value)) throw new Error(`Invalid ${name} "${value}": expected a whole number.`);

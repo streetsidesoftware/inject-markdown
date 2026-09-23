@@ -12,6 +12,13 @@ function render(rows: string[][]): string {
         .stringify({ type: 'root', children: rowsToHtmlTable(rows) });
 }
 
+function render2(rows: string[][], headerRows: number): string {
+    return unified()
+        .use(remarkGfm)
+        .use(remarkStringify)
+        .stringify({ type: 'root', children: rowsToHtmlTable(rows, { headerRows }) });
+}
+
 describe('rowsToHtmlTable (ADR-0010)', () => {
     test('plain cells stay on one line with HTML-escaped text', () => {
         expect(
@@ -81,5 +88,17 @@ describe('rowsToHtmlTable (ADR-0010)', () => {
         expect(render([['h'], [{ json: { x: [1] } } as never]])).toContain(
             '<td>\n\n```json\n{\n  "x": [\n    1\n  ]\n}\n```\n\n</td>',
         );
+    });
+
+    test('header-rows=2 gives two header rows (ADR-0010 point 4)', () => {
+        const out = render2([['a'], ['b'], ['c']], 2);
+        expect(out).toContain('<thead>\n<tr>\n<th>a</th>\n</tr>\n<tr>\n<th>b</th>\n</tr>\n</thead>');
+        expect(out).toContain('<td>c</td>');
+    });
+
+    test('header-rows=0 has no <thead>', () => {
+        const out = render2([['a'], ['b']], 0);
+        expect(out).not.toContain('<thead>');
+        expect(out).toContain('<tbody>\n<tr>\n<td>a</td>');
     });
 });

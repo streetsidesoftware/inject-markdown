@@ -18,6 +18,7 @@
   - `@@inject-table: <file>` -- force any file to be injected as a table, regardless of its extension.
   - `@@inject-table: <file.json>` -- a JSON array of objects, injected as a table with one column per key.
   - Use `@@inject-code: <file.csv>` or `#lang=csv` to inject the file as a code block instead of a table.
+  - `header-rows` -- optional; how many leading rows form the header (default `1`; `0` for none).
   - `start-row`, `end-row`, `num-rows` -- optional; the data rows to include (default: the first 10,000).
   - `markdown` -- optional; render inline Markdown in the table's cells instead of escaping it.
   - `html-table` -- optional; emit an HTML table whose cells can hold full Markdown, including lists and paragraphs.

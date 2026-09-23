@@ -618,6 +618,30 @@ describe('row window (ADR-0004)', () => {
         expect(empty).not.toContain('one');
     });
 
+    test('header rows are kept and the window counts data rows after them', async () => {
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
+        const written = (await fi.processFile('README.md')).file.value as string;
+        expect(written).toContain('| Date       | Name<br />First | Name<br />Last | Value |');
+        const windowed = written.slice(written.indexOf('grouped.csv#header-rows=2&start-row=2 --->'));
+        expect(windowed.slice(0, windowed.indexOf('inject-end'))).not.toContain('Ada');
+    });
+
+    test('a file shorter than header-rows is all header and no data', async () => {
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
+        const r = await fi.processFile('README.md');
+        expect(r.hasErrors).toBe(false);
+        const written = r.file.value as string;
+        const start = written.indexOf('<!--- @@inject: grouped.csv#header-rows=9 --->');
+        const section = written.slice(start, written.indexOf('<!--- @@inject-end: grouped.csv#header-rows=9', start));
+        expect(section).toContain('Date<br />2024-01-01<br />2024-01-02');
+        expect(
+            section
+                .trim()
+                .split('\n')
+                .filter((l) => l.startsWith('|')),
+        ).toHaveLength(2);
+    });
+
     test('an invalid window value is a directive error', async () => {
         const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/with-errors'), silent: true });
         const r = await fi.processFile('table-row-window.md');
@@ -638,6 +662,8 @@ describe('JSON table source (ADR-0011)', () => {
         expect(written).toContain('<td>\n\n```json\n{\n  "v": "1.0"\n}\n```\n\n</td>');
         expect(written).toContain('| name  | role            | active | note |');
         expect(written).toContain('| name | born | tags | meta | role | active | note |');
+        // header-rows=0 drops the key header, so the pipe form numbers the columns (ADR-0011 point 9).
+        expect(written).toContain('| 1     | 2    | 3                  | 4                     |');
     });
 
     test('bad JSON sources are directive errors', async () => {
@@ -653,6 +679,7 @@ describe('JSON table source (ADR-0011)', () => {
         expect(messages).toContain('Expected a JSON array of objects, but element 2 is a number.');
         expect(messages).toContain('Expected a JSON array of objects, found an empty array.');
         expect(messages).toContain('A line range can not be used on a JSON table');
+        expect(messages).toContain('header-rows=2 can not be used on a JSON table');
     });
 });
 

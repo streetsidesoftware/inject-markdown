@@ -9,3 +9,5 @@
 <!--- @@inject-table: empty.json --->
 
 <!--- @@inject-table: ok.json#L1-L1 --->
+
+<!--- @@inject-table: ok.json#header-rows=2 --->

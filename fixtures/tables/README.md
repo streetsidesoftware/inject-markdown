@@ -67,3 +67,31 @@
 ## JSON window past the end keeps a header of all keys
 
 <!--- @@inject-table: people.json#start-row=100 --->
+
+## Two header rows: `header-rows=2`
+
+<!--- @@inject: grouped.csv#header-rows=2 --->
+
+## Two header rows in an HTML table
+
+<!--- @@inject: grouped.csv#header-rows=2&html-table --->
+
+## Header rows and the row window: `header-rows=2&start-row=2`
+
+<!--- @@inject: grouped.csv#header-rows=2&start-row=2 --->
+
+## No header row: `header-rows=0`
+
+<!--- @@inject: rows.csv#header-rows=0&num-rows=2 --->
+
+## No header row in an HTML table
+
+<!--- @@inject: rows.csv#header-rows=0&num-rows=2&html-table --->
+
+## More header rows than the file has: all header, no data
+
+<!--- @@inject: grouped.csv#header-rows=9 --->
+
+## JSON with `header-rows=0` drops the key header
+
+<!--- @@inject-table: people.json#header-rows=0&end-row=2 --->

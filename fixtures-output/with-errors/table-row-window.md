@@ -23,3 +23,11 @@
 --->
 
 <!--- @@inject-end: ../tables/rows.csv#num-rows=-1 --->
+
+<!--- @@inject: ../tables/rows.csv#header-rows=two --->
+
+<!---
+  Invalid header-rows "two": expected a whole number.
+--->
+
+<!--- @@inject-end: ../tables/rows.csv#header-rows=two --->

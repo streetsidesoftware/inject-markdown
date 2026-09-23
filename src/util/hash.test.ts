@@ -74,6 +74,11 @@ describe('hash', () => {
         });
         expect(parseHashString('#start-row').heading).toBeUndefined();
     });
+
+    test('header-rows is captured raw; bare #header-rows is an empty value', () => {
+        expect(parseHashString('#header-rows=2').headerRows).toBe('2');
+        expect(parseHashString('#header-rows')).toEqual({ headerRows: '', params: m('header-rows') });
+    });
 });
 
 describe('repeated hash keys (ADR-0011)', () => {
