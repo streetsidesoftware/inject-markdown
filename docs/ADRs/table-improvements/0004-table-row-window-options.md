@@ -30,6 +30,8 @@ Large CSV/TSV sources need a way to inject a bounded slice of rows — both to k
 - `start-row` beyond the last available data row → the output table has its header row(s) but zero data rows.
 - `end-row < start-row` (whether from explicit values or from the derived formula) → same: header-only table.
 
+For a JSON source, whose columns come from the objects in the window, the header then falls back to all keys in the file ([ADR-0011](0011-table-json-source.md) point 4).
+
 This mirrors how an empty/short CSV already produces a header-only or empty table today — an empty selection is a valid, if unusual, outcome rather than a misconfiguration.
 
 ## Options Considered
