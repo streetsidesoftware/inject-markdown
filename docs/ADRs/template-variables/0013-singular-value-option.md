@@ -14,7 +14,7 @@ With [ADR-0012](0012-declaration-order-precedence.md), declarations are an order
 
 1. **`value=name:val` sets exactly one name.** It splits at the first `:` only; everything after it is the value, commas and further colons included, with no quoting. `#value=range:1, 2, 3&value=url:https://x.dev` sets `range` to `1, 2, 3` and `url` to `https://x.dev`. Name and value are trimmed, as in `values=`.
 2. **It is repeatable, and each occurrence is one declaration** in the [ADR-0012](0012-declaration-order-precedence.md) sequence, interleaving with `values=`, `values-file=` and `value-alias=` by position.
-3. **A malformed occurrence is a directive error.** No `:` (`value=version`) or an empty name (`value=:1.0`) is reported the way an unreadable `values-file=` entry is. `value=name:` is valid and sets the empty string.
+3. **A malformed occurrence is a directive error.** No `:` (`value=version`) or an empty name (`value=:1.0`) is reported the way an unreadable `values-file=` entry is. `value=name:` is valid and sets the empty string. A bare `#value` (or `#value=`, which `URLSearchParams` cannot tell apart from it) is not treated as the option: it keeps its existing meaning as a heading reference, so a directive injecting a section titled "value" doesn't start failing.
 4. **`value=` opts a directive in** to placeholder scanning, alongside `values=`, `values-file=`, `value-alias=` and bare `vars` ([ADR-0002](0002-directive-value-sources.md) point 4).
 5. **`values=` is unchanged**, including silently dropping a malformed entry and its quoting rule. The two are equals; `values=` stays the compact form for several short values.
 
