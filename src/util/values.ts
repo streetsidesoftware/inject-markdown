@@ -16,6 +16,15 @@ export interface ValuesFileEntry {
     path: string;
 }
 
+/**
+ * One entry in the ordered value sequence, per ADR-0012: a pair (`values=`/`value=`/`--value`),
+ * a values-file entry, or an alias. Resolution walks the sequence newest first.
+ */
+export type ValueDeclaration =
+    | { kind: 'value'; name: string; value: string }
+    | { kind: 'values-file'; entry: ValuesFileEntry }
+    | { kind: 'alias'; name: string; target: string };
+
 const validPlaceholderSegment = /^[A-Za-z0-9_][A-Za-z0-9_-]*$/;
 
 /**
@@ -58,20 +67,17 @@ function emptyTree(): JsonObject {
 /**
  * Parse `values=name:val,name2:val2`, per ADR-0002 point 1.
  * A whole value wrapped in double quotes suppresses comma-splitting, producing one pair whose
- * value may contain literal commas/colons (`values="name:1, 2, 3"`).
+ * value may contain literal commas/colons (`values="name:1, 2, 3"`). Pairs keep their written
+ * order, repeats included, so each stays positioned in the declaration sequence (ADR-0012).
  */
-export function parseValuesOption(raw: string): Map<string, string> {
-    const pairs = new Map<string, string>();
+export function parseValuesPairs(raw: string): [name: string, value: string][] {
+    const pairs: [string, string][] = [];
     const trimmed = raw.trim();
     if (!trimmed) return pairs;
 
     function addPair(entry: string): void {
-        const idx = entry.indexOf(':');
-        if (idx < 0) return;
-        const name = entry.slice(0, idx).trim();
-        const value = entry.slice(idx + 1).trim();
-        if (!name) return;
-        pairs.set(name, value);
+        const pair = splitPair(entry);
+        if (pair) pairs.push(pair);
     }
 
     if (isQuoted(trimmed)) {
@@ -83,6 +89,22 @@ export function parseValuesOption(raw: string): Map<string, string> {
         addPair(entry);
     }
     return pairs;
+}
+
+/**
+ * Parse one `value=name:val`, per ADR-0013: split at the first `:`, and the rest is the value,
+ * commas and colons included. `undefined` when there is no `:` or the name is empty.
+ */
+export function parseSingleValue(raw: string): [name: string, value: string] | undefined {
+    return splitPair(raw);
+}
+
+function splitPair(entry: string): [string, string] | undefined {
+    const idx = entry.indexOf(':');
+    if (idx < 0) return undefined;
+    const name = entry.slice(0, idx).trim();
+    if (!name) return undefined;
+    return [name, entry.slice(idx + 1).trim()];
 }
 
 /** Parse one `values-file=`/`--values-file` entry: `[prefix:]path`, per ADR-0007. */
@@ -215,19 +237,13 @@ export type UnresolvedReason = 'undefined' | 'object' | 'array' | 'null' | 'cycl
 export type ResolveResult = { value: string } | { unresolved: UnresolvedReason };
 
 /**
- * One layer per `name -> value` pair (e.g. inline `values=`/`--value`), highest precedence first.
- * Per-pair rather than one folded tree so `--value a=1 --value a.b=2` keeps both names, per
- * ADR-0008 point 1; the last-listed pair wins because it lands first in the returned order.
+ * The layer for one `name -> value` pair (`values=`/`value=`/`--value`). One layer per pair rather
+ * than one folded tree, so `--value a=1 --value a.b=2` keeps both names (ADR-0008 point 1).
  */
-export function layersFromFlatMap(pairs: ReadonlyMap<string, string> | undefined): ValueLayer[] {
-    if (!pairs?.size) return [];
-    const layers: ValueLayer[] = [];
-    for (const [name, value] of pairs) {
-        const layer = emptyTree();
-        setPath(layer, name, value);
-        layers.push(layer);
-    }
-    return layers.reverse();
+export function layerFromPair(name: string, value: string): ValueLayer {
+    const layer = emptyTree();
+    setPath(layer, name, value);
+    return layer;
 }
 
 /** Walk an ordered layer list, taking the first layer holding `name` as a scalar, per ADR-0008 point 3. */
@@ -245,54 +261,47 @@ export function resolveInLayers(layers: readonly ValueLayer[], name: string): Re
 }
 
 /**
- * Read a list of `values-file=`/`--values-file` entries into one layer each, per ADR-0007 and
- * ADR-0008, highest precedence (last-listed) first. A per-entry read/parse failure or invalid
- * auto-derived prefix is reported via `onError` and that entry is skipped, rather than failing the
- * whole list.
+ * Read one `values-file=`/`--values-file` entry into its layer. A read/parse failure or invalid
+ * auto-derived prefix is reported via `onError` and yields `undefined`, so one bad entry doesn't
+ * fail the rest of the sequence.
  */
-export async function buildValuesFileLayers(
+export async function readValuesFileLayer(
     fs: FileSystemAdapter,
-    entries: ValuesFileEntry[],
+    entry: ValuesFileEntry,
     resolvePath: (path: string) => Promise<PathLike>,
     onError: (message: string) => void,
     encoding: BufferEncoding = 'utf8',
-): Promise<ValueLayer[]> {
-    if (!entries.length) return [];
-    const layers: ValueLayer[] = [];
-    for (const entry of entries) {
-        let data: JsonValue;
-        try {
-            const resolved = await resolvePath(entry.path);
-            const text = await fs.readFile(resolved, encoding);
-            data = JSON.parse(text);
-        } catch (e) {
-            const err = e instanceof Error ? e.message : String(e);
-            onError(`Failed to read values file "${entry.path}": ${err}`);
-            continue;
-        }
-        if (entry.prefixKind === 'root') {
-            // A root entry contributes its own keys, so it is only usable as a layer if it is an
-            // object; an array or scalar at the top level has no names to offer.
-            if (typeof data !== 'object' || data === null || Array.isArray(data)) continue;
-            const layer = emptyTree();
-            for (const [k, v] of Object.entries(data)) layer[k] = v;
-            layers.push(layer);
-            continue;
-        }
-        const explicit = entry.prefixKind === 'explicit';
-        const prefix = explicit ? (entry.prefixName ?? '') : deriveAutoPrefixFromPath(entry.path);
-        // An explicit prefix was already checked by `parseValuesFileEntry` -- the colon would not
-        // have separated otherwise. An auto-derived one stays a single segment (ADR-0009 point 4).
-        if (!explicit && !isValidPlaceholderSegment(prefix)) {
-            onError(
-                `Invalid values-file prefix "${prefix}" derived from "${entry.path}". Use an explicit prefix or ":${entry.path}" to merge at the root.`,
-            );
-            continue;
-        }
-        const layer = emptyTree();
-        // `setPath` so a dotted explicit prefix nests, per ADR-0009 point 3.
-        setPath(layer, prefix, data);
-        layers.push(layer);
+): Promise<ValueLayer | undefined> {
+    let data: JsonValue;
+    try {
+        const resolved = await resolvePath(entry.path);
+        const text = await fs.readFile(resolved, encoding);
+        data = JSON.parse(text);
+    } catch (e) {
+        const err = e instanceof Error ? e.message : String(e);
+        onError(`Failed to read values file "${entry.path}": ${err}`);
+        return undefined;
     }
-    return layers.reverse();
+    if (entry.prefixKind === 'root') {
+        // A root entry contributes its own keys, so it is only usable as a layer if it is an
+        // object; an array or scalar at the top level has no names to offer.
+        if (typeof data !== 'object' || data === null || Array.isArray(data)) return undefined;
+        const layer = emptyTree();
+        for (const [k, v] of Object.entries(data)) layer[k] = v;
+        return layer;
+    }
+    const explicit = entry.prefixKind === 'explicit';
+    const prefix = explicit ? (entry.prefixName ?? '') : deriveAutoPrefixFromPath(entry.path);
+    // An explicit prefix was already checked by `parseValuesFileEntry` -- the colon would not
+    // have separated otherwise. An auto-derived one stays a single segment (ADR-0009 point 4).
+    if (!explicit && !isValidPlaceholderSegment(prefix)) {
+        onError(
+            `Invalid values-file prefix "${prefix}" derived from "${entry.path}". Use an explicit prefix or ":${entry.path}" to merge at the root.`,
+        );
+        return undefined;
+    }
+    const layer = emptyTree();
+    // `setPath` so a dotted explicit prefix nests, per ADR-0009 point 3.
+    setPath(layer, prefix, data);
+    return layer;
 }

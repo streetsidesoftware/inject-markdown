@@ -30,14 +30,16 @@ describe('hash', () => {
 
     test('#values=name:1.2.3', () => {
         expect(parseHashString('#values=name:1.2.3')).toEqual({
-            values: new Map([['name', '1.2.3']]),
+            valueDecls: [{ kind: 'value', name: 'name', value: '1.2.3' }],
             params: m('values=name:1.2.3'),
         });
     });
 
     test('#values-file=pkg:package.json', () => {
         expect(parseHashString('#values-file=pkg:package.json')).toEqual({
-            valuesFile: [{ prefixKind: 'explicit', prefixName: 'pkg', path: 'package.json' }],
+            valueDecls: [
+                { kind: 'values-file', entry: { prefixKind: 'explicit', prefixName: 'pkg', path: 'package.json' } },
+            ],
             params: m('values-file=pkg:package.json'),
         });
     });
@@ -85,24 +87,69 @@ describe('repeated hash keys (ADR-0011)', () => {
     test('a repeated values-file= is identical to the equivalent comma list', () => {
         const repeated = parseHashString('#values-file=:./package.json&values-file=release:releases.json');
         const commaList = parseHashString('#values-file=:./package.json,release:releases.json');
-        expect(repeated.valuesFile).toEqual(commaList.valuesFile);
-        expect(repeated.valuesFile).toHaveLength(2);
+        expect(repeated.valueDecls).toEqual(commaList.valueDecls);
+        expect(repeated.valueDecls).toHaveLength(2);
     });
 
-    test('a repeated values= accumulates, and a repeated name last-wins', () => {
+    test('a repeated values= accumulates, keeping a repeated name in its written position', () => {
         const info = parseHashString('#values=a:1&values=b:2&values=a:3');
-        expect([...(info.values ?? [])]).toEqual([
-            ['a', '3'],
-            ['b', '2'],
+        expect(info.valueDecls).toEqual([
+            { kind: 'value', name: 'a', value: '1' },
+            { kind: 'value', name: 'b', value: '2' },
+            { kind: 'value', name: 'a', value: '3' },
         ]);
     });
 
     test('a repeated value-alias= accumulates', () => {
         const info = parseHashString('#value-alias=x:y&value-alias=p:q');
-        expect([...(info.valueAlias ?? [])]).toEqual([
-            ['x', 'y'],
-            ['p', 'q'],
+        expect(info.valueDecls).toEqual([
+            { kind: 'alias', name: 'x', target: 'y' },
+            { kind: 'alias', name: 'p', target: 'q' },
         ]);
+    });
+});
+
+describe('declaration order (ADR-0012)', () => {
+    test('value options interleave in written order', () => {
+        const info = parseHashString('#values-file=:a.json&values=v:1&value-alias=w:v&values-file=:b.json&value=v:2');
+        expect(info.valueDecls).toEqual([
+            { kind: 'values-file', entry: { prefixKind: 'root', path: 'a.json' } },
+            { kind: 'value', name: 'v', value: '1' },
+            { kind: 'alias', name: 'w', target: 'v' },
+            { kind: 'values-file', entry: { prefixKind: 'root', path: 'b.json' } },
+            { kind: 'value', name: 'v', value: '2' },
+        ]);
+    });
+
+    test('an empty values= still opts the directive in', () => {
+        expect(parseHashString('#values=').valueDecls).toEqual([]);
+    });
+});
+
+describe('value= (ADR-0013)', () => {
+    test('splits at the first colon; commas and colons after it are literal', () => {
+        const info = parseHashString(`#value=range:${e('1, 2, 3')}&value=url:https://x.dev`);
+        expect(info.valueDecls).toEqual([
+            { kind: 'value', name: 'range', value: '1, 2, 3' },
+            { kind: 'value', name: 'url', value: 'https://x.dev' },
+        ]);
+    });
+
+    test('an empty value is valid', () => {
+        expect(parseHashString('#value=name:').valueDecls).toEqual([{ kind: 'value', name: 'name', value: '' }]);
+    });
+
+    test.each(['#value=version', '#value=:1.0'])('%s is a malformed value=', (hash) => {
+        const info = parseHashString(hash);
+        expect(info.valueErrors).toHaveLength(1);
+        expect(info.valueErrors?.[0]).toContain('expected name:value');
+        expect(info.valueDecls).toBeUndefined();
+    });
+
+    test('a bare #value keeps its heading meaning', () => {
+        const info = parseHashString('#value');
+        expect(info.heading).toBe('value');
+        expect(info.valueErrors).toBeUndefined();
     });
 
     test('a repeated scalar key silently last-wins', () => {

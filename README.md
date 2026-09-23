@@ -128,6 +128,7 @@ Add options after a `#` in the file reference, separated by `&`:
 | `end-row=<n>`                | Tables     | Last data row to include.                                                                     |
 | `num-rows=<n>`               | Tables     | Maximum number of data rows. Default `10000`.                                                 |
 | `values=<name:val,…>`        | All        | Values for `{@ name @}` placeholders. See [Template variables](#template-variables).          |
+| `value=<name:val>`           | All        | One placeholder value; commas and colons after the first `:` are part of the value.           |
 | `values-file=<path>`         | All        | A JSON file of placeholder values.                                                            |
 | `value-alias=<new:target,…>` | All        | Resolve one placeholder name as another.                                                      |
 | `vars`                       | All        | Resolve placeholders using only values set on the command line.                               |
@@ -421,7 +422,7 @@ npm install my-package@1.2.3
 <!--- @@inject-end: values-example.md#values=version:1.2.3 --->
 ````
 
-Placeholders are only replaced when the directive has `values=`, `values-file=`, `value-alias=` or `vars`. Values can also come from JSON files and the command line (`--value`, `--values-file`, `--allow-env`). See [Template variables](docs/guide/template-variables.md) for the full rules.
+Placeholders are only replaced when the directive has `values=`, `value=`, `values-file=`, `value-alias=` or `vars`. Values can also come from JSON files and the command line (`--value`, `--values-file`, `--allow-env`). See [Template variables](docs/guide/template-variables.md) for the full rules.
 
 <!--- @@inject-end: content/README.md --->
 
@@ -453,8 +454,8 @@ Options:
                                  <dir>, outside the injection root (cwd).
                                  Repeatable.
   --value <name=val>             Set a run-wide {@ name @} placeholder value.
-                                 Repeatable; a later --value for the same name
-                                 wins.
+                                 Repeatable; the last --value, --values-file or
+                                 --value-alias defining a name wins.
   --values-file <[prefix:]path>  Add a run-wide JSON file of {@ name @}
                                  placeholder values, resolved relative to --cwd.
                                  Repeatable.
@@ -462,8 +463,8 @@ Options:
                                  environment variable <name> via {@ env.name @}.
                                  Repeatable.
   --value-alias <new=target>     Resolve the {@ new @} placeholder as if it were
-                                 {@ target @}. Repeatable; a later --value-alias
-                                 for the same name wins.
+                                 {@ target @}. Repeatable; ordered with --value
+                                 and --values-file.
   --strict-vars                  Treat an unresolved {@ name @} placeholder as a
                                  directive error.
   --clean                        Remove the injected content.

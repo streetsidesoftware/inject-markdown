@@ -1,5 +1,5 @@
 import type { RelURL } from './url_helper.js';
-import { parseValuesFileList, parseValuesOption, type ValuesFileEntry } from './values.js';
+import { parseSingleValue, parseValuesFileList, parseValuesPairs, type ValueDeclaration } from './values.js';
 
 export type Range = [number, number];
 
@@ -25,14 +25,15 @@ export interface InjectInfo {
     startRow?: string | undefined;
     endRow?: string | undefined;
     numRows?: string | undefined;
-    /** Inline placeholder values: `values=name:val,name2:val2`. See ADR-0002. */
-    values?: Map<string, string> | undefined;
-    /** `values-file=[prefix:]path[,...]`. See ADR-0002, ADR-0007. */
-    valuesFile?: ValuesFileEntry[] | undefined;
+    /**
+     * `values=`, `value=`, `values-file=` and `value-alias=` entries in written order; the newest
+     * wins (ADR-0012). See ADR-0002, ADR-0007, ADR-0010, ADR-0013.
+     */
+    valueDecls?: ValueDeclaration[] | undefined;
+    /** Malformed `value=` occurrences, reported as directive errors (ADR-0013 point 3). */
+    valueErrors?: string[] | undefined;
     /** Bare `#vars` opt-in: scan for placeholders using CLI/environment sources alone. See ADR-0002. */
     vars?: boolean | undefined;
-    /** `value-alias=new:target,...`, redefining a name to point at another. See ADR-0010. */
-    valueAlias?: Map<string, string> | undefined;
 }
 
 export function parseHash(url: URL | RelURL): InjectInfo {
@@ -52,6 +53,9 @@ export function parseHashString(hash: string): InjectInfo {
     const tags: string[] = [];
 
     const p = new Map<string, string | string[]>();
+
+    const valueDecls: ValueDeclaration[] = [];
+    const valueErrors: string[] = [];
 
     function addParam(key: string, value: string) {
         const v = p.get(key);
@@ -79,10 +83,21 @@ export function parseHashString(hash: string): InjectInfo {
                 info.quote = parseFlagValue(value, true);
                 continue;
             case 'values':
-                info.values = mergePairs(info.values, parseValuesOption(value));
+                for (const [name, v] of parseValuesPairs(value)) valueDecls.push({ kind: 'value', name, value: v });
                 continue;
+            case 'value': {
+                // A bare `#value` is indistinguishable from `#value=` and keeps its heading meaning (ADR-0013 point 3).
+                if (!value) break;
+                const pair = parseSingleValue(value);
+                if (pair) {
+                    valueDecls.push({ kind: 'value', name: pair[0], value: pair[1] });
+                } else {
+                    valueErrors.push(`Invalid value="${value}": expected name:value.`);
+                }
+                continue;
+            }
             case 'values-file':
-                info.valuesFile = [...(info.valuesFile ?? []), ...parseValuesFileList(value)];
+                for (const entry of parseValuesFileList(value)) valueDecls.push({ kind: 'values-file', entry });
                 continue;
             case 'vars':
                 info.vars = parseFlagValue(value, true);
@@ -107,7 +122,7 @@ export function parseHashString(hash: string): InjectInfo {
                 continue;
             case 'value-alias':
                 // Same `name:target` list shape as `values=` (ADR-0010 point 1).
-                info.valueAlias = mergePairs(info.valueAlias, parseValuesOption(value));
+                for (const [name, target] of parseValuesPairs(value)) valueDecls.push({ kind: 'alias', name, target });
                 continue;
             case 'lines':
             case 'line':
@@ -142,6 +157,10 @@ export function parseHashString(hash: string): InjectInfo {
         info.tags = tags;
     }
 
+    // Kept even when empty, so an occurrence that parsed to nothing still opts the directive in.
+    if (valueDecls.length || hasValueKey(p)) info.valueDecls = valueDecls;
+    if (valueErrors.length) info.valueErrors = valueErrors;
+
     if (p.size) {
         info.params = p;
     }
@@ -149,15 +168,8 @@ export function parseHashString(hash: string): InjectInfo {
     return info;
 }
 
-/**
- * Accumulate a repeated list-valued key in document order, per ADR-0011 point 1 — the same result
- * as writing one comma-separated list. A repeated name still last-wins, which is what `Map.set`
- * already does within a single occurrence.
- */
-function mergePairs(existing: Map<string, string> | undefined, next: Map<string, string>): Map<string, string> {
-    if (!existing) return next;
-    for (const [name, value] of next) existing.set(name, value);
-    return existing;
+function hasValueKey(params: Map<string, unknown>): boolean {
+    return params.has('values') || params.has('values-file') || params.has('value-alias');
 }
 
 function isRange(a: number[] | unknown): a is Range {

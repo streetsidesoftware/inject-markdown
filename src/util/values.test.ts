@@ -1,33 +1,71 @@
 import { describe, expect, test, vi } from 'vitest';
 
-import type { FileSystemAdapter } from '../FileSystemAdapter/FileSystemAdapter.js';
+import type { FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import {
-    buildValuesFileLayers,
     deriveAutoPrefixFromPath,
     getPath,
     isScalar,
     isValidPlaceholderSegment,
     isValidValuesFilePrefix,
     type JsonObject,
-    layersFromFlatMap,
+    layerFromPair,
+    parseSingleValue,
     parseValuesFileEntry,
     parseValuesFileList,
-    parseValuesOption,
+    parseValuesPairs,
+    readValuesFileLayer,
     resolveInLayers,
     setPath,
+    type ValueLayer,
+    type ValuesFileEntry,
 } from './values.js';
 
-describe('parseValuesOption', () => {
+/** Read entries in order into layers, newest (last-listed) first, skipping failures. */
+async function buildValuesFileLayers(
+    fs: FileSystemAdapter,
+    entries: ValuesFileEntry[],
+    resolvePath: (path: string) => Promise<PathLike>,
+    onError: (message: string) => void,
+): Promise<ValueLayer[]> {
+    const layers: ValueLayer[] = [];
+    for (const entry of entries) {
+        const layer = await readValuesFileLayer(fs, entry, resolvePath, onError);
+        if (layer) layers.push(layer);
+    }
+    return layers.reverse();
+}
+
+/** One layer per pair, newest (last-listed) first. */
+function layersFromPairs(pairs: [string, string][]): ValueLayer[] {
+    return pairs.map(([name, value]) => layerFromPair(name, value)).reverse();
+}
+
+describe('parseValuesPairs', () => {
     test.each`
         raw                      | expected
-        ${'name:val'}            | ${new Map([['name', 'val']])}
-        ${'name:val,name2:val2'} | ${new Map([['name', 'val'], ['name2', 'val2']])}
-        ${' name : val , a:b '}  | ${new Map([['name', 'val'], ['a', 'b']])}
-        ${'"name:1, 2, 3"'}      | ${new Map([['name', '1, 2, 3']])}
-        ${''}                    | ${new Map()}
-        ${'noColon'}             | ${new Map()}
-    `('parseValuesOption($raw)', ({ raw, expected }) => {
-        expect(parseValuesOption(raw)).toEqual(expected);
+        ${'name:val'}            | ${[['name', 'val']]}
+        ${'name:val,name2:val2'} | ${[['name', 'val'], ['name2', 'val2']]}
+        ${' name : val , a:b '}  | ${[['name', 'val'], ['a', 'b']]}
+        ${'"name:1, 2, 3"'}      | ${[['name', '1, 2, 3']]}
+        ${'a:1,a:2'}             | ${[['a', '1'], ['a', '2']]}
+        ${''}                    | ${[]}
+        ${'noColon'}             | ${[]}
+    `('parseValuesPairs($raw)', ({ raw, expected }) => {
+        expect(parseValuesPairs(raw)).toEqual(expected);
+    });
+});
+
+describe('parseSingleValue', () => {
+    test.each`
+        raw                | expected
+        ${'range:1, 2, 3'} | ${['range', '1, 2, 3']}
+        ${'url:https://x'} | ${['url', 'https://x']}
+        ${' name : val '}  | ${['name', 'val']}
+        ${'name:'}         | ${['name', '']}
+        ${'noColon'}       | ${undefined}
+        ${':1.0'}          | ${undefined}
+    `('parseSingleValue($raw)', ({ raw, expected }) => {
+        expect(parseSingleValue(raw)).toEqual(expected);
     });
 });
 
@@ -95,31 +133,18 @@ describe('getPath / setPath / treeFromFlatMap', () => {
         expect(tree).toEqual({ package: { version: '1.2.3' } });
     });
 
-    test('layersFromFlatMap makes one layer per pair, last-listed first', () => {
-        const layers = layersFromFlatMap(
-            new Map([
-                ['package.version', '1.2.3'],
-                ['name', 'demo'],
-            ]),
-        );
-        expect(layers).toEqual([{ name: 'demo' }, { package: { version: '1.2.3' } }]);
+    test('layerFromPair nests a dotted name', () => {
+        expect(layerFromPair('package.version', '1.2.3')).toEqual({ package: { version: '1.2.3' } });
     });
 
-    test('layersFromFlatMap keeps both names when one is a prefix of another', () => {
+    test('one layer per pair keeps both names when one is a prefix of another', () => {
         // One folded tree would lose `a` to `a.b`; separate layers keep both (ADR-0008 point 1).
-        const layers = layersFromFlatMap(
-            new Map([
-                ['a', '1'],
-                ['a.b', '2'],
-            ]),
-        );
+        const layers = layersFromPairs([
+            ['a', '1'],
+            ['a.b', '2'],
+        ]);
         expect(resolveInLayers(layers, 'a')).toEqual({ value: '1' });
         expect(resolveInLayers(layers, 'a.b')).toEqual({ value: '2' });
-    });
-
-    test('layersFromFlatMap returns no layers for an empty map', () => {
-        expect(layersFromFlatMap(undefined)).toEqual([]);
-        expect(layersFromFlatMap(new Map())).toEqual([]);
     });
 });
 
@@ -138,7 +163,7 @@ describe('isScalar', () => {
     });
 });
 
-describe('buildValuesFileLayers', () => {
+describe('readValuesFileLayer', () => {
     function fsWith(files: Record<string, string>): FileSystemAdapter {
         return {
             readFile: vi.fn(async (p: string | URL): Promise<string> => {
@@ -231,14 +256,14 @@ describe('prototype safety', () => {
         ${'a.__proto__.polluted'}
         ${'constructor.prototype.polluted'}
     `('setPath drops the prototype-reaching name $name', ({ name }: { name: string }) => {
-        const layers = layersFromFlatMap(new Map([[name, 'pwned']]));
+        const layers = layersFromPairs([[name, 'pwned']]);
         expect(resolveInLayers(layers, name)).toEqual({ unresolved: 'undefined' });
         expect(({} as Record<string, unknown>).polluted).toBe(undefined);
         expect(Object.prototype).not.toHaveProperty('polluted');
     });
 
-    test('layersFromFlatMap builds null-prototype layers', () => {
-        const [layer] = layersFromFlatMap(new Map([['a.b', '1']]));
+    test('layerFromPair builds null-prototype layers', () => {
+        const layer = layerFromPair('a.b', '1');
         expect(Object.getPrototypeOf(layer)).toBe(null);
         expect(Object.getPrototypeOf(getPath(layer, 'a') as object)).toBe(null);
     });

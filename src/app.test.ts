@@ -1,3 +1,6 @@
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+
 import { Command, CommanderError } from 'commander';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -48,6 +51,25 @@ describe('app', () => {
         const argv = createArgv(args, '--output-dir=temp');
         command.exitOverride(errorHandler);
         await expect(app.run(command, argv)).rejects.toBeInstanceOf(CommanderError);
+    });
+
+    test.each`
+        order                                                                                        | expected
+        ${['--value=fromCli=v', '--values-file=cliData.json', '--value-alias=fromCli=cliData.town']} | ${'Value: Springfield'}
+        ${['--value-alias=fromCli=cliData.town', '--values-file=cliData.json', '--value=fromCli=v']} | ${'Value: v'}
+        ${['--value=fromCli=old', '--value-alias=fromCli=cliData.town', '--value=fromCli=new']}      | ${'Value: new'}
+    `('CLI value flags resolve in command-line order, newest first: $order', async ({ order, expected }) => {
+        const outDir = await mkdtemp(path.join(tmpdir(), 'inject-markdown-'));
+        try {
+            const command = new Command();
+            const cwd = path.join(__root__, 'fixtures/template-variables/cli-sources');
+            const argv = createArgv('README.md', `--cwd=${cwd}`, `--output-dir=${outDir}`, '--silent', order);
+            command.exitOverride(errorHandler);
+            await app.run(command, argv);
+            expect(await readFile(path.join(outDir, 'README.md'), 'utf8')).toContain(expected);
+        } finally {
+            await rm(outDir, { recursive: true, force: true });
+        }
     });
 });
 
