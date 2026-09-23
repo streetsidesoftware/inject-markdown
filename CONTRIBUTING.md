@@ -107,20 +107,25 @@ Follow Conventional Commits:
 
 ### PR descriptions
 
-`fix:` and `feat:` PRs are user-facing and feed release notes — write for a reader deciding whether a change affects them, not for a reviewer reviewing the diff. Keep them short; no one reads a long one.
+Keep PR descriptions short — no one reads a long one. Prefer bullet points over prose paragraphs; a sentence packed with more than one or two `inline code` spans is hard to parse — break it into a list instead.
 
-- A one-paragraph TL;DR at the top: what changed, for the user.
-- The motivation — why — in a sentence or two.
-- For `feat:` PRs, a short paragraph on the feature itself: what it lets the user do that they couldn't before, and — where it shapes how they should think about using it — why it was designed that way (e.g. why it's opt-in, why this precedence order). Skip for `fix:`.
-- If needed, further detail in `<details>` blocks (e.g. `<summary>Usage</summary>`, `<summary>Details</summary>`), as bullet points, not prose paragraphs.
+Use `##` headings to break up sections rather than running everything together as prose — one for each part below that applies.
+
+- `## Summary` — a one- or two-sentence TL;DR that stands on its own: what changed and why, in plain prose. It should be readable without anything that follows, not a fragment a later section completes. If the why needs more room than that, give it its own sentence or two right after.
+- `fix:` and `feat:` PRs are user-facing and feed release notes — write for a reader deciding whether a change affects them, not for a reviewer reviewing the diff.
+  - For `feat:` PRs, add a `## Feature` heading with a short paragraph on the feature itself: what it lets the user do that they couldn't before, and — where it shapes how they should think about using it — why it was designed that way (e.g. why it's opt-in, why this precedence order).
+- `refactor:`/`chore:` PRs are for reviewers, not release notes, so implementation detail belongs here rather than being trimmed out. Group it by theme (e.g. what moved where, what got simplified), each group with bullets on what changed and how — not `<details>`-gated, since a reviewer needs to see it to review the PR. A `##`/`###` heading or a bold label (`**Theme:**` on its own line before the bullets) both work; use a bold label when a full heading would be heavier than the group needs.
+- If needed, further detail in `<details>` blocks (e.g. `<summary>Usage</summary>`, `<summary>Details</summary>`), as bullet points, not prose paragraphs — these stay collapsed, unlike the `##` headings above, so lead with what actually needs a click.
   - Usage should include changes to the command line options and/or `@@inject` directives. Adding an example or two would be great.
 - No test plan section — CI covers that.
 
 Do not:
 
 - Restate the diff or narrate file-by-file changes.
-- Explain internal implementation, refactors, or code structure the user doesn't interact with.
+- On `fix:`/`feat:` PRs, explain internal implementation, refactors, or code structure the user doesn't interact with — that's what `refactor:`/`chore:` PRs are for.
 - Add tables, code walkthroughs, or before/after examples for internal behavior.
+- Compress the TL;DR into a bare fragment or list of renamed symbols that only makes sense once you've read the bullets below it.
+- Add auto-generated links back to individual diff hunks or lines (e.g. `[[1]]`/`[[2]]` permalinks) — the diff is already there for anyone reviewing.
 - Write a separate section per commit or sub-change — one TL;DR covers the whole PR.
 
 ## CI & releases
