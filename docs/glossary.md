@@ -145,3 +145,6 @@ Rewriting a path-relative URL in injected Markdown (including `#markdown`/`#html
 
 **`rebase-links` option**
 A boolean hash key (`part.md#rebase-links=false`) that turns rebasing off (or explicitly on) for one directive. Rebasing is on by default; the run-wide `--no-rebase-links` CLI flag turns it off, and a directive's own value wins over the CLI. See [relative-links/ADR-0002](ADRs/relative-links/0002-default-on-with-opt-out.md).
+
+**`--rebase-output-links`**
+An opt-in CLI flag, requiring `--output-dir`, that rebases the relative links of every written file (the host's own links and injected content alike) so they resolve from the output location. With an `http(s)` URL value, links become that base plus the path from `--cwd` instead. It implies `--no-inject-only`, and runs after source-to-host rebasing, whatever `rebase-links` says. Designed, not yet implemented. See [relative-links/ADR-0007](ADRs/relative-links/0007-rebase-output-links.md) to [ADR-0010](ADRs/relative-links/0010-output-rebase-surface.md).
