@@ -10,7 +10,7 @@ Table injection reads only delimited text. `readAndParseTableFile` ([FileInjecto
 
 A `.json` file referenced by `@@inject:` is injected as a code block. The README's `sample.json` example relies on that, and only `.csv`/`.tsv` default to a table (`tableFileExtensions` in [Directive.ts](../../../src/FileInjector/Directive.ts)).
 
-Much tabular data (API exports, generated reports, config lists) is JSON, typically an array of records. Everything after parsing (`rowsToTable`, `rowsToHtmlTable`, `#markdown` per [ADR-0008](0008-table-markdown-cells.md), `#html-table` per [ADR-0010](0010-table-html-table.md), placeholder substitution) works on `string[][]` rows. So supporting JSON comes down to turning a JSON value into those rows.
+Much tabular data (API exports, generated reports, config lists) is JSON, typically an array of records. Everything after parsing (`rowsToTable`, `rowsToHtmlTable`, `#markdown` per [ADR-0008](0008-table-markdown-cells.md), `#html-table` per [ADR-0010](0010-table-html-table.md), placeholder substitution) works on `string[][]` rows. So supporting JSON is mostly a matter of turning a JSON value into those rows. The exceptions are nested values, which render differently per table form (point 5), and columns, which depend on the row window (point 4).
 
 ## Decision
 
