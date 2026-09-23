@@ -10,7 +10,7 @@ When a Markdown file is injected, its content is copied verbatim into the host d
 
 Nothing in the pipeline touches link URLs today. `sanitizeImport` and `extractHeader` ([Markdown.ts](../../../src/FileInjector/Markdown.ts)) only remove or select nodes.
 
-This ADR decides which URLs are rebased. How the new URL is computed is decided in [ADR-0003](0003-rebase-base-resolution.md), and when rebasing applies in [ADR-0002](0002-default-on-with-opt-out.md).
+This ADR decides which URLs are rebased. How the new URL is computed is decided in [ADR-0003](0003-rebase-base-resolution.md), when rebasing applies in [ADR-0002](0002-default-on-with-opt-out.md), and how it interacts with code blocks and Markdown table cells in [ADR-0005](0005-interactions.md).
 
 ## Decision
 
