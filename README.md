@@ -163,6 +163,34 @@ export function sayHello(name: string): string {
 
 To force a `.csv`/`.tsv` file to be injected as a code block instead, use `@@inject-code: sample.csv` or `@@inject: sample.csv#lang=csv`. To force any other file to be injected as a table, use `@@inject-table: <file>`.
 
+### JSON as a Table
+
+`@@inject-table:` also accepts a `.json` file holding an array of objects. Each object is a row, and its keys are the columns. `@@inject:` on a `.json` file still injects a code block.
+
+```markdown
+<!--- @@inject-table: sample-table.json --->
+
+| name         | born | fields                       | rank         |
+| ------------ | ---- | ---------------------------- | ------------ |
+| Ada Lovelace | 1815 | \["mathematics","computing"] |              |
+| Grace Hopper | 1906 |                              | Rear Admiral |
+
+<!--- @@inject-end: sample-table.json --->
+```
+
+Renders as:
+
+| name         | born | fields                       | rank         |
+| ------------ | ---- | ---------------------------- | ------------ |
+| Ada Lovelace | 1815 | \["mathematics","computing"] |              |
+| Grace Hopper | 1906 |                              | Rear Admiral |
+
+- The columns are every key found in the rows being shown, in the order they first appear. A missing key is an empty cell.
+- Numbers and booleans are shown as text, and `null` is an empty cell.
+- A nested object or array is shown as compact JSON. With `#markdown` it's a code span, and with `#html-table` it's a formatted `json` code block.
+- `start-row`, `end-row` and `num-rows` work as for CSV. A line range (`#L1-L10`) is an error on a JSON source.
+- The file must be a non-empty array of objects; anything else is an error.
+
 ### Selecting Rows
 
 `start-row`, `end-row`, and `num-rows` choose which data rows are injected. Rows are numbered from 1, starting at the first row after the header.
@@ -324,6 +352,7 @@ or
 > - `@@inject: <file.csv|file.tsv>` and `@@inject-table: <file>`
 >   - `<file.csv>`, `<file.tsv>` -- a comma or tab separated file, injected as a Markdown table using all of its columns.
 >   - `@@inject-table: <file>` -- force any file to be injected as a table, regardless of its extension.
+>   - `@@inject-table: <file.json>` -- a JSON array of objects, injected as a table with one column per key.
 >   - Use `@@inject-code: <file.csv>` or `#lang=csv` to inject the file as a code block instead of a table.
 >   - `start-row`, `end-row`, `num-rows` -- optional; the data rows to include (default: the first 10,000).
 >   - `markdown` -- optional; render inline Markdown in the table's cells instead of escaping it.
