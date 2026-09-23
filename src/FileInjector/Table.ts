@@ -51,6 +51,7 @@ export function rowsToHtmlTable(rows: string[][]): RootContent[] {
     let html = '';
 
     function flush() {
+        if (!html) return;
         const node: Html = { type: 'html', value: html.replace(/\n$/, '') };
         nodes.push(node);
         html = '';

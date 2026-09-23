@@ -61,4 +61,19 @@ describe('rowsToHtmlTable (ADR-0010)', () => {
     test('ragged rows are padded with empty cells', () => {
         expect(render([['a', 'b'], ['1']])).toContain('<td>1</td>\n<td></td>');
     });
+
+    // ADR-0010 point 12: a definition must not apply to the rest of the document.
+    test.each`
+        value                                     | expected
+        ${'[a]: https://x.y'}                     | ${'<td>[a]: https://x.y</td>'}
+        ${'**b**\n\n[a]: https://x.y'}            | ${'\n\\[a]: https\\://x.y\n'}
+        ${'> [a]: https://x.y'}                   | ${'> \\[a]: https\\://x.y'}
+        ${'- [a]: https://x.y'}                   | ${'* \\[a]: https\\://x.y'}
+        ${'text[^1]\n\n[^1]: the note\n    more'} | ${'\\[^1]: the note\nmore'}
+    `('a definition stays in its cell as literal text: $value', ({ value, expected }) => {
+        const out = render([['h'], [value]]);
+        expect(out).toContain(expected);
+        expect(out).not.toMatch(/^\[a\]:/m);
+        expect(out).not.toMatch(/^\[\^1\]:/m);
+    });
 });

@@ -3,6 +3,7 @@ import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import type { Processor } from 'unified';
 import { unified } from 'unified';
+import { SKIP, visit } from 'unist-util-visit';
 
 /**
  * micromark flow (block) constructs switched off for cell parsing, so block syntax such as
@@ -44,7 +45,17 @@ function createBlockProcessor() {
  */
 export function parseCellBlocks(value: string): RootContent[] {
     blockProcessor ??= createBlockProcessor();
-    return blockProcessor.parse(value).children;
+    const root = blockProcessor.parse(value);
+    // A definition would apply document-wide once emitted, so keep it as literal text (point 12).
+    visit(root, (node, index, parent) => {
+        if (node.type !== 'definition' && node.type !== 'footnoteDefinition') return;
+        if (!parent || index === undefined) return;
+        // Continuation-line indentation would otherwise be written as `&#x20;` entities.
+        const source = value.slice(node.position?.start.offset, node.position?.end.offset).replace(/\n[ \t]+/g, '\n');
+        parent.children[index] = { type: 'paragraph', children: [{ type: 'text', value: source }] };
+        return SKIP;
+    });
+    return root.children;
 }
 
 /**
