@@ -1,0 +1,6 @@
+option,description
+`#html-table`,"Cells can hold **block** Markdown:
+
+- lists
+- several paragraphs"
+plain,Plain cells stay on one line
