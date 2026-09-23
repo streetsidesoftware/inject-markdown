@@ -26,6 +26,8 @@ Options:
                                  for the same name wins.
   --strict-vars                  Treat an unresolved {@ name @} placeholder as a
                                  directive error.
+  --no-rebase-links              Keep relative links in injected Markdown as
+                                 written instead of rebasing them.
   --clean                        Remove the injected content.
   --no-inject-only               Update the whole file.
   --verbose                      Verbose output.

@@ -76,7 +76,7 @@ Recipes show the real output of a directive rather than a hand-written copy, so 
 - Add a recipe if the feature has a visible effect.
 - Put detailed rules (precedence, edge cases) in `docs/guide/` and link to it from the README, rather than growing the README.
 
-Links in `content/README.md` are written relative to the repository root (e.g. `docs/guide/...`), because they're read from the root `README.md`. They don't resolve when viewing `content/README.md` itself.
+Links in `content/README.md` are written relative to `content/` (e.g. `../docs/guide/...`), like any Markdown file. Injecting it into the root `README.md` rewrites them to resolve from there; see [Relative links](docs/guide/relative-links.md).
 
 ## Architecture
 

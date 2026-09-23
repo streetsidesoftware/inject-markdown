@@ -62,7 +62,7 @@ To keep it in one place, add a script to `package.json`:
 - **The tool writes content after each directive** and closes it with an `@@inject-end` marker. On every run, everything between the directive and its end marker is replaced. Edit the source file, not the injected text.
 - **How content is injected depends on the file type:** `.md` files are injected as Markdown, `.csv`/`.tsv` files as a table, and everything else as a fenced code block. The [directives](#directives) and [options](#injection-options) below override this.
 - **Paths are relative to the Markdown file** that contains the directive. A reference can also be an `http(s)` URL; GitHub `blob` URLs are fetched as raw content.
-- **Local references must stay inside the injection root** — the directory set by `--cwd`, by default the current directory. See [Injection root](docs/guide/injection-root.md) for why, and for `--allow-outside-root`.
+- **Local references must stay inside the injection root** — the directory set by `--cwd`, by default the current directory. See [Injection root](../docs/guide/injection-root.md) for why, and for `--allow-outside-root`.
 - **Only `.md` files are processed.** Pass files or glob patterns: `inject-markdown README.md "docs/**/*.md"`.
 - **Unchanged files are not rewritten.**
 
@@ -104,19 +104,20 @@ Add options after a `#` in the file reference, separated by `&`:
 <!--- @@inject: guide.md#heading=Install&quote --->
 ```
 
-| Option                       | Applies to | Effect                                                                                        |
-| ---------------------------- | ---------- | --------------------------------------------------------------------------------------------- |
-| `heading=<text>`             | Markdown   | Inject only the section under this heading. The shorthand `#<text>` also works.               |
-| `L<n>-L<m>`                  | All        | Inject only lines `n` to `m`, e.g. `#L5-L7`.                                                  |
-| `lang=<lang>`                | Code       | Set the code block's language. On a CSV/TSV file, this injects it as code instead of a table. |
-| `code`                       | Markdown   | Inject Markdown as a code block. `code=<lang>` is the same as `lang=<lang>`.                  |
-| `quote`                      | All        | Inject as a block quote.                                                                      |
-| `markdown`                   | Tables     | Render inline Markdown in cells instead of escaping it.                                       |
-| `html-table`                 | Tables     | Emit an HTML table whose cells can hold full Markdown, including lists and paragraphs.        |
-| `values=<name:val,…>`        | All        | Values for `{@ name @}` placeholders. See [Template variables](#template-variables).          |
-| `values-file=<path>`         | All        | A JSON file of placeholder values.                                                            |
-| `value-alias=<new:target,…>` | All        | Resolve one placeholder name as another.                                                      |
-| `vars`                       | All        | Resolve placeholders using only values set on the command line.                               |
+| Option                       | Applies to       | Effect                                                                                                                                             |
+| ---------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `heading=<text>`             | Markdown         | Inject only the section under this heading. The shorthand `#<text>` also works.                                                                    |
+| `L<n>-L<m>`                  | All              | Inject only lines `n` to `m`, e.g. `#L5-L7`.                                                                                                       |
+| `lang=<lang>`                | Code             | Set the code block's language. On a CSV/TSV file, this injects it as code instead of a table.                                                      |
+| `code`                       | Markdown         | Inject Markdown as a code block. `code=<lang>` is the same as `lang=<lang>`.                                                                       |
+| `quote`                      | All              | Inject as a block quote.                                                                                                                           |
+| `markdown`                   | Tables           | Render inline Markdown in cells instead of escaping it.                                                                                            |
+| `html-table`                 | Tables           | Emit an HTML table whose cells can hold full Markdown, including lists and paragraphs.                                                             |
+| `rebase-links=false`         | Markdown, Tables | Keep relative links as written. By default they're rewritten to resolve from the host file. See [Relative links](../docs/guide/relative-links.md). |
+| `values=<name:val,…>`        | All              | Values for `{@ name @}` placeholders. See [Template variables](#template-variables).                                                               |
+| `values-file=<path>`         | All              | A JSON file of placeholder values.                                                                                                                 |
+| `value-alias=<new:target,…>` | All              | Resolve one placeholder name as another.                                                                                                           |
+| `vars`                       | All              | Resolve placeholders using only values set on the command line.                                                                                    |
 
 ## Recipes
 
@@ -141,6 +142,24 @@ This is an example bit of markdown.
 ```
 
 <!--- @@inject-end: import-sample-md.md --->
+
+### Keep relative links working
+
+Relative links in an injected file are rewritten to resolve from the file they're injected into. Here `parts/links.md` links to `../example.md`:
+
+<!--- @@inject-code: import-sample-links.md --->
+
+```markdown
+<!--- @@inject: parts/links.md --->
+
+Read the [relative links guide](../docs/guide/relative-links.md) or the [example](example.md).
+
+<!--- @@inject-end: parts/links.md --->
+```
+
+<!--- @@inject-end: import-sample-links.md --->
+
+Use `#rebase-links=false` or `--no-rebase-links` to keep links as written. See [Relative links](../docs/guide/relative-links.md) for what is and isn't rewritten.
 
 ### Inject one section of a Markdown file
 
@@ -415,4 +434,4 @@ npm install my-package@1.2.3
 
 <!--- @@inject-end: import-sample-values.md --->
 
-Placeholders are only replaced when the directive has `values=`, `values-file=`, `value-alias=` or `vars`. Values can also come from JSON files and the command line (`--value`, `--values-file`, `--allow-env`). See [Template variables](docs/guide/template-variables.md) for the full rules.
+Placeholders are only replaced when the directive has `values=`, `values-file=`, `value-alias=` or `vars`. Values can also come from JSON files and the command line (`--value`, `--values-file`, `--allow-env`). See [Template variables](../docs/guide/template-variables.md) for the full rules.
