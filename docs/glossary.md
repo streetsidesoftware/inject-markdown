@@ -84,7 +84,10 @@ A `{@ name @}` marker inside injected content, replaced with a value resolved ag
 The dotted path inside a placeholder (e.g. `package.version`), each segment `[A-Za-z0-9_][A-Za-z0-9_-]*` — a hyphen is allowed inside a segment but never at its start. A dotted name traverses into nested objects from a JSON value source. See [ADR-0001](ADRs/template-variables/0001-placeholder-syntax.md).
 
 **`values=` option**
-A directive hash option supplying inline placeholder values as comma-separated `name:value` pairs (`values=name:val,name2:val2`), with whole-value quoting for literal commas/colons. Highest-precedence value source for its directive. See [ADR-0002](ADRs/template-variables/0002-directive-value-sources.md).
+A directive hash option supplying inline placeholder values as comma-separated `name:value` pairs (`values=name:val,name2:val2`), with whole-value quoting for literal commas/colons. Each pair is a [value declaration](#value-declaration) ranked by [declaration order](#declaration-order). See [ADR-0002](ADRs/template-variables/0002-directive-value-sources.md), [ADR-0012](ADRs/template-variables/0012-declaration-order-precedence.md).
+
+**`value=` option**
+A repeatable directive hash option setting exactly one placeholder value (`value=name:val`): it splits at the first `:` and the rest is the value, commas and colons included, with no quoting. A missing `:` or empty name is a directive error. Opts the directive into placeholder scanning. See [ADR-0013](ADRs/template-variables/0013-singular-value-option.md).
 
 **`values-file=` option**
 A directive hash option naming one or more JSON files of placeholder values (`values-file=[prefix:]path[,...]`, or the key repeated), each resolved relative to the containing document and subject to the injection-root boundary like any directive file reference. See [ADR-0002](ADRs/template-variables/0002-directive-value-sources.md), [ADR-0007](ADRs/template-variables/0007-values-file-prefixing.md).
@@ -104,11 +107,17 @@ A repeatable CLI option naming environment variable names a directive may refere
 **`env.` namespace**
 A reserved placeholder-name prefix (`{@ env.VERSION @}`) resolving to `process.env.VERSION` when allow-listed via `--allow-env`; always reserved, even if another value source defines a top-level `env` key. See [ADR-0003](ADRs/template-variables/0003-cli-and-env-value-sources.md).
 
+**Value declaration**
+One entry that defines placeholder values or an alias: a `values=` pair, a `value=`, a `values-file=` entry, a `value-alias=` pair, or the CLI equivalents. Each value declaration is a [value layer](#value-layer); an alias declaration is not. See [ADR-0012](ADRs/template-variables/0012-declaration-order-precedence.md).
+
+**Declaration order**
+The order value declarations are written in, oldest to newest: every CLI flag in argv order, then the directive's hash options left to right. The newest declaration wins, whichever option it came from. The `env.` namespace is outside the order. See [ADR-0012](ADRs/template-variables/0012-declaration-order-precedence.md).
+
 **Value source precedence**
-The fixed lookup order for resolving a placeholder name when more than one source _type_ defines it: directive `values=` > directive `values-file=` > CLI `--value` > CLI `--values-file` > environment (`env.` namespace only). It ranks source types; what "wins" means for a partial collision is [per-leaf resolution](#per-leaf-resolution). See [ADR-0004](ADRs/template-variables/0004-value-source-precedence.md), [ADR-0008](ADRs/template-variables/0008-value-layering-and-resolution.md).
+Which declaration wins when several define a placeholder name. Since [ADR-0012](ADRs/template-variables/0012-declaration-order-precedence.md) this is [declaration order](#declaration-order), newest first, applied by [per-leaf resolution](#per-leaf-resolution); the earlier fixed ranking by source type ([ADR-0004](ADRs/template-variables/0004-value-source-precedence.md)) is superseded. See [ADR-0008](ADRs/template-variables/0008-value-layering-and-resolution.md).
 
 **Value layer**
-The smallest unit supplying placeholder values: one `name:value` pair from a directive's `values=`, one `--value` flag, or one `values-file=`/`--values-file` entry. Layers are ordered by [value source precedence](#value-source-precedence), with a later-listed entry sitting above an earlier one within the same source. Layers are never combined into a shared value tree. See [ADR-0008](ADRs/template-variables/0008-value-layering-and-resolution.md).
+The smallest unit supplying placeholder values: one `name:value` pair from a directive's `values=`, one `value=`, one `--value` flag, or one `values-file=`/`--values-file` entry. Layers are ordered by [declaration order](#declaration-order), newest on top. Layers are never combined into a shared value tree. See [ADR-0008](ADRs/template-variables/0008-value-layering-and-resolution.md).
 
 **Per-leaf resolution**
 Resolving a placeholder name by walking [value layers](#value-layer) in order and taking the first that holds that exact name as a scalar. A layer lacking the name, or holding an object, array or `null` at it, is skipped rather than ending the search — so `--value package.engines.node=26.0` overrides one leaf of a values file without hiding its siblings. Nothing is deep-merged; "merge" describes only the observable result. See [ADR-0008](ADRs/template-variables/0008-value-layering-and-resolution.md).
@@ -132,10 +141,10 @@ The namespace written before the colon in a `values-file=`/`--values-file` entry
 A `values-file=`/`--values-file` entry written with an empty prefix (a leading colon, no name before it), contributing that file's keys directly to the root namespace instead of under an auto-derived or explicit prefix — the opt-out for a directive that wants bare placeholder names from a single file. It is an ordinary [value layer](#value-layer) with no prefix, so two root-merged entries resolve per leaf rather than the later one replacing the earlier. See [ADR-0007](ADRs/template-variables/0007-values-file-prefixing.md), [ADR-0008](ADRs/template-variables/0008-value-layering-and-resolution.md).
 
 **Value alias**
-A mapping from one [placeholder name](#placeholder-name) to another, declared with the `value-alias=` directive option or the `--value-alias` CLI option. It holds no value of its own: resolving the aliased name resolves the target through the normal layer walk, so it always reflects what the sources currently say. Ranks above the values of its own tier, so a directive alias redefines a name that directive's own `values-file=` supplies. See [ADR-0010](ADRs/template-variables/0010-value-alias.md).
+A mapping from one [placeholder name](#placeholder-name) to another, declared with the `value-alias=` directive option or the `--value-alias` CLI option. It holds no value of its own: resolving the aliased name resolves the target through the normal layer walk, so it always reflects what the sources currently say. Takes part in [declaration order](#declaration-order) like a value: for a given name, the newest of an alias and a value decides it. See [ADR-0010](ADRs/template-variables/0010-value-alias.md), [ADR-0012](ADRs/template-variables/0012-declaration-order-precedence.md).
 
 **`value-alias=` option**
-A directive hash option declaring aliases as comma-separated `new:target` pairs (`value-alias=version:release.latest.version`). Opts the directive into placeholder scanning, like `values=`/`values-file=`/`vars`. See [ADR-0010](ADRs/template-variables/0010-value-alias.md).
+A directive hash option declaring aliases as comma-separated `new:target` pairs (`value-alias=version:release.latest.version`). Opts the directive into placeholder scanning, like `values=`/`value=`/`values-file=`/`vars`. See [ADR-0010](ADRs/template-variables/0010-value-alias.md).
 
 **`--value-alias`**
-A repeatable CLI option (`--value-alias <new>=<target>`) declaring a run-wide [value alias](#value-alias). Ranks above `--value`/`--values-file` but below anything the directive declares. See [ADR-0010](ADRs/template-variables/0010-value-alias.md).
+A repeatable CLI option (`--value-alias <new>=<target>`) declaring a run-wide [value alias](#value-alias). Ordered with `--value`/`--values-file` by argv position, and older than anything the directive declares. See [ADR-0010](ADRs/template-variables/0010-value-alias.md), [ADR-0012](ADRs/template-variables/0012-declaration-order-precedence.md).
