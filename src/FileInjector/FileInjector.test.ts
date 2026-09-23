@@ -661,6 +661,44 @@ describe('row window (ADR-0004)', () => {
     });
 });
 
+describe('JSON table source (ADR-0011)', () => {
+    test('renders each table form, windowed columns, and substituted nested strings', async () => {
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
+        const written = (await fi.processFile('README.md')).file.value as string;
+        expect(written).toContain('| Ada   | 1815 | \\["math","poetry"] | {"v":"1.0"} |');
+        expect(written).toContain('| Ada   | 1815 | `["math","poetry"]` | `{"v":"1.0"}` |');
+        expect(written).toContain('<td>\n\n```json\n{\n  "v": "1.0"\n}\n```\n\n</td>');
+        expect(written).toContain('| name  | role            | active | note |');
+        expect(written).toContain('| name | born | tags | meta | role | active | note |');
+        // header-rows=0 drops the key header, so the pipe form numbers the columns (ADR-0011 point 9).
+        expect(written).toContain('| 1     | 2    | 3                  | 4                     |');
+    });
+
+    test('bad JSON sources are directive errors', async () => {
+        const fi = new FileInjector(createFSA(), {
+            cwd: path.join(__root__, 'fixtures/with-errors/json-table'),
+            silent: true,
+        });
+        const r = await fi.processFile('README.md');
+        expect(r.hasErrors).toBe(true);
+        const messages = r.file.messages.map(String).join('\n');
+        expect(messages).toContain('Invalid JSON: ');
+        expect(messages).toContain('Expected a JSON array of objects, found an object.');
+        expect(messages).toContain('Expected a JSON array of objects, but element 2 is a number.');
+        expect(messages).toContain('Expected a JSON array of objects, found an empty array.');
+        expect(messages).toContain('A line range can not be used on a JSON table');
+        expect(messages).toContain('header-rows=2 can not be used on a JSON table');
+    });
+
+    test('header-rows=0 with an empty window keeps one numbered column per key', async () => {
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
+        const written = (await fi.processFile('README.md')).file.value as string;
+        const start = written.indexOf('<!--- @@inject-table: people.json#header-rows=0&start-row=100 --->');
+        const section = written.slice(start, written.indexOf('<!--- @@inject-end', start));
+        expect(section).toContain('| 1 | 2 | 3 | 4 | 5 | 6 | 7 |');
+    });
+});
+
 function normalizeWriteFileCalls(
     writeFile: MockedFileSystemAdapter['writeFile'],
 ): MockedFileSystemAdapter['writeFile']['mock']['calls'] {

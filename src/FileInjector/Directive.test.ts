@@ -16,6 +16,8 @@ describe('parseDirective', () => {
         ${'<!--- @@inject-table: data.csv#lang=csv --->'} | ${'table'}
         ${'<!--- @@inject: readme.md --->'}               | ${'start'}
         ${'<!--- @@inject: notes.txt --->'}               | ${'code'}
+        ${'<!--- @@inject: data.json --->'}               | ${'code'}
+        ${'<!--- @@inject-table: data.json --->'}         | ${'table'}
         ${'<!--- @@inject-end: data.csv --->'}            | ${'end'}
     `('$html -> $expectedType', ({ html, expectedType }) => {
         const d = parseDirective(html);

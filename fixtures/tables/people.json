@@ -1,0 +1,5 @@
+[
+    { "name": "Ada", "born": 1815, "tags": ["math", "poetry"], "meta": { "v": "{@ version @}" } },
+    { "name": "Grace", "role": "Admiral | Navy", "active": true, "note": null },
+    { "name": "Linus", "born": 1969 }
+]
