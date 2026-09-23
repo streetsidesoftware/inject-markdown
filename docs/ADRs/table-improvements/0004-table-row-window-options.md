@@ -25,6 +25,8 @@ Large CSV/TSV sources need a way to inject a bounded slice of rows — both to k
 - `end-row`, if given, is the inclusive last data row number.
 - Effective last row = `min(start-row + num-rows - 1, end-row)` when `end-row` is given, else simply `start-row + num-rows - 1`. E.g. `start-row=1`, `num-rows=10000` (defaults), no `end-row` → rows 1 through 10,000 inclusive.
 
+**Value validation:** each value must be a whole number (digits only). A malformed value (`start-row=abc`, `num-rows=-1`, `end-row=1.5`) or `start-row=0` is a directive error, per [ADR-0001](0001-table-option-encoding-conventions.md)'s fail-fast rule for directive mistakes. `end-row=0` and `num-rows=0` are valid and select nothing, by the formula above.
+
 **Edge cases — both treated as an empty result, not an error:**
 
 - `start-row` beyond the last available data row → the output table has its header row(s) but zero data rows.

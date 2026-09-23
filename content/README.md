@@ -88,13 +88,13 @@ git diff --exit-code
 
 ## Directives
 
-| Directive                | Effect                                                                             |
-| ------------------------ | ---------------------------------------------------------------------------------- |
-| `@@inject: <file>`       | Inject the file: Markdown as Markdown, CSV/TSV as a table, anything else as code.  |
-| `@@inject-code: <file>`  | Always inject as a fenced code block, including Markdown and CSV/TSV files.        |
-| `@@inject-table: <file>` | Always inject as a table, whatever the file extension.                             |
-| `@@inject-start: <file>` | Same as `@@inject`.                                                                |
-| `@@inject-end: <file>`   | Marks the end of injected content. The tool writes it; you don't normally need to. |
+| Directive                | Effect                                                                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@@inject: <file>`       | Inject the file: Markdown as Markdown, CSV/TSV as a table, anything else as code.                                                                      |
+| `@@inject-code: <file>`  | Always inject as a fenced code block, including Markdown and CSV/TSV files.                                                                            |
+| `@@inject-table: <file>` | Always inject as a table, whatever the file extension. A `.json` file must hold an array of objects; `@@inject: <file>.json` still injects it as code. |
+| `@@inject-start: <file>` | Same as `@@inject`.                                                                                                                                    |
+| `@@inject-end: <file>`   | Marks the end of injected content. The tool writes it; you don't normally need to.                                                                     |
 
 ## Injection options
 
@@ -113,6 +113,10 @@ Add options after a `#` in the file reference, separated by `&`:
 | `quote`                      | All              | Inject as a block quote.                                                                                                                           |
 | `markdown`                   | Tables           | Render inline Markdown in cells instead of escaping it.                                                                                            |
 | `html-table`                 | Tables           | Emit an HTML table whose cells can hold full Markdown, including lists and paragraphs.                                                             |
+| `header-rows=<n>`            | Tables           | How many leading rows form the header. Default `1`; `0` means no header.                                                                           |
+| `start-row=<n>`              | Tables           | First data row to include, counting from 1 after the header rows.                                                                                  |
+| `end-row=<n>`                | Tables           | Last data row to include.                                                                                                                          |
+| `num-rows=<n>`               | Tables           | Maximum number of data rows. Default `10000`.                                                                                                      |
 | `rebase-links=false`         | Markdown, Tables | Keep relative links as written. By default they're rewritten to resolve from the host file. See [Relative links](../docs/guide/relative-links.md). |
 | `values=<name:val,…>`        | All              | Values for `{@ name @}` placeholders. See [Template variables](#template-variables).                                                               |
 | `values-file=<path>`         | All              | A JSON file of placeholder values.                                                                                                                 |
@@ -299,6 +303,99 @@ All columns are included. Use `@@inject-code` or `#lang=csv` to inject the file 
 ```
 
 <!--- @@inject-end: import-sample-csv.md --->
+
+#### Header rows and selecting rows
+
+`header-rows=<n>` makes the first `n` rows the header:
+
+- With more than one, each column's header rows are joined with `<br />`, skipping blank cells. With `#html-table` they stay separate header rows.
+- `header-rows=0` means every row is data. A pipe table then shows column numbers (`1`, `2`, …) as its header, and an `#html-table` has no header.
+- `#header-rows` with no value means `header-rows=1`.
+
+<!--- @@inject-code: import-sample-header-rows.md --->
+
+```markdown
+<!--- @@inject: sample-header-rows.csv#header-rows=2 --->
+
+| Date       | Name<br />First | Name<br />Last |
+| ---------- | --------------- | -------------- |
+| 1815-12-10 | Ada             | Lovelace       |
+| 1906-12-09 | Grace           | Hopper         |
+
+<!--- @@inject-end: sample-header-rows.csv#header-rows=2 --->
+```
+
+<!--- @@inject-end: import-sample-header-rows.md --->
+
+Renders as:
+
+<!--- @@inject: import-sample-header-rows.md --->
+
+| Date       | Name<br />First | Name<br />Last |
+| ---------- | --------------- | -------------- |
+| 1815-12-10 | Ada             | Lovelace       |
+| 1906-12-09 | Grace           | Hopper         |
+
+<!--- @@inject-end: import-sample-header-rows.md --->
+
+`start-row`, `end-row` and `num-rows` choose which data rows are injected:
+
+- Rows are numbered from 1, starting after the header rows.
+- `num-rows` defaults to `10000`, so a larger file is cut off unless you raise it.
+- A window past the end of the data gives a table with only its header.
+- A value that isn't a whole number, or `start-row=0`, is an error.
+
+<!--- @@inject-code: import-sample-row-window.md --->
+
+```markdown
+<!--- @@inject: sample-rows.csv#start-row=2&num-rows=2 --->
+
+| n   | planet |
+| --- | ------ |
+| 2   | Venus  |
+| 3   | Earth  |
+
+<!--- @@inject-end: sample-rows.csv#start-row=2&num-rows=2 --->
+```
+
+<!--- @@inject-end: import-sample-row-window.md --->
+
+#### JSON as a table
+
+`@@inject-table:` also accepts a `.json` file holding an array of objects. Each object is a row, and its keys are the columns. `@@inject:` on a `.json` file still injects a code block.
+
+<!--- @@inject-code: import-sample-json-table.md --->
+
+```markdown
+<!--- @@inject-table: sample-table.json --->
+
+| name         | born | fields                       | rank         |
+| ------------ | ---- | ---------------------------- | ------------ |
+| Ada Lovelace | 1815 | \["mathematics","computing"] |              |
+| Grace Hopper | 1906 |                              | Rear Admiral |
+
+<!--- @@inject-end: sample-table.json --->
+```
+
+<!--- @@inject-end: import-sample-json-table.md --->
+
+Renders as:
+
+<!--- @@inject: import-sample-json-table.md --->
+
+| name         | born | fields                       | rank         |
+| ------------ | ---- | ---------------------------- | ------------ |
+| Ada Lovelace | 1815 | \["mathematics","computing"] |              |
+| Grace Hopper | 1906 |                              | Rear Admiral |
+
+<!--- @@inject-end: import-sample-json-table.md --->
+
+- The columns are every key found in the rows being shown, in the order they first appear. A missing key is an empty cell.
+- Numbers and booleans are shown as text, and `null` is an empty cell.
+- A nested object or array is shown as compact JSON. With `#markdown` it's a code span, and with `#html-table` it's a formatted `json` code block.
+- `start-row`, `end-row` and `num-rows` work as for CSV. A line range (`#L1-L10`) is an error on a JSON source.
+- The keys are the one header row: `header-rows=0` hides it, and a larger value is an error.
+- The file must be a non-empty array of objects; anything else is an error.
 
 #### Markdown in table cells
 

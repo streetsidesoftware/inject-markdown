@@ -3,13 +3,20 @@ import remarkStringify from 'remark-stringify';
 import { unified } from 'unified';
 import { describe, expect, test } from 'vitest';
 
-import { rowsToHtmlTable } from './Table.js';
+import { type CellValue, rowsToHtmlTable } from './Table.js';
 
-function render(rows: string[][]): string {
+function render(rows: CellValue[][]): string {
     return unified()
         .use(remarkGfm)
         .use(remarkStringify)
         .stringify({ type: 'root', children: rowsToHtmlTable(rows) });
+}
+
+function render2(rows: CellValue[][], headerRows: number): string {
+    return unified()
+        .use(remarkGfm)
+        .use(remarkStringify)
+        .stringify({ type: 'root', children: rowsToHtmlTable(rows, { headerRows }) });
 }
 
 describe('rowsToHtmlTable (ADR-0010)', () => {
@@ -75,5 +82,23 @@ describe('rowsToHtmlTable (ADR-0010)', () => {
         expect(out).toContain(expected);
         expect(out).not.toMatch(/^\[a\]:/m);
         expect(out).not.toMatch(/^\[\^1\]:/m);
+    });
+
+    test('a nested JSON value becomes a pretty-printed json code block (ADR-0011)', () => {
+        expect(render([['h'], [{ json: { x: [1] } }]])).toContain(
+            '<td>\n\n```json\n{\n  "x": [\n    1\n  ]\n}\n```\n\n</td>',
+        );
+    });
+
+    test('header-rows=2 gives two header rows (ADR-0010 point 4)', () => {
+        const out = render2([['a'], ['b'], ['c']], 2);
+        expect(out).toContain('<thead>\n<tr>\n<th>a</th>\n</tr>\n<tr>\n<th>b</th>\n</tr>\n</thead>');
+        expect(out).toContain('<td>c</td>');
+    });
+
+    test('header-rows=0 has no <thead>', () => {
+        const out = render2([['a'], ['b']], 0);
+        expect(out).not.toContain('<thead>');
+        expect(out).toContain('<tbody>\n<tr>\n<td>a</td>');
     });
 });

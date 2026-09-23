@@ -22,6 +22,7 @@ import { substituteInString, substituteInTree } from '../util/placeholders.js';
 import { dirToUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
 import { detectMarkdownStyle } from './detectStyle.js';
 import { type Directive, directiveRegExp, type DirectiveType, parseDirective } from './Directive.js';
+import { jsonToRows, mapJsonStrings } from './jsonTable.js';
 import { applyQuote, errorToComment, extractHeader, isHtmlNode, sanitizeImport, toCode, toRoot } from './Markdown.js';
 import { applyPatches, indentContinuationLines, lineIndent, type Patch, stringifyFragment } from './patchContent.js';
 import {
@@ -31,7 +32,8 @@ import {
     type RunWideValueSources,
 } from './placeholderValues.js';
 import { rebaseLinks } from './rebaseLinks.js';
-import { rowsToHtmlTable, rowsToTable } from './Table.js';
+import { applyRowWindow, resolveHeaderRows, resolveRowWindow, type RowWindow } from './rowWindow.js';
+import { type CellValue, type HeaderRowsOption, isJsonCell, rowsToHtmlTable, rowsToTable, widestRow } from './Table.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
 
@@ -514,22 +516,38 @@ async function processFileInjections(
         const info = parseHash(fileName);
         const lines = info.lines;
         try {
+            const window = resolveRowWindow(info);
+            const headerRows = resolveHeaderRows(info.headerRows);
+            const isJson = path.extname(fileName.pathname).toLowerCase() === '.json';
+            if (isJson && lines) {
+                throw new Error('A line range can not be used on a JSON table; use start-row, end-row or num-rows.');
+            }
+            if (isJson && headerRows > 1) {
+                throw new Error(
+                    `header-rows=${headerRows} can not be used on a JSON table; its keys form one header row.`,
+                );
+            }
             const vFile = await resolveAndReadFile(fileName);
             const content = extractLines(extractContent(vFile), lines);
-            const delimiter = delimiterForExtension(path.extname(fileName.pathname));
             // Substitution runs on the parsed cell values, per ADR-0006 point 3 — substituting into
             // the raw text first would let a value containing the delimiter add phantom columns.
-            const rows = parseDelimitedText(content, delimiter);
+            const { rows, tableOptions } = isJson
+                ? jsonTableRows(content, window, headerRows)
+                : delimitedTableRows(content, fileName, window, headerRows);
             await applySubstitution(info, directive.node, substitutionDeps, (resolve, onUnresolved) => {
+                const sub = (text: string) => substituteInString(text, resolve, onUnresolved);
                 for (const row of rows) {
                     for (let i = 0; i < row.length; ++i) {
-                        row[i] = substituteInString(row[i], resolve, onUnresolved);
+                        const cell = row[i];
+                        row[i] = isJsonCell(cell) ? { json: mapJsonStrings(cell.json, sub) as object } : sub(cell);
                     }
                 }
             });
             // `#html-table` wins over `#markdown` when both are given (ADR-0010 point 2).
             const root = toRoot(
-                info.htmlTable ? rowsToHtmlTable(rows) : rowsToTable(rows, { markdown: info.markdown }),
+                info.htmlTable
+                    ? rowsToHtmlTable(rows, tableOptions)
+                    : rowsToTable(rows, { ...tableOptions, markdown: info.markdown }),
             );
             if (info.htmlTable || info.markdown) maybeRebaseLinks(root, fileName, info);
             return { root, info };
@@ -538,6 +556,35 @@ async function processFileInjections(
             file.error(err.message, directive.node.position);
             return { root: errorToComment(err), info };
         }
+    }
+
+    interface TableRows {
+        rows: CellValue[][];
+        tableOptions: HeaderRowsOption;
+    }
+
+    function delimitedTableRows(content: string, fileName: URL, window: RowWindow, headerRows: number): TableRows {
+        const delimiter = delimiterForExtension(path.extname(fileName.pathname));
+        const parsed = parseDelimitedText(content, delimiter);
+        // The window counts data rows only, after the header rows (ADR-0004). A file shorter
+        // than `header-rows` is all header and no data.
+        const header = parsed.slice(0, headerRows);
+        const rows = [...header, ...applyRowWindow(parsed.slice(headerRows), window)];
+        const tableOptions = {
+            // An empty source keeps the requested count, so it still renders an empty header row.
+            headerRows: parsed.length ? header.length : headerRows,
+            // With no header and an empty window, the source still says how many columns there are.
+            columnCount: rows.length ? undefined : widestRow(parsed),
+        };
+        return { rows, tableOptions };
+    }
+
+    /** The keys are the one header row; `header-rows=0` drops it (ADR-0011 point 9). */
+    function jsonTableRows(content: string, window: RowWindow, headerRows: number): TableRows {
+        const [keys, ...data] = jsonToRows(content, window);
+        if (headerRows) return { rows: [keys, ...data], tableOptions: { headerRows } };
+        // Without the key row, an empty window would leave no columns; the keys still count them.
+        return { rows: data, tableOptions: { headerRows, columnCount: data.length ? undefined : keys.length } };
     }
 
     async function readAndParseCodeFile(fileName: URL, directive: DirectiveNode): Promise<ParseResult> {

@@ -71,6 +71,21 @@ describe('hash', () => {
         expect(parseHashString('#rebase-links=no').rebaseLinks).toBe(false);
         expect(parseHashString('#heading=x').rebaseLinks).toBeUndefined();
     });
+
+    test('row window options are captured as raw strings, not headings', () => {
+        expect(parseHashString('#start-row=2&end-row=5&num-rows=3')).toEqual({
+            startRow: '2',
+            endRow: '5',
+            numRows: '3',
+            params: m('start-row=2', 'end-row=5', 'num-rows=3'),
+        });
+        expect(parseHashString('#start-row').heading).toBeUndefined();
+    });
+
+    test('header-rows is captured raw; bare #header-rows is an empty value', () => {
+        expect(parseHashString('#header-rows=2').headerRows).toBe('2');
+        expect(parseHashString('#header-rows')).toEqual({ headerRows: '', params: m('header-rows') });
+    });
 });
 
 describe('repeated hash keys (ADR-0011)', () => {
