@@ -16,18 +16,18 @@ Each has to pick between source text and visible text once markup is present.
 
 ## Decision
 
-1. **Cell plain text.** For a `#markdown` table, a cell's _plain text_ is the concatenation, in order, of its parsed phrasing tree's:
+1. **Cell plain text.** For a `#markdown` table, a cell's _plain text_ is the concatenation, in document order, of its parsed Markdown tree's:
    - text node values
-   - inline code values
+   - inline code and code block values
    - image alt text
 
-   Link text counts through its text children; the URL does not. Raw HTML nodes contribute nothing, except that a `<br>`/`<br />` tag and a hard break each contribute a single space. Example: `` **a**<br />`b` `` → `a b`. For a literal-text table, plain text is the cell's text, as today.
+   Link text counts through its text children; the URL does not. Raw HTML nodes contribute nothing, except that a `<br>`/`<br />` tag and a hard break each contribute a single space. Adjacent blocks (paragraphs, list items, headings, and so on) are also separated by a single space, because cells can hold block content in an HTML table ([ADR-0008](0008-table-markdown-cells.md) point 5). Examples: `` **a**<br />`b` `` → `a b`, and a list `- a⏎- b` → `a b`. For a literal-text table, plain text is the cell's text, as today.
 
 2. **`columns` name matching uses plain text.** The header match string from ADR-0002 is built from each header cell's plain text. It is still space-joined across header rows, whitespace-normalized, and case-sensitive. So `columns=Price` selects a header written `**Price**`, and toggling `#markdown` never breaks an existing `columns=` reference.
 
-3. **Auto-alignment tests plain text.** The ADR-0005 numeric/currency pattern and its ≥90% threshold apply to each data cell's plain text. `**$5.00**` and `` `42` `` count as numeric.
+3. **Auto-alignment tests plain text.** The ADR-0005 numeric/currency pattern and its ≥90% threshold apply to each data cell's plain text. `**$5.00**` and `` `42` `` count as numeric. The resulting alignment is written as the `align` attribute ([ADR-0008](0008-table-markdown-cells.md) point 3).
 
-4. **`header-format` transforms text nodes only.** Casing applies to the values of `text` nodes in the header cell. Link URLs, image sources and alt text, inline code, and raw HTML are left untouched. `**unit** [price](x.md)` with `header-format=upper` renders `**UNIT** [PRICE](x.md)`. With `title`, word boundaries are whitespace within and across adjacent text nodes, so `**unit** price` → `**Unit** Price`.
+4. **`header-format` transforms text nodes only.** Casing applies to the values of `text` nodes anywhere in the header cell, including inside headings, lists, and other blocks. Link URLs, image sources and alt text, inline code, and raw HTML are left untouched. `**unit** [price](x.md)` with `header-format=upper` renders `**UNIT** [PRICE](x.md)`. With `title`, word boundaries are whitespace within and across adjacent text nodes, so `**unit** price` → `**Unit** Price`.
 
 5. **`column-names` labels follow the same rules.** They are parsed as Markdown in a `#markdown` table (ADR-0008 point 3), still bypass `header-format` (ADR-0007), and never affect `columns` matching.
 
@@ -37,6 +37,7 @@ Each has to pick between source text and visible text once markup is present.
 - **Auto-align on raw text.** Rejected: emphasis or code formatting on a number would flip the column to left-aligned.
 - **`header-format` on the whole raw string.** Rejected: uppercasing a URL (`x.md` → `X.MD`) breaks links, and it would change code spans.
 - **Plain text from text nodes only (no inline code or alt text).** Rejected: `` `42` `` would be empty and so never numeric, and a header written as a code span (`` `id` ``) could never be referenced by name.
+- **Plain text of the first block only.** Rejected: a header or value split across paragraphs or list items would silently lose the rest of its text for matching and alignment.
 - **Include raw HTML tag text in plain text.** Rejected: `columns` references would have to spell out tags such as `<sup>1</sup>`.
 
 ## Consequences
