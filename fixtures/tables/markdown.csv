@@ -1,0 +1,7 @@
+Option,Description,Default
+**`columns`**,"Pick columns, e.g. `a|b` or a | b",_all_
+`#markdown`,"See [ADR-0008](../../docs/ADRs/table-improvements/0008-table-markdown-cells.md)",~~off~~
+# Title,- item stays literal,1. first
+<sup>1</sup>,"line one
+line two",> note
+plain,"has {@ name @}",

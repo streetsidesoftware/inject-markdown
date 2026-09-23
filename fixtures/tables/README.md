@@ -19,3 +19,11 @@
 ## `#lang=csv` forces a code block
 
 <!--- @@inject: sample.csv#lang=csv --->
+
+## `#markdown` renders inline Markdown in cells
+
+<!--- @@inject: markdown.csv#markdown&values=name:*draft* --->
+
+## Without `#markdown` the same cells are literal
+
+<!--- @@inject: markdown.csv --->

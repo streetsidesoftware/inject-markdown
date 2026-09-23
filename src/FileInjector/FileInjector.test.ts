@@ -553,6 +553,32 @@ describe('template variables', () => {
     });
 });
 
+describe('#markdown table cells (ADR-0008)', () => {
+    async function processTables() {
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
+        const r = await fi.processFile('README.md');
+        return r.file.value as string;
+    }
+
+    test('renders inline Markdown, keeps block syntax literal, and escapes pipes', async () => {
+        const written = await processTables();
+        expect(written).toContain('| **`columns`** | Pick columns, e.g. `a\\|b` or a \\| b');
+        expect(written).toContain('| # Title       | - item stays literal');
+        expect(written).toContain('| <sup>1</sup>  | line one<br />line two');
+    });
+
+    test('substitutes placeholders before parsing, so a value can carry Markdown', async () => {
+        const written = await processTables();
+        // Parsed as emphasis, then written in the document's detected emphasis style.
+        expect(written).toContain('| plain         | has _draft_');
+    });
+
+    test('without #markdown the same cells stay escaped', async () => {
+        const written = await processTables();
+        expect(written).toContain('| \\*\\*\\`columns\\`\\*\\* |');
+    });
+});
+
 function normalizeWriteFileCalls(
     writeFile: MockedFileSystemAdapter['writeFile'],
 ): MockedFileSystemAdapter['writeFile']['mock']['calls'] {

@@ -48,6 +48,14 @@ describe('hash', () => {
             params: m('vars'),
         });
     });
+
+    test('#markdown (bare flag) is not taken as a heading', () => {
+        expect(parseHashString('#markdown')).toEqual({
+            markdown: true,
+            params: m('markdown'),
+        });
+        expect(parseHashString('#markdown=false').markdown).toBe(false);
+    });
 });
 
 describe('repeated hash keys (ADR-0011)', () => {

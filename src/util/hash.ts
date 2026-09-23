@@ -15,6 +15,8 @@ export interface InjectInfo {
     quote?: boolean;
     /** Indicate that markdown should be injected as code. */
     code?: string;
+    /** Bare `#markdown`: parse table cells as inline Markdown. See ADR-0008. */
+    markdown?: boolean | undefined;
     /** Inline placeholder values: `values=name:val,name2:val2`. See ADR-0002. */
     values?: Map<string, string> | undefined;
     /** `values-file=[prefix:]path[,...]`. See ADR-0002, ADR-0007. */
@@ -76,6 +78,9 @@ export function parseHashString(hash: string): InjectInfo {
                 continue;
             case 'vars':
                 info.vars = parseFlagValue(value, true);
+                continue;
+            case 'markdown':
+                info.markdown = parseFlagValue(value, true);
                 continue;
             case 'value-alias':
                 // Same `name:target` list shape as `values=` (ADR-0010 point 1).

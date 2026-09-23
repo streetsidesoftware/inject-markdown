@@ -41,4 +41,22 @@ describe('rowsToTable', () => {
             ],
         });
     });
+
+    test('markdown: parses cells as inline Markdown', () => {
+        const table = rowsToTable([['**h**'], ['a']], { markdown: true });
+        expect(table.children[0].children[0]).toEqual({
+            type: 'tableCell',
+            children: [{ type: 'strong', children: [expect.objectContaining({ type: 'text', value: 'h' })] }].map((n) =>
+                expect.objectContaining(n),
+            ),
+        });
+    });
+
+    test('without markdown, cells stay literal text', () => {
+        const table = rowsToTable([['**h**']]);
+        expect(table.children[0].children[0]).toEqual({
+            type: 'tableCell',
+            children: [{ type: 'text', value: '**h**' }],
+        });
+    });
 });
