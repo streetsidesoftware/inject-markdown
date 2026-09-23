@@ -106,6 +106,20 @@ export function sayHello(name: string): string {
 
 To force a `.csv`/`.tsv` file to be injected as a code block instead, use `@@inject-code: sample.csv` or `@@inject: sample.csv#lang=csv`. To force any other file to be injected as a table, use `@@inject-table: <file>`.
 
+### Selecting Rows
+
+`start-row`, `end-row`, and `num-rows` choose which data rows are injected. Rows are numbered from 1, starting at the first row after the header.
+
+- `start-row=N` -- first data row to include. Default `1`.
+- `end-row=N` -- last data row to include.
+- `num-rows=N` -- maximum number of rows. Default `10000`, so a larger file is cut off unless you raise it.
+
+```markdown
+<!--- @@inject: data.csv#start-row=11&num-rows=10 --->
+```
+
+A window past the end of the data gives a table with only its header. A value that isn't a whole number, or `start-row=0`, is an error.
+
 ### Markdown in Cells
 
 By default, cell text is literal: any Markdown in it is escaped. Add `#markdown` to render inline Markdown (emphasis, code, links, images, strikethrough, and inline HTML) in every cell, header included.
@@ -276,6 +290,7 @@ or
 >   - `<file.csv>`, `<file.tsv>` -- a comma or tab separated file, injected as a Markdown table using all of its columns.
 >   - `@@inject-table: <file>` -- force any file to be injected as a table, regardless of its extension.
 >   - Use `@@inject-code: <file.csv>` or `#lang=csv` to inject the file as a code block instead of a table.
+>   - `start-row`, `end-row`, `num-rows` -- optional; the data rows to include (default: the first 10,000).
 >   - `markdown` -- optional; render inline Markdown in the table's cells instead of escaping it.
 >   - `html-table` -- optional; emit an HTML table whose cells can hold full Markdown, including lists and paragraphs.
 

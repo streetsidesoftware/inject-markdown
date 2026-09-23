@@ -17,6 +17,7 @@
   - `<file.csv>`, `<file.tsv>` -- a comma or tab separated file, injected as a Markdown table using all of its columns.
   - `@@inject-table: <file>` -- force any file to be injected as a table, regardless of its extension.
   - Use `@@inject-code: <file.csv>` or `#lang=csv` to inject the file as a code block instead of a table.
+  - `start-row`, `end-row`, `num-rows` -- optional; the data rows to include (default: the first 10,000).
   - `markdown` -- optional; render inline Markdown in the table's cells instead of escaping it.
   - `html-table` -- optional; emit an HTML table whose cells can hold full Markdown, including lists and paragraphs.
 
