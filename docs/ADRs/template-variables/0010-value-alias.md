@@ -1,6 +1,6 @@
 # ADR-0010: `value-alias=` — redefining a name to point at another
 
-**Status:** Accepted
+**Status:** Accepted; point 3 superseded by [ADR-0012](0012-declaration-order-precedence.md)
 **Date:** 2026-09-22
 **Deciders:** Jason Dent
 

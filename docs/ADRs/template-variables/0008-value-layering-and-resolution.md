@@ -1,6 +1,6 @@
 # ADR-0008: Value layering and per-leaf resolution
 
-**Status:** Accepted
+**Status:** Accepted; point 2's source order superseded by [ADR-0012](0012-declaration-order-precedence.md)
 **Date:** 2026-09-22
 **Deciders:** Jason Dent
 

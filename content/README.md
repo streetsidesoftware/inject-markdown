@@ -119,6 +119,7 @@ Add options after a `#` in the file reference, separated by `&`:
 | `num-rows=<n>`               | Tables           | Maximum number of data rows. Default `10000`.                                                                                                      |
 | `rebase-links=false`         | Markdown, Tables | Keep relative links as written. By default they're rewritten to resolve from the host file. See [Relative links](../docs/guide/relative-links.md). |
 | `values=<name:val,…>`        | All              | Values for `{@ name @}` placeholders. See [Template variables](#template-variables).                                                               |
+| `value=<name:val>`           | All              | One placeholder value; commas and colons after the first `:` are part of the value.                                                                |
 | `values-file=<path>`         | All              | A JSON file of placeholder values.                                                                                                                 |
 | `value-alias=<new:target,…>` | All              | Resolve one placeholder name as another.                                                                                                           |
 | `vars`                       | All              | Resolve placeholders using only values set on the command line.                                                                                    |
@@ -531,4 +532,4 @@ npm install my-package@1.2.3
 
 <!--- @@inject-end: import-sample-values.md --->
 
-Placeholders are only replaced when the directive has `values=`, `values-file=`, `value-alias=` or `vars`. Values can also come from JSON files and the command line (`--value`, `--values-file`, `--allow-env`). See [Template variables](../docs/guide/template-variables.md) for the full rules.
+Placeholders are only replaced when the directive has `values=`, `value=`, `values-file=`, `value-alias=` or `vars`. Values can also come from JSON files and the command line (`--value`, `--values-file`, `--allow-env`). See [Template variables](../docs/guide/template-variables.md) for the full rules.

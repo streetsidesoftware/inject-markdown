@@ -10,6 +10,7 @@ import { nodeFsa } from '../FileSystemAdapter/fsa.js';
 import { createStore, normalizePath, type Store } from '../FileSystemAdapter/fsStore.mjs';
 import { OptionError } from '../util/errors.js';
 import { isURL, relativePath } from '../util/url_helper.js';
+import type { ValueDeclaration } from '../util/values.js';
 import { FileInjector, type Logger } from './FileInjector.js';
 
 const __file__ = fileURLToPath(import.meta.url);
@@ -335,6 +336,13 @@ describe('template variables', () => {
     const layersRoot = path.join(__root__, 'fixtures/template-variables/layers');
     const aliasRoot = path.join(__root__, 'fixtures/template-variables/alias');
 
+    const value = (name: string, v: string): ValueDeclaration => ({ kind: 'value', name, value: v });
+    const alias = (name: string, target: string): ValueDeclaration => ({ kind: 'alias', name, target });
+    const valuesFile = (path: string): ValueDeclaration => ({
+        kind: 'values-file',
+        entry: { prefixKind: 'auto', path },
+    });
+
     function count(text: string, needle: string): number {
         return text.split(needle).length - 1;
     }
@@ -345,9 +353,10 @@ describe('template variables', () => {
         const r = await fi.processFile('README.md');
         const written = r.file.value as string;
 
-        // Inline `values=`, auto-derived prefix, explicit prefix, and root merge all resolve `version` to "1.2.3".
-        expect(count(written, 'npm install pkg@1.2.3')).toBe(4);
-        // Inline `values=` takes precedence over `values-file=` on the same directive.
+        // Inline `values=`, auto-derived prefix, explicit prefix, root merge, and a values file declared
+        // after `values=` all resolve `version` to "1.2.3".
+        expect(count(written, 'npm install pkg@1.2.3')).toBe(5);
+        // The newest declaration wins whatever its option (ADR-0012): `value=` after `values-file=`.
         expect(count(written, 'npm install pkg@9.9.9')).toBe(1);
         // Not opted in (no `values=`/`values-file=`/`vars`) and a non-scalar values-file lookup both
         // leave the placeholder untouched, literally.
@@ -368,13 +377,23 @@ describe('template variables', () => {
         expect(messages).toContain('Unresolved placeholder "{@ version @}"');
     });
 
+    test('value= keeps commas and colons literal, and a malformed one is a directive error (ADR-0013)', async () => {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: valuesRoot, silent: true });
+        const r = await fi.processFile('malformed-value.md');
+        const written = r.file.value as string;
+        expect(written).toContain('Range: 1, 2, 3');
+        expect(written).toContain('URL: https://example.com/a:b');
+        expect(r.hasErrors).toBe(true);
+        expect(r.file.messages.map(String).join('\n')).toContain('Invalid value="range": expected name:value.');
+    });
+
     test('CLI --value/--values-file/--allow-env, and directive values= takes precedence over --value', async () => {
         const fsa = createFSA();
         const fi = new FileInjector(fsa, {
             cwd: cliRoot,
             silent: true,
-            value: { fromCli: 'CliValue', greeting: 'CLI' },
-            valuesFile: ['cliData.json'],
+            valueDeclarations: [value('fromCli', 'CliValue'), value('greeting', 'CLI'), valuesFile('cliData.json')],
             allowEnv: ['TV_TEST_VAR'],
         });
         const previousEnv = process.env.TV_TEST_VAR;
@@ -439,7 +458,7 @@ describe('template variables', () => {
         const fi = new FileInjector(fsa, {
             cwd: layersRoot,
             silent: true,
-            value: { a: '1', 'a.b': '2' },
+            valueDeclarations: [value('a', '1'), value('a.b', '2')],
         });
         const r = await fi.processFile('cli-nested.md');
         // One folded tree would lose `a` to `a.b`; one layer per flag keeps both.
@@ -451,7 +470,11 @@ describe('template variables', () => {
         const fsa = createFSA();
         // The directive's `values=x.y:...` creates an object at `x` as a side effect of the dotted
         // name. The lower-precedence CLI `--value x=...` scalar must still resolve `{@ x @}`.
-        const fi = new FileInjector(fsa, { cwd: layersRoot, silent: true, value: { x: 'fromCli' } });
+        const fi = new FileInjector(fsa, {
+            cwd: layersRoot,
+            silent: true,
+            valueDeclarations: [value('x', 'fromCli')],
+        });
         const r = await fi.processFile('fallthrough.md');
         expect(r.file.value).toContain('x=fromCli xy=fromDirective');
         expect(r.hasErrors).toBe(false);
@@ -474,8 +497,8 @@ describe('template variables', () => {
         const fi = new FileInjector(fsa, { cwd: aliasRoot, silent: true });
         const r = await fi.processFile('README.md');
         const written = r.file.value as string;
-        // The alias outranks its own tier's values: `version` comes from releases.json, not from
-        // the root-merged package.json, while `name` still does.
+        // The alias is declared after the values files, so it decides `version` (ADR-0012 point 5):
+        // it comes from releases.json, not from the root-merged package.json, while `name` still does.
         expect(written).toContain('name=demo version=2.5.0 date=2026-09-22');
         // a -> b -> release.latest.version
         expect(written).toContain('a=2.5.0');
@@ -485,17 +508,32 @@ describe('template variables', () => {
         expect(r.hasErrors).toBe(false);
     });
 
-    test('a directive alias outranks a CLI alias, and a CLI alias outranks --value', async () => {
+    test('any directive declaration is newer than every CLI declaration (ADR-0012 point 3)', async () => {
         const fsa = createFSA();
         const fi = new FileInjector(fsa, {
             cwd: aliasRoot,
             silent: true,
-            valueAlias: { version: 'name' },
-            value: { version: 'fromCliValue' },
+            valueDeclarations: [alias('version', 'name'), value('version', 'fromCliValue')],
         });
         const r = await fi.processFile('README.md');
-        // The directive's own alias wins over the CLI alias and over --value.
+        // The directive's own alias wins over both CLI declarations.
         expect(r.file.value).toContain('version=2.5.0');
+    });
+
+    test('CLI declarations resolve newest first, aliases included (ADR-0012 points 4-5)', async () => {
+        const fsa = createFSA();
+        const run = async (valueDeclarations: ValueDeclaration[]) => {
+            const fi = new FileInjector(fsa, { cwd: cliRoot, silent: true, valueDeclarations });
+            return (await fi.processFile('README.md')).file.value as string;
+        };
+        // cli-value.txt reads `{@ fromCli @}`; cliData.json supplies `town` under the `cliData` prefix.
+        expect(await run([value('fromCli', 'old'), value('fromCli', 'new')])).toContain('Value: new');
+        expect(
+            await run([alias('fromCli', 'cliData.town'), valuesFile('cliData.json'), value('fromCli', 'v')]),
+        ).toContain('Value: v');
+        expect(
+            await run([value('fromCli', 'v'), valuesFile('cliData.json'), alias('fromCli', 'cliData.town')]),
+        ).toContain('Value: Springfield');
     });
 
     test('an alias may target the reserved env. namespace, still gated by --allow-env', async () => {
@@ -506,7 +544,7 @@ describe('template variables', () => {
             const allowed = new FileInjector(fsa, {
                 cwd: aliasRoot,
                 silent: true,
-                valueAlias: { token: 'env.TV_ALIAS_VAR' },
+                valueDeclarations: [alias('token', 'env.TV_ALIAS_VAR')],
                 allowEnv: ['TV_ALIAS_VAR'],
             });
             expect((await allowed.processFile('README.md')).file.value).toContain('token=fromEnv');
@@ -514,7 +552,7 @@ describe('template variables', () => {
             const denied = new FileInjector(fsa, {
                 cwd: aliasRoot,
                 silent: true,
-                valueAlias: { token: 'env.TV_ALIAS_VAR' },
+                valueDeclarations: [alias('token', 'env.TV_ALIAS_VAR')],
             });
             // Without --allow-env the alias resolves through the namespace and finds nothing.
             expect((await denied.processFile('README.md')).file.value).toContain('token={@ token @}');
@@ -526,7 +564,11 @@ describe('template variables', () => {
 
     test('an unreadable --values-file raises an OptionError, not a document error', async () => {
         const fsa = createFSA();
-        const fi = new FileInjector(fsa, { cwd: valuesRoot, silent: true, valuesFile: ['does-not-exist.json'] });
+        const fi = new FileInjector(fsa, {
+            cwd: valuesRoot,
+            silent: true,
+            valueDeclarations: [valuesFile('does-not-exist.json')],
+        });
         await expect(fi.processFile('README.md')).rejects.toThrow(OptionError);
         await expect(fi.processFile('README.md')).rejects.toThrow('Failed to read values file');
     });
