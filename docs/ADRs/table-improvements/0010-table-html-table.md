@@ -70,6 +70,8 @@ The option lives in the `#`-fragment like the other table options ([ADR-0001](00
 
 11. **Placeholders are substituted before parsing.** `{@ name @}` substitution still runs on the parsed CSV field values, per [template-variables/ADR-0006](../template-variables/0006-substitution-mechanics-and-timing.md) (no phantom columns). It runs _before_ the Markdown parse, so a substituted value like `*draft*` renders italic. This matches placeholders in an injected `.md` file.
 
+12. **Definitions stay in their cell, as literal text.** A link reference definition (`[a]: https://…`) or footnote definition (`[^1]: …`) in a cell, including one nested in a quote or list, is written as escaped literal text in that cell. Emitted as-is, it would sit at document level between the tags and resolve `[a]`/`[^1]` anywhere on the page. As a consequence, a reference in the same cell doesn't resolve to it either.
+
 ## Options Considered
 
 - **HTML output under `#markdown` itself.** The design briefly had `#markdown` emit this HTML table. Split into two flags so authors who only need inline links and emphasis keep an ordinary pipe table ([ADR-0008](0008-table-markdown-cells.md)).
@@ -81,6 +83,9 @@ The option lives in the `#`-fragment like the other table options ([ADR-0001](00
 - **`style="text-align:…"` for alignment.** Rejected: GitHub's sanitizer strips `style`, so alignment would be lost there. `align` is deprecated in HTML5 but kept by GitHub, and it is what GitHub's own pipe-table renderer emits.
 - **`<br />`-joined multi-row headers, or synthesized numbered headers for `header-rows=0`, as in the pipe form.** Rejected: both are workarounds for GFM's single mandatory header row, which an HTML table doesn't have.
 - **Newlines as `<br />`.** Rejected: with block content allowed, a blank line has to mean a paragraph break, as it does everywhere else in Markdown.
+- **Emit definitions as-is.** Rejected: a definition in one cell would silently change how links and footnotes resolve elsewhere in the document.
+- **Drop definitions.** Rejected: the author's text would disappear without warning.
+- **Definitions as a directive error.** Rejected: literal text keeps the content visible without failing the injection.
 - **Escape raw HTML.** Rejected: it would also block `<br>`/`<sup>`/`<details>`, which are common in table cells, and would be inconsistent with `.md` injection.
 - **Substitute placeholders after parsing, into text nodes only.** Rejected: inconsistent with how placeholders behave in injected Markdown.
 - **`#html-table` as a directive error on non-table injections.** Rejected: the flag is harmless there, and an error would be noise.
