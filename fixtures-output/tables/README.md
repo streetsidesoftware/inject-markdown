@@ -234,3 +234,140 @@ line two
 </table>
 
 <!--- @@inject-end: markdown.csv#markdown&html-table --->
+
+## Row window: `start-row=2&num-rows=2`
+
+<!--- @@inject: rows.csv#start-row=2&num-rows=2 --->
+
+| n | name  |
+| - | ----- |
+| 2 | two   |
+| 3 | three |
+
+<!--- @@inject-end: rows.csv#start-row=2&num-rows=2 --->
+
+## Row window: `end-row=2`
+
+<!--- @@inject: rows.csv#end-row=2 --->
+
+| n | name |
+| - | ---- |
+| 1 | one  |
+| 2 | two  |
+
+<!--- @@inject-end: rows.csv#end-row=2 --->
+
+## Row window past the end is a header-only table
+
+<!--- @@inject: rows.csv#start-row=100 --->
+
+| n | name |
+| - | ---- |
+
+<!--- @@inject-end: rows.csv#start-row=100 --->
+
+## Two header rows: `header-rows=2`
+
+<!--- @@inject: grouped.csv#header-rows=2 --->
+
+| Date       | Name<br />First | Name<br />Last | Value |
+| ---------- | --------------- | -------------- | ----- |
+| 2024-01-01 | Ada             | Lovelace       | 1     |
+| 2024-01-02 | Grace           | Hopper         | 2     |
+
+<!--- @@inject-end: grouped.csv#header-rows=2 --->
+
+## Two header rows in an HTML table
+
+<!--- @@inject: grouped.csv#header-rows=2&html-table --->
+
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Name</th>
+<th>Name</th>
+<th>Value</th>
+</tr>
+<tr>
+<th></th>
+<th>First</th>
+<th>Last</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2024-01-01</td>
+<td>Ada</td>
+<td>Lovelace</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2024-01-02</td>
+<td>Grace</td>
+<td>Hopper</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+
+<!--- @@inject-end: grouped.csv#header-rows=2&html-table --->
+
+## Header rows and the row window: `header-rows=2&start-row=2`
+
+<!--- @@inject: grouped.csv#header-rows=2&start-row=2 --->
+
+| Date       | Name<br />First | Name<br />Last | Value |
+| ---------- | --------------- | -------------- | ----- |
+| 2024-01-02 | Grace           | Hopper         | 2     |
+
+<!--- @@inject-end: grouped.csv#header-rows=2&start-row=2 --->
+
+## No header row: `header-rows=0`
+
+<!--- @@inject: rows.csv#header-rows=0&num-rows=2 --->
+
+| 1 | 2    |
+| - | ---- |
+| n | name |
+| 1 | one  |
+
+<!--- @@inject-end: rows.csv#header-rows=0&num-rows=2 --->
+
+## No header row in an HTML table
+
+<!--- @@inject: rows.csv#header-rows=0&num-rows=2&html-table --->
+
+<table>
+<tbody>
+<tr>
+<td>n</td>
+<td>name</td>
+</tr>
+<tr>
+<td>1</td>
+<td>one</td>
+</tr>
+</tbody>
+</table>
+
+<!--- @@inject-end: rows.csv#header-rows=0&num-rows=2&html-table --->
+
+## More header rows than the file has: all header, no data
+
+<!--- @@inject: grouped.csv#header-rows=9 --->
+
+| Date<br />2024-01-01<br />2024-01-02 | Name<br />First<br />Ada<br />Grace | Name<br />Last<br />Lovelace<br />Hopper | Value<br />1<br />2 |
+| ------------------------------------ | ----------------------------------- | ---------------------------------------- | ------------------- |
+
+<!--- @@inject-end: grouped.csv#header-rows=9 --->
+
+## No header row and a window past the end: numbered header, no data
+
+<!--- @@inject: rows.csv#header-rows=0&start-row=100 --->
+
+| 1 | 2 |
+| - | - |
+
+<!--- @@inject-end: rows.csv#header-rows=0&start-row=100 --->

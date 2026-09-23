@@ -123,6 +123,10 @@ Add options after a `#` in the file reference, separated by `&`:
 | `quote`                      | All        | Inject as a block quote.                                                                      |
 | `markdown`                   | Tables     | Render inline Markdown in cells instead of escaping it.                                       |
 | `html-table`                 | Tables     | Emit an HTML table whose cells can hold full Markdown, including lists and paragraphs.        |
+| `header-rows=<n>`            | Tables     | How many leading rows form the header. Default `1`; `0` means no header.                      |
+| `start-row=<n>`              | Tables     | First data row to include, counting from 1 after the header rows.                             |
+| `end-row=<n>`                | Tables     | Last data row to include.                                                                     |
+| `num-rows=<n>`               | Tables     | Maximum number of data rows. Default `10000`.                                                 |
 | `values=<name:val,…>`        | All        | Values for `{@ name @}` placeholders. See [Template variables](#template-variables).          |
 | `values-file=<path>`         | All        | A JSON file of placeholder values.                                                            |
 | `value-alias=<new:target,…>` | All        | Resolve one placeholder name as another.                                                      |
@@ -257,6 +261,50 @@ All columns are included. Use `@@inject-code` or `#lang=csv` to inject the file 
 | Grace Hopper | Programmer    |
 
 <!--- @@inject-end: sample.csv --->
+```
+
+#### Header rows and selecting rows
+
+`header-rows=<n>` makes the first `n` rows the header:
+
+- With more than one, each column's header rows are joined with `<br />`, skipping blank cells. With `#html-table` they stay separate header rows.
+- `header-rows=0` means every row is data. A pipe table then shows column numbers (`1`, `2`, …) as its header, and an `#html-table` has no header.
+- `#header-rows` with no value means `header-rows=1`.
+
+```markdown
+<!--- @@inject: sample-header-rows.csv#header-rows=2 --->
+
+| Date       | Name<br />First | Name<br />Last |
+| ---------- | --------------- | -------------- |
+| 1815-12-10 | Ada             | Lovelace       |
+| 1906-12-09 | Grace           | Hopper         |
+
+<!--- @@inject-end: sample-header-rows.csv#header-rows=2 --->
+```
+
+Renders as:
+
+| Date       | Name<br />First | Name<br />Last |
+| ---------- | --------------- | -------------- |
+| 1815-12-10 | Ada             | Lovelace       |
+| 1906-12-09 | Grace           | Hopper         |
+
+`start-row`, `end-row` and `num-rows` choose which data rows are injected:
+
+- Rows are numbered from 1, starting after the header rows.
+- `num-rows` defaults to `10000`, so a larger file is cut off unless you raise it.
+- A window past the end of the data gives a table with only its header.
+- A value that isn't a whole number, or `start-row=0`, is an error.
+
+```markdown
+<!--- @@inject: sample-rows.csv#start-row=2&num-rows=2 --->
+
+| n   | planet |
+| --- | ------ |
+| 2   | Venus  |
+| 3   | Earth  |
+
+<!--- @@inject-end: sample-rows.csv#start-row=2&num-rows=2 --->
 ```
 
 #### Markdown in table cells

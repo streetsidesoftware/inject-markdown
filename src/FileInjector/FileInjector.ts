@@ -30,7 +30,8 @@ import {
     resolveRunWideValueSources,
     type RunWideValueSources,
 } from './placeholderValues.js';
-import { rowsToHtmlTable, rowsToTable } from './Table.js';
+import { applyRowWindow, resolveHeaderRows, resolveRowWindow } from './rowWindow.js';
+import { rowsToHtmlTable, rowsToTable, widestRow } from './Table.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
 
@@ -507,12 +508,24 @@ async function processFileInjections(
         const info = parseHash(fileName);
         const lines = info.lines;
         try {
+            const window = resolveRowWindow(info);
+            const headerRows = resolveHeaderRows(info.headerRows);
             const vFile = await resolveAndReadFile(fileName);
             const content = extractLines(extractContent(vFile), lines);
             const delimiter = delimiterForExtension(path.extname(fileName.pathname));
             // Substitution runs on the parsed cell values, per ADR-0006 point 3 — substituting into
             // the raw text first would let a value containing the delimiter add phantom columns.
-            const rows = parseDelimitedText(content, delimiter);
+            const parsed = parseDelimitedText(content, delimiter);
+            // The window counts data rows only, after the header rows (ADR-0004). A file shorter
+            // than `header-rows` is all header and no data.
+            const header = parsed.slice(0, headerRows);
+            const rows = [...header, ...applyRowWindow(parsed.slice(headerRows), window)];
+            const tableOptions = {
+                // An empty source keeps the requested count, so it still renders an empty header row.
+                headerRows: parsed.length ? header.length : headerRows,
+                // With no header and an empty window, the source still says how many columns there are.
+                columnCount: rows.length ? undefined : widestRow(parsed),
+            };
             await applySubstitution(info, directive.node, substitutionDeps, (resolve, onUnresolved) => {
                 for (const row of rows) {
                     for (let i = 0; i < row.length; ++i) {
@@ -522,7 +535,11 @@ async function processFileInjections(
             });
             return {
                 // `#html-table` wins over `#markdown` when both are given (ADR-0010 point 2).
-                root: toRoot(info.htmlTable ? rowsToHtmlTable(rows) : rowsToTable(rows, { markdown: info.markdown })),
+                root: toRoot(
+                    info.htmlTable
+                        ? rowsToHtmlTable(rows, tableOptions)
+                        : rowsToTable(rows, { ...tableOptions, markdown: info.markdown }),
+                ),
                 info,
             };
         } catch (e) {

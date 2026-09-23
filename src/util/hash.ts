@@ -19,6 +19,12 @@ export interface InjectInfo {
     markdown?: boolean | undefined;
     /** Bare `#html-table`: emit an HTML table whose cells hold Markdown. See ADR-0010. */
     htmlTable?: boolean | undefined;
+    /** Raw `header-rows` value; bare means 1. Validated when the table is built. See ADR-0002. */
+    headerRows?: string | undefined;
+    /** Row window for tables, validated when the table is built. See ADR-0004. */
+    startRow?: string | undefined;
+    endRow?: string | undefined;
+    numRows?: string | undefined;
     /** Inline placeholder values: `values=name:val,name2:val2`. See ADR-0002. */
     values?: Map<string, string> | undefined;
     /** `values-file=[prefix:]path[,...]`. See ADR-0002, ADR-0007. */
@@ -86,6 +92,18 @@ export function parseHashString(hash: string): InjectInfo {
                 continue;
             case 'html-table':
                 info.htmlTable = parseFlagValue(value, true);
+                continue;
+            case 'header-rows':
+                info.headerRows = value;
+                continue;
+            case 'start-row':
+                info.startRow = value;
+                continue;
+            case 'end-row':
+                info.endRow = value;
+                continue;
+            case 'num-rows':
+                info.numRows = value;
                 continue;
             case 'value-alias':
                 // Same `name:target` list shape as `values=` (ADR-0010 point 1).

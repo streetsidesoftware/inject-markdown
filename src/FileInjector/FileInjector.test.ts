@@ -602,6 +602,65 @@ describe('#html-table (ADR-0010)', () => {
     });
 });
 
+describe('row window (ADR-0004)', () => {
+    test('windows data rows and keeps the header', async () => {
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
+        const written = (await fi.processFile('README.md')).file.value as string;
+        const section = (hash: string) =>
+            written.slice(
+                written.indexOf(`<!--- @@inject: rows.csv#${hash} --->`),
+                written.indexOf(`<!--- @@inject-end: rows.csv#${hash} --->`),
+            );
+        expect(section('start-row=2&num-rows=2')).toMatch(/\| 2 +\| two +\|\n\| 3 +\| three +\|\n\n$/);
+        expect(section('end-row=2')).toMatch(/\| 1 +\| one +\|\n\| 2 +\| two +\|\n\n$/);
+        const empty = section('start-row=100');
+        expect(empty).toContain('| n | name |');
+        expect(empty).not.toContain('one');
+    });
+
+    test('header rows are kept and the window counts data rows after them', async () => {
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
+        const written = (await fi.processFile('README.md')).file.value as string;
+        expect(written).toContain('| Date       | Name<br />First | Name<br />Last | Value |');
+        const windowed = written.slice(written.indexOf('grouped.csv#header-rows=2&start-row=2 --->'));
+        expect(windowed.slice(0, windowed.indexOf('inject-end'))).not.toContain('Ada');
+    });
+
+    test('a file shorter than header-rows is all header and no data', async () => {
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
+        const r = await fi.processFile('README.md');
+        expect(r.hasErrors).toBe(false);
+        const written = r.file.value as string;
+        const start = written.indexOf('<!--- @@inject: grouped.csv#header-rows=9 --->');
+        const section = written.slice(start, written.indexOf('<!--- @@inject-end: grouped.csv#header-rows=9', start));
+        expect(section).toContain('Date<br />2024-01-01<br />2024-01-02');
+        expect(
+            section
+                .trim()
+                .split('\n')
+                .filter((l) => l.startsWith('|')),
+        ).toHaveLength(2);
+    });
+
+    test('header-rows=0 with a window past the end keeps the numbered header', async () => {
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
+        const written = (await fi.processFile('README.md')).file.value as string;
+        const start = written.indexOf('<!--- @@inject: rows.csv#header-rows=0&start-row=100 --->');
+        const section = written.slice(start, written.indexOf('<!--- @@inject-end', start));
+        expect(section).toContain('| 1 | 2 |');
+    });
+
+    test('an invalid window value is a directive error', async () => {
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/with-errors'), silent: true });
+        const r = await fi.processFile('table-row-window.md');
+        expect(r.hasErrors).toBe(true);
+        const messages = r.file.messages.map(String).join('\n');
+        expect(messages).toContain('Invalid start-row "abc": expected a whole number.');
+        expect(messages).toContain('Invalid start-row "0": row numbers start at 1.');
+        expect(messages).toContain('Invalid num-rows "-1": expected a whole number.');
+    });
+});
+
 function normalizeWriteFileCalls(
     writeFile: MockedFileSystemAdapter['writeFile'],
 ): MockedFileSystemAdapter['writeFile']['mock']['calls'] {
