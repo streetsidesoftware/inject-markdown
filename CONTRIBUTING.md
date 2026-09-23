@@ -105,6 +105,24 @@ Follow Conventional Commits:
 - `feat:` — features and other larger changes.
 - `chore:` — CI/CD or dependency-related changes.
 
+### PR descriptions
+
+`fix:` and `feat:` PRs are user-facing and feed release notes — write for a reader deciding whether a change affects them, not for a reviewer reviewing the diff. Keep them short; no one reads a long one.
+
+- A one-paragraph TL;DR at the top: what changed, for the user.
+- The motivation — why — in a sentence or two.
+- For `feat:` PRs, a short paragraph on the feature itself: what it lets the user do that they couldn't before, and — where it shapes how they should think about using it — why it was designed that way (e.g. why it's opt-in, why this precedence order). Skip for `fix:`.
+- If needed, further detail in `<details>` blocks (e.g. `<summary>Usage</summary>`, `<summary>Details</summary>`), as bullet points, not prose paragraphs.
+  - Usage should include changes to the command line options and/or `@@inject` directives. Adding an example or two would be great.
+- No test plan section — CI covers that.
+
+Do not:
+
+- Restate the diff or narrate file-by-file changes.
+- Explain internal implementation, refactors, or code structure the user doesn't interact with.
+- Add tables, code walkthroughs, or before/after examples for internal behavior.
+- Write a separate section per commit or sub-change — one TL;DR covers the whole PR.
+
 ## CI & releases
 
 - `.github/workflows/test.yml` runs unit tests and `lint.yml` runs linting on PRs.
