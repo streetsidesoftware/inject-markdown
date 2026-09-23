@@ -108,7 +108,7 @@ A repeatable CLI option naming environment variable names a directive may refere
 A reserved placeholder-name prefix (`{@ env.VERSION @}`) resolving to `process.env.VERSION` when allow-listed via `--allow-env`; always reserved, even if another value source defines a top-level `env` key. See [ADR-0003](ADRs/template-variables/0003-cli-and-env-value-sources.md).
 
 **Value declaration**
-One entry that defines placeholder values or an alias: a `values=` pair, a `value=`, a `values-file=` entry, a `value-alias=` pair, or the CLI equivalents. Each value declaration is a [value layer](#value-layer); an alias declaration is not. See [ADR-0012](ADRs/template-variables/0012-declaration-order-precedence.md).
+One entry in the [declaration order](#declaration-order): a `values=` pair, a `value=`, a `values-file=` entry, a `value-alias=` pair, or the CLI equivalents. A declaration that supplies values is a [value layer](#value-layer). An alias (`value-alias=`/`--value-alias`) takes part in the same order but supplies no value, so it is not a layer. See [ADR-0012](ADRs/template-variables/0012-declaration-order-precedence.md).
 
 **Declaration order**
 The order value declarations are written in, oldest to newest: every CLI flag in argv order, then the directive's hash options left to right. The newest declaration wins, whichever option it came from. The `env.` namespace is outside the order. See [ADR-0012](ADRs/template-variables/0012-declaration-order-precedence.md).
