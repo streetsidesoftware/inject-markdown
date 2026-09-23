@@ -1,6 +1,6 @@
 # ADR-0002: `header-rows` option
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 
