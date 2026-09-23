@@ -2,6 +2,18 @@ import type { Html, PhrasingContent, RootContent, Table, TableCell, TableRow } f
 
 import { parseCellBlocks, parseCellMarkdown } from './cellMarkdown.js';
 
+/** A nested JSON object or array, rendered per table form (ADR-0011 point 5). */
+export interface JsonCell {
+    json: object;
+}
+
+/** A table cell's source: text, or a nested JSON value from a JSON table source. */
+export type CellValue = string | JsonCell;
+
+export function isJsonCell(value: unknown): value is JsonCell {
+    return typeof value === 'object' && value !== null && 'json' in value;
+}
+
 export interface HeaderRowsOption {
     /** Leading rows that form the header; default 1. See ADR-0002. */
     headerRows?: number | undefined;
@@ -18,21 +30,25 @@ export interface RowsToTableOptions extends HeaderRowsOption {
  * Convert parsed rows into a GFM table. The first `headerRows` rows are joined per column into the
  * single GFM header row with `<br />`; with none, the header is the column numbers (ADR-0002).
  */
-export function rowsToTable(rows: string[][], options: RowsToTableOptions = {}): Table {
+export function rowsToTable(rows: CellValue[][], options: RowsToTableOptions = {}): Table {
     const columnCount = options.columnCount ?? widestRow(rows);
 
-    function toChildren(value: string | undefined): PhrasingContent[] {
+    function toChildren(value: CellValue | undefined): PhrasingContent[] {
+        if (isJsonCell(value)) {
+            const text = JSON.stringify(value.json);
+            return [options.markdown ? { type: 'inlineCode', value: text } : { type: 'text', value: text }];
+        }
         if (!value) return [];
         return options.markdown ? parseCellMarkdown(value) : [{ type: 'text', value }];
     }
 
-    function toCell(value: string | undefined): TableCell {
+    function toCell(value: CellValue | undefined): TableCell {
         return { type: 'tableCell', children: toChildren(value) };
     }
 
     /** One header cell from a column's non-empty header-row cells, joined with `<br />`. */
     function toHeaderCell(column: number): TableCell {
-        const parts = header.map((row) => row[column]).filter((v): v is string => !!v);
+        const parts = header.map((row) => row[column]).filter((v): v is CellValue => !!v);
         const children = parts.flatMap((part, i): PhrasingContent[] => [
             ...(i ? [{ type: 'html', value: '<br />' } as const] : []),
             ...toChildren(part),
@@ -48,7 +64,7 @@ export function rowsToTable(rows: string[][], options: RowsToTableOptions = {}):
         return { type: 'tableRow', children };
     }
 
-    function toTableRow(cells: string[]): TableRow {
+    function toTableRow(cells: CellValue[]): TableRow {
         const children: TableCell[] = [];
         for (let i = 0; i < columnCount; ++i) {
             children.push(toCell(cells[i]));
@@ -72,7 +88,7 @@ export function rowsToTable(rows: string[][], options: RowsToTableOptions = {}):
  * blocks of each cell that has markup. The blank line remark-stringify puts between siblings is what
  * lets a renderer parse that Markdown.
  */
-export function rowsToHtmlTable(rows: string[][], options: HeaderRowsOption = {}): RootContent[] {
+export function rowsToHtmlTable(rows: CellValue[][], options: HeaderRowsOption = {}): RootContent[] {
     const columnCount = options.columnCount ?? widestRow(rows);
     const nodes: RootContent[] = [];
     let html = '';
@@ -84,8 +100,12 @@ export function rowsToHtmlTable(rows: string[][], options: HeaderRowsOption = {}
         html = '';
     }
 
-    function addCell(tag: 'th' | 'td', value: string | undefined) {
-        const blocks = value ? parseCellBlocks(value) : [];
+    function addCell(tag: 'th' | 'td', value: CellValue | undefined) {
+        const blocks: RootContent[] = isJsonCell(value)
+            ? [{ type: 'code', lang: 'json', value: JSON.stringify(value.json, null, 2) }]
+            : value
+              ? parseCellBlocks(value)
+              : [];
         const plain = plainParagraphText(blocks);
         if (plain !== undefined) {
             html += `<${tag}>${escapeHtml(plain)}</${tag}>\n`;
@@ -97,7 +117,7 @@ export function rowsToHtmlTable(rows: string[][], options: HeaderRowsOption = {}
         html = `</${tag}>\n`;
     }
 
-    function addRow(tag: 'th' | 'td', cells: string[]) {
+    function addRow(tag: 'th' | 'td', cells: CellValue[]) {
         html += '<tr>\n';
         for (let i = 0; i < columnCount; ++i) {
             addCell(tag, cells[i]);
@@ -126,7 +146,7 @@ export function widestRow(rows: unknown[][]): number {
 }
 
 /** The leading `headerRows` rows (default 1) and the rest. An empty source keeps one empty header row. */
-function splitHeader(rows: string[][], headerRows = 1): { header: string[][]; body: string[][] } {
+function splitHeader(rows: CellValue[][], headerRows = 1): { header: CellValue[][]; body: CellValue[][] } {
     if (!rows.length) return { header: headerRows ? [[]] : [], body: [] };
     return { header: rows.slice(0, headerRows), body: rows.slice(headerRows) };
 }
