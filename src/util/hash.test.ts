@@ -56,6 +56,14 @@ describe('hash', () => {
         });
         expect(parseHashString('#markdown=false').markdown).toBe(false);
     });
+
+    test('#html-table (bare flag) is not taken as a heading', () => {
+        expect(parseHashString('#html-table')).toEqual({
+            htmlTable: true,
+            params: m('html-table'),
+        });
+        expect(parseHashString('#html-table=false').htmlTable).toBe(false);
+    });
 });
 
 describe('repeated hash keys (ADR-0011)', () => {

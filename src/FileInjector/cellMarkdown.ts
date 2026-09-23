@@ -1,4 +1,4 @@
-import type { Link, PhrasingContent } from 'mdast';
+import type { Link, PhrasingContent, RootContent } from 'mdast';
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import type { Processor } from 'unified';
@@ -29,9 +29,22 @@ function remarkInlineOnly(this: Processor) {
 }
 
 let processor: ReturnType<typeof createProcessor> | undefined;
+let blockProcessor: ReturnType<typeof createBlockProcessor> | undefined;
 
 function createProcessor() {
     return unified().use(remarkParse).use(remarkGfm).use(remarkInlineOnly);
+}
+
+function createBlockProcessor() {
+    return unified().use(remarkParse).use(remarkGfm);
+}
+
+/**
+ * Parse a table cell's text as a standalone Markdown document, blocks included (ADR-0010 point 6).
+ */
+export function parseCellBlocks(value: string): RootContent[] {
+    blockProcessor ??= createBlockProcessor();
+    return blockProcessor.parse(value).children;
 }
 
 /**
