@@ -99,11 +99,14 @@ Key abstractions:
 
 ## Commits & pull requests
 
-Follow Conventional Commits. Release Please derives the version bump and changelog from the type, so pick it by user-facing impact, not by how much code changed:
+Keep commits focused and describe the _why_ in the commit message, not just the _what_.
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/). Release Please derives the version bump and changelog from the type, so pick it by user-facing impact, not by how much code changed:
 
 - `feat:` — a feature or other change a user of the published package would notice.
 - `fix:` — a bug fix that changes published behavior.
 - `feat!:` / `fix!:` — either of the above, but breaking.
+- `perf:` — a performance improvement a consumer would notice, with no behavior change.
 - `refactor:` — internal restructuring with no behavior change.
 - `docs:` — documentation only (README, ADRs, CONTRIBUTING.md, etc.).
 - `test:` — test-only changes.
@@ -111,6 +114,8 @@ Follow Conventional Commits. Release Please derives the version bump and changel
 - `chore:` — everything else that doesn't touch published behavior: repo tooling, Claude Code skills/config, dev dependencies, lint/format config, etc.
 
 Repo maintenance and internal restructuring are never `fix:`/`feat:`, even for a large diff — those two are reserved for changes to the published package's behavior, because `fix:`/`feat:` are what show up in the changelog and bump the version.
+
+If a PR merges under the wrong type, see the `release-notes` Claude Code skill for correcting the entry after the fact via a `BEGIN_COMMIT_OVERRIDE` block, rather than rewriting history.
 
 ### PR descriptions
 
@@ -121,7 +126,7 @@ Use `##` headings to break up sections rather than running everything together a
 - `## Summary` — a one- or two-sentence TL;DR that stands on its own: what changed and why, in plain prose. It should be readable without anything that follows, not a fragment a later section completes. If the why needs more room than that, give it its own sentence or two right after.
 - `fix:` and `feat:` PRs are user-facing and feed release notes — write for a reader deciding whether a change affects them, not for a reviewer reviewing the diff.
   - For `feat:` PRs, add a `## Feature` heading with a short paragraph on the feature itself: what it lets the user do that they couldn't before, and — where it shapes how they should think about using it — why it was designed that way (e.g. why it's opt-in, why this precedence order).
-- `refactor:`/`chore:` PRs are for reviewers, not release notes, so implementation detail belongs here rather than being trimmed out. Group it by theme (e.g. what moved where, what got simplified), each group with bullets on what changed and how — not `<details>`-gated, since a reviewer needs to see it to review the PR. A `##`/`###` heading or a bold label (`**Theme:**` on its own line before the bullets) both work; use a bold label when a full heading would be heavier than the group needs.
+- `refactor:`/`chore:` PRs are for reviewers, not release notes, so implementation detail belongs here rather than being trimmed out — but keep it to the _what_ and _why it matters to a reviewer_, not a mechanical _how_ or a narration of the steps taken to get there. Group by theme (what changed, not which file it lives in) — label each group with a short effect/topic phrase, e.g. `**Hidden refactors**`, not a file path like `**src/FileInjector/Directive.ts**`. A single-item group reads fine as a short paragraph after its label; only reach for bullets under a label when the group covers several distinct changes. Not `<details>`-gated, since a reviewer needs to see it to review the PR. A `##`/`###` heading or a bold label (`**Topic**` on its own line before the paragraph/bullets) both work; use a bold label when a full heading would be heavier than the group needs.
 - If needed, further detail in `<details>` blocks (e.g. `<summary>Usage</summary>`, `<summary>Details</summary>`), as bullet points, not prose paragraphs — these stay collapsed, unlike the `##` headings above, so lead with what actually needs a click.
   - Usage should include changes to the command line options and/or `@@inject` directives. Adding an example or two would be great.
 - No test plan section — CI covers that.
@@ -129,6 +134,7 @@ Use `##` headings to break up sections rather than running everything together a
 Do not:
 
 - Restate the diff or narrate file-by-file changes.
+- Narrate the process of arriving at the change (where content was copied from, exploration or dead ends, which attempt fixed what) — describe the resulting change and why it matters, not the journey there.
 - On `fix:`/`feat:` PRs, explain internal implementation, refactors, or code structure the user doesn't interact with — that's what `refactor:`/`chore:` PRs are for.
 - Add tables, code walkthroughs, or before/after examples for internal behavior.
 - Compress the TL;DR into a bare fragment or list of renamed symbols that only makes sense once you've read the bullets below it.
