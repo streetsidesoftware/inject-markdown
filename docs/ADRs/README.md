@@ -29,12 +29,13 @@ This directory records architecturally significant decisions for `inject-markdow
 
 ## Groups
 
-| Group                                          | Description                                                                                                         |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| [table-improvements/](table-improvements/)     | `header-rows`, `columns`, row windowing, auto-alignment, Markdown-cell, and JSON-source options for table injection |
-| [file-access-security/](file-access-security/) | Boundary restricting which local files an `@@inject` directive may read                                             |
-| [template-variables/](template-variables/)     | `{@ name @}` placeholder substitution in injected content, values, sources, precedence                              |
-| [security-hardening/](security-hardening/)     | Parser denial of service, discovery boundary, remote fetch policy, `--deny-access`, threat model                    |
+| Group                                          | Description                                                                                                                               |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| [table-improvements/](table-improvements/)     | `header-rows`, `columns`, row windowing, auto-alignment, Markdown-cell, and JSON-source options for table injection                       |
+| [file-access-security/](file-access-security/) | Boundary restricting which local files an `@@inject` directive may read                                                                   |
+| [template-variables/](template-variables/)     | `{@ name @}` placeholder substitution in injected content, values, sources, precedence                                                    |
+| [security-hardening/](security-hardening/)     | Parser denial of service, discovery boundary, remote fetch policy, `--deny-access`, threat model                                          |
+| [relative-links/](relative-links/)             | Rebasing relative URLs in Markdown links, images, and definitions: in injected content, and onto `--output-dir` (`--rebase-output-links`) |
 
 ## Index (ungrouped ADRs)
 
