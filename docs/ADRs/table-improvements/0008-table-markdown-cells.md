@@ -1,6 +1,6 @@
 # ADR-0008: `markdown` option — Markdown in pipe-table cells
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-23
 **Deciders:** Jason Dent
 

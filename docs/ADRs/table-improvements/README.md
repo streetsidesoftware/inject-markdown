@@ -11,9 +11,9 @@ ADRs for table-injection options (`header-rows`, `columns`, row windowing, auto-
 | [0005](0005-table-auto-alignment.md)              | Auto-alignment by content type                          | Proposed |
 | [0006](0006-table-header-format.md)               | `header-format` option                                  | Proposed |
 | [0007](0007-table-column-names.md)                | `column-names` option                                   | Proposed |
-| [0008](0008-table-markdown-cells.md)              | `markdown` option — Markdown in pipe-table cells        | Proposed |
+| [0008](0008-table-markdown-cells.md)              | `markdown` option — Markdown in pipe-table cells        | Accepted |
 | [0009](0009-table-markdown-interactions.md)       | `markdown` option interactions with other table options | Proposed |
-| [0010](0010-table-html-table.md)                  | `html-table` option — Markdown cells in an HTML table   | Proposed |
-| [0011](0011-table-json-source.md)                 | JSON files as a table source                            | Proposed |
+| [0010](0010-table-html-table.md)                  | `html-table` option — Markdown cells in an HTML table   | Accepted |
+| [0011](0011-table-json-source.md)                 | JSON files as a table source                            | Accepted |
 
 See also: [../../glossary.md](../../glossary.md).
