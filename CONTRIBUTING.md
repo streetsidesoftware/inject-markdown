@@ -51,6 +51,33 @@ The `injection-root-boundary/` fixtures are excluded from that run. They test a 
 pnpm build:readme   # ./scripts/update_readme.sh
 ```
 
+The script writes `content/help.txt` from `--help`, hydrates every file under `content/`, then hydrates `README.md`. The GitHub recipe fetches from github.com, so it needs network access.
+
+### Where things live
+
+- `README.md`, outside the markers — hand-edited: title, pitch, Why, the Reference links and the `<details>` wrapper around `--help`.
+- `content/README.md` — Quick start through Recipes. It has no H1; its sections are `##`.
+- `content/import-sample-*.md`, `quickstart.md` — one directive each, hydrated in place and shown as code by `content/README.md`.
+- `content/*` other files — the source files those directives inject (`code.ts`, `sample.csv`, …).
+- `docs/guide/*.md` — hand-written user guides for rules too detailed for the README. Not generated.
+- `static/footer.md` — the footer.
+
+### Adding a recipe
+
+Recipes show the real output of a directive rather than a hand-written copy, so the example can't drift from the tool's behavior:
+
+1. Add `content/import-sample-<name>.md` containing just the directive, e.g. `<!--- @@inject: code.js#L5-L7 --->`.
+2. In `content/README.md`, show it with `<!--- @@inject-code: import-sample-<name>.md --->`. For output that should also render (tables, for example), add a plain `@@inject` of the same file after it.
+3. Run `pnpm build:readme` and commit the hydrated sample files along with `README.md`.
+
+### Documenting a new feature
+
+- Add a row to the **Directives** or **Injection options** table in `content/README.md`.
+- Add a recipe if the feature has a visible effect.
+- Put detailed rules (precedence, edge cases) in `docs/guide/` and link to it from the README, rather than growing the README.
+
+Links in `content/README.md` are written relative to the repository root (e.g. `docs/guide/...`), because they're read from the root `README.md`. They don't resolve when viewing `content/README.md` itself.
+
 ## Architecture
 
 ```

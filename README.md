@@ -1,99 +1,49 @@
-# Markdown File Injector
+# inject-markdown
 
-A Command line tool to inject files into Markdown files.
-
-## Justification
-
-Sometimes it is necessary to assemble content into a static markdown file like `README.md`.
-Manually copying and pasting content leads to duplication making it difficult to keep things in sync.
-
-## Usage
-
-Use HTML comments to mark where content will be injected.
+Keep Markdown files in sync with the files they show. Mark a spot with an HTML comment, run `inject-markdown`, and the referenced file's content is written into place — and refreshed on every run.
 
 ```markdown
-<!--- @@inject: fixtures/sample-src.md --->
+<!--- @@inject: src/example.ts --->
 ```
 
-```sh
-npx inject-markdown README.md
-```
+## Why
 
-## `--help`
-
-```sh
-npx inject-markdown --help
-```
-
-<!--- @@inject: content/help.txt --->
-
-```
-Usage: inject-markdown [options] <files...>
-
-Inject file content into markdown files.
-
-Arguments:
-  files                          Files to scan for injected content.
-
-Options:
-  --no-must-find-files           No error if files are not found.
-  --output-dir <dir>             Output Directory
-  --cwd <dir>                    Current Directory
-  --allow-outside-root <dir>     Allow local @@inject references to resolve into
-                                 <dir>, outside the injection root (cwd).
-                                 Repeatable.
-  --value <name=val>             Set a run-wide {@ name @} placeholder value.
-                                 Repeatable; a later --value for the same name
-                                 wins.
-  --values-file <[prefix:]path>  Add a run-wide JSON file of {@ name @}
-                                 placeholder values, resolved relative to --cwd.
-                                 Repeatable.
-  --allow-env <name>             Allow a directive to reference the OS
-                                 environment variable <name> via {@ env.name @}.
-                                 Repeatable.
-  --value-alias <new=target>     Resolve the {@ new @} placeholder as if it were
-                                 {@ target @}. Repeatable; a later --value-alias
-                                 for the same name wins.
-  --strict-vars                  Treat an unresolved {@ name @} placeholder as a
-                                 directive error.
-  --clean                        Remove the injected content.
-  --no-inject-only               Update the whole file.
-  --verbose                      Verbose output.
-  --silent                       Only output errors.
-  --no-stop-on-errors            Do not stop if an error occurs.
-  --write-on-error               write the file even if an injection error
-                                 occurs.
-  --color                        Force color.
-  --no-color                     Do not use color.
-  --no-summary                   Do not show the summary
-  --dry-run                      Process the files, but do not write.
-  -V, --version                  output the version number
-  -h, --help                     display help for command
-```
-
-<!--- @@inject-end: content/help.txt --->
+Docs such as `README.md` often repeat code samples, CLI help output or parts of other docs. Copied by hand, they drift out of date. `inject-markdown` copies them for you, so the source file stays the single source of truth.
 
 <!--- @@inject: content/README.md --->
 
-# How to use Injections
+## Quick start
 
-## Injection Root
+1. Install it as a dev dependency (or skip this and use `npx`):
 
-A local (`file:`) directive reference must resolve inside the **injection root** — the directory set by `--cwd` (default: the current directory). A reference that resolves outside it, including via a symlink, is denied with a fatal `Access denied` error; this protects against a directive in a processed Markdown file disclosing files outside the intended project tree (e.g. `.env`, SSH keys) into generated output. The denial is worded and reported identically whether or not the referenced file exists, so it can't be used to probe the machine running the tool. Remote (`http(s)`) references are unaffected.
+   ```sh
+   npm install --save-dev inject-markdown
+   ```
 
-For a legitimate reference outside the injection root — e.g. a monorepo doc at `packages/docs/README.md` injecting a code sample from a sibling `packages/shared/src/example.ts` — pass `--allow-outside-root <dir>` (repeatable) naming each additional directory that's allowed. Like `--cwd`, each `<dir>` is resolved relative to the directory `inject-markdown` is invoked from, not relative to `--cwd`:
+1. Add a directive where the content should go:
 
-```sh
-inject-markdown packages/docs/README.md --cwd packages/docs --allow-outside-root packages/shared
-```
+   ```markdown
+   # My Project
 
-## Import Code
+   ## Example
 
-All non-markdown files will be imported as a code block.
+   <!--- @@inject: code.ts --->
+   ```
 
-```markdown
+1. Run it on the Markdown file:
+
+   ```sh
+   npx inject-markdown README.md
+   ```
+
+The file now contains the content of `code.ts`, followed by an end marker:
+
+````markdown
+# My Project
+
+## Example
+
 <!--- @@inject: code.ts --->
-```
 
 ```ts
 export function sayHello(name: string): string {
@@ -101,15 +51,126 @@ export function sayHello(name: string): string {
 }
 ```
 
-## Import `json` as `jsonc`
+<!--- @@inject-end: code.ts --->
+````
 
-### Syntax
+Run it again after `code.ts` changes, and the section between the two markers is refreshed.
 
-```markdown
-<!--- @@inject-code: sample.json#lang=jsonc --->
+To keep it in one place, add a script to `package.json`:
+
+```json
+{
+  "scripts": {
+    "build:docs": "inject-markdown README.md"
+  }
+}
 ```
 
-### Example
+## How it works
+
+- **Directives are HTML comments**, so they don't show up when the Markdown is rendered.
+- **The tool writes content after each directive** and closes it with an `@@inject-end` marker. On every run, everything between the directive and its end marker is replaced. Edit the source file, not the injected text.
+- **How content is injected depends on the file type:** `.md` files are injected as Markdown, `.csv`/`.tsv` files as a table, and everything else as a fenced code block. The [directives](#directives) and [options](#injection-options) below override this.
+- **Paths are relative to the Markdown file** that contains the directive. A reference can also be an `http(s)` URL; GitHub `blob` URLs are fetched as raw content.
+- **Local references must stay inside the injection root** — the directory set by `--cwd`, by default the current directory. See [Injection root](docs/guide/injection-root.md) for why, and for `--allow-outside-root`.
+- **Only `.md` files are processed.** Pass files or glob patterns: `inject-markdown README.md "docs/**/*.md"`.
+- **Unchanged files are not rewritten.**
+
+Commonly used flags:
+
+| Flag           | Effect                                                                     |
+| -------------- | -------------------------------------------------------------------------- |
+| `--dry-run`    | Process the files and report, but don't write anything.                    |
+| `--clean`      | Remove injected content. The directives stay, so the next run restores it. |
+| `--output-dir` | Write the results to another directory instead of in place.                |
+| `--verbose`    | Show more detail about each file.                                          |
+
+See [CLI options](#cli-options) for the full list.
+
+### Checking docs in CI
+
+`--dry-run` exits successfully even when content is out of date. To fail a CI job when docs are stale, regenerate them and check for changes:
+
+```sh
+npx inject-markdown README.md
+git diff --exit-code
+```
+
+## Directives
+
+| Directive                | Effect                                                                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@@inject: <file>`       | Inject the file: Markdown as Markdown, CSV/TSV as a table, anything else as code.                                                                      |
+| `@@inject-code: <file>`  | Always inject as a fenced code block, including Markdown and CSV/TSV files.                                                                            |
+| `@@inject-table: <file>` | Always inject as a table, whatever the file extension. A `.json` file must hold an array of objects; `@@inject: <file>.json` still injects it as code. |
+| `@@inject-start: <file>` | Same as `@@inject`.                                                                                                                                    |
+| `@@inject-end: <file>`   | Marks the end of injected content. The tool writes it; you don't normally need to.                                                                     |
+
+## Injection options
+
+Add options after a `#` in the file reference, separated by `&`:
+
+```markdown
+<!--- @@inject: guide.md#heading=Install&quote --->
+```
+
+| Option                       | Applies to | Effect                                                                                        |
+| ---------------------------- | ---------- | --------------------------------------------------------------------------------------------- |
+| `heading=<text>`             | Markdown   | Inject only the section under this heading. The shorthand `#<text>` also works.               |
+| `L<n>-L<m>`                  | All        | Inject only lines `n` to `m`, e.g. `#L5-L7`.                                                  |
+| `lang=<lang>`                | Code       | Set the code block's language. On a CSV/TSV file, this injects it as code instead of a table. |
+| `code`                       | Markdown   | Inject Markdown as a code block. `code=<lang>` is the same as `lang=<lang>`.                  |
+| `quote`                      | All        | Inject as a block quote.                                                                      |
+| `markdown`                   | Tables     | Render inline Markdown in cells instead of escaping it.                                       |
+| `html-table`                 | Tables     | Emit an HTML table whose cells can hold full Markdown, including lists and paragraphs.        |
+| `header-rows=<n>`            | Tables     | How many leading rows form the header. Default `1`; `0` means no header.                      |
+| `start-row=<n>`              | Tables     | First data row to include, counting from 1 after the header rows.                             |
+| `end-row=<n>`                | Tables     | Last data row to include.                                                                     |
+| `num-rows=<n>`               | Tables     | Maximum number of data rows. Default `10000`.                                                 |
+| `values=<name:val,…>`        | All        | Values for `{@ name @}` placeholders. See [Template variables](#template-variables).          |
+| `values-file=<path>`         | All        | A JSON file of placeholder values.                                                            |
+| `value-alias=<new:target,…>` | All        | Resolve one placeholder name as another.                                                      |
+| `vars`                       | All        | Resolve placeholders using only values set on the command line.                               |
+
+## Recipes
+
+Each example shows the directive and what the tool writes after it.
+
+### Inject a Markdown file
+
+```markdown
+<!--- @@inject: example.md --->
+
+# Example
+
+This is an example bit of markdown.
+
+- first
+- second
+- third
+
+<!--- @@inject-end: example.md --->
+```
+
+### Inject one section of a Markdown file
+
+The section runs from the heading up to the next heading of the same or higher level.
+
+````markdown
+<!--- @@inject: sections.md#heading=Install --->
+
+## Install
+
+```sh
+npm install --save-dev inject-markdown
+```
+
+<!--- @@inject-end: sections.md#heading=Install --->
+````
+
+### Inject a code file
+
+Non-Markdown files become a code block. The language is taken from the file extension; use `lang=` to override it.
 
 ````markdown
 <!--- @@inject-code: sample.json#lang=jsonc --->
@@ -123,25 +184,73 @@ export function sayHello(name: string): string {
 <!--- @@inject-end: sample.json#lang=jsonc --->
 ````
 
-### Actual Result
+### Inject selected lines
 
-```jsonc
-{
-  "name": "Sample"
+````markdown
+<!--- @@inject: code.js#L5-L7 --->
+
+```js
+export function sayGoodbye(name) {
+  return `Goodbye ${name}`;
 }
 ```
 
-## Import a CSV/TSV as a Table
+<!--- @@inject-end: code.js#L5-L7 --->
+````
 
-`.csv` and `.tsv` files are injected as a Markdown table by default, using all of the columns.
+### Show Markdown as source
 
-### Syntax
+````markdown
+<!--- @@inject-code: example.md --->
 
 ```markdown
-<!--- @@inject: sample.csv --->
+# Example
+
+This is an example bit of markdown.
+
+- first
+- second
+- third
 ```
 
-### Example
+<!--- @@inject-end: example.md --->
+````
+
+### Inject as a block quote
+
+```markdown
+<!--- @@inject: example.md#L5-L7&quote --->
+
+> - first
+> - second
+> - third
+
+<!--- @@inject-end: example.md#L5-L7&quote --->
+```
+
+### Inject lines from GitHub
+
+On GitHub, select the lines, choose **Copy permalink**, and use the URL as the file reference.
+
+````markdown
+<!--- @@inject: https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe/src/app.mts#L15-L19 --->
+
+```typescript
+async function version(): Promise<string> {
+    const pathSelf = fileURLToPath(import.meta.url);
+    const pathPackageJson = path.join(path.dirname(pathSelf), '../package.json');
+    const packageJson = JSON.parse(await fs.readFile(pathPackageJson, 'utf8'));
+    return (typeof packageJson === 'object' && packageJson?.version) || '0.0.0';
+```
+
+<!--- @@inject-end: https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe/src/app.mts#L15-L19 --->
+````
+
+<!--- cspell:dictionaries typescript --->
+
+### Inject a CSV or TSV file as a table
+
+All columns are included. Use `@@inject-code` or `#lang=csv` to inject the file as code instead.
 
 ```markdown
 <!--- @@inject: sample.csv --->
@@ -154,16 +263,51 @@ export function sayHello(name: string): string {
 <!--- @@inject-end: sample.csv --->
 ```
 
-### Actual Result
+#### Header rows and selecting rows
 
-| name         | role          |
-| ------------ | ------------- |
-| Ada Lovelace | Mathematician |
-| Grace Hopper | Programmer    |
+`header-rows=<n>` makes the first `n` rows the header:
 
-To force a `.csv`/`.tsv` file to be injected as a code block instead, use `@@inject-code: sample.csv` or `@@inject: sample.csv#lang=csv`. To force any other file to be injected as a table, use `@@inject-table: <file>`.
+- With more than one, each column's header rows are joined with `<br />`, skipping blank cells. With `#html-table` they stay separate header rows.
+- `header-rows=0` means every row is data. A pipe table then shows column numbers (`1`, `2`, …) as its header, and an `#html-table` has no header.
+- `#header-rows` with no value means `header-rows=1`.
 
-### JSON as a Table
+```markdown
+<!--- @@inject: sample-header-rows.csv#header-rows=2 --->
+
+| Date       | Name<br />First | Name<br />Last |
+| ---------- | --------------- | -------------- |
+| 1815-12-10 | Ada             | Lovelace       |
+| 1906-12-09 | Grace           | Hopper         |
+
+<!--- @@inject-end: sample-header-rows.csv#header-rows=2 --->
+```
+
+Renders as:
+
+| Date       | Name<br />First | Name<br />Last |
+| ---------- | --------------- | -------------- |
+| 1815-12-10 | Ada             | Lovelace       |
+| 1906-12-09 | Grace           | Hopper         |
+
+`start-row`, `end-row` and `num-rows` choose which data rows are injected:
+
+- Rows are numbered from 1, starting after the header rows.
+- `num-rows` defaults to `10000`, so a larger file is cut off unless you raise it.
+- A window past the end of the data gives a table with only its header.
+- A value that isn't a whole number, or `start-row=0`, is an error.
+
+```markdown
+<!--- @@inject: sample-rows.csv#start-row=2&num-rows=2 --->
+
+| n   | planet |
+| --- | ------ |
+| 2   | Venus  |
+| 3   | Earth  |
+
+<!--- @@inject-end: sample-rows.csv#start-row=2&num-rows=2 --->
+```
+
+#### JSON as a table
 
 `@@inject-table:` also accepts a `.json` file holding an array of objects. Each object is a row, and its keys are the columns. `@@inject:` on a `.json` file still injects a code block.
 
@@ -192,40 +336,13 @@ Renders as:
 - The keys are the one header row: `header-rows=0` hides it, and a larger value is an error.
 - The file must be a non-empty array of objects; anything else is an error.
 
-### Header Rows
+#### Markdown in table cells
 
-By default the first row is the header. `header-rows=N` makes the first `N` rows the header.
+By default, Markdown in a cell is escaped and shown literally. Add `#markdown` to render inline Markdown (emphasis, code, links, images, strikethrough, inline HTML) in every cell, including the header.
 
-- With more than one, each column's header rows are joined with a line break (`<br />`); blank cells are skipped. In an `#html-table` table they stay separate header rows.
-- `header-rows=0` means the file has no header: every row is data, and the pipe table's header is the column numbers (`1`, `2`, ...). An `#html-table` table then has no header at all.
-- `#header-rows` with no value means `header-rows=1`.
-
-```markdown
-<!--- @@inject: data.csv#header-rows=2 --->
-```
-
-### Selecting Rows
-
-`start-row`, `end-row`, and `num-rows` choose which data rows are injected. Rows are numbered from 1, starting at the first row after the header rows.
-
-- `start-row=N` -- first data row to include. Default `1`.
-- `end-row=N` -- last data row to include.
-- `num-rows=N` -- maximum number of rows. Default `10000`, so a larger file is cut off unless you raise it.
-
-```markdown
-<!--- @@inject: data.csv#start-row=11&num-rows=10 --->
-```
-
-A window past the end of the data gives a table with only its header. A value that isn't a whole number, or `start-row=0`, is an error.
-
-### Markdown in Cells
-
-By default, cell text is literal: any Markdown in it is escaped. Add `#markdown` to render inline Markdown (emphasis, code, links, images, strikethrough, and inline HTML) in every cell, header included.
-
-- Block syntax such as `# Title` or `- item` stays literal text, because a table cell can't hold blocks.
-- A `|` never needs escaping in the CSV; it's escaped in the output.
-- A newline inside a quoted field becomes `<br />`.
-- Raw HTML is passed through unchanged, so only use `#markdown` on CSV files you trust as much as the Markdown around them.
+- Block syntax such as `# Title` or `- item` stays literal, because a table cell can't hold blocks.
+- A `|` in the CSV is escaped for you; a newline inside a quoted field becomes `<br />`.
+- Raw HTML is passed through, so only use `#markdown` on CSV files you trust as much as the Markdown around them.
 
 ```markdown
 <!--- @@inject: sample-markdown.csv#markdown --->
@@ -245,15 +362,11 @@ Renders as:
 | `#markdown`  | Render **inline** Markdown, e.g. [links](https://github.com) and `a\|b` |
 | - not a list | Block syntax stays literal<br />and a newline becomes a line break      |
 
-### HTML Table with Markdown Cells
+#### Block Markdown in table cells
 
-When cells need more than inline Markdown, use `#html-table`. It emits an HTML `<table>` instead of a pipe table, and each cell can hold full Markdown, including lists and paragraphs.
+When cells need lists or paragraphs, use `#html-table`. It writes an HTML `<table>` instead of a pipe table, and each cell can hold full Markdown. It implies `#markdown`.
 
-- A cell with Markdown is wrapped in blank lines so the renderer parses it; plain cells stay on one line.
-- Newlines follow normal Markdown rules: a blank line starts a new paragraph.
-- A `|` needs no escaping.
-- `#html-table` implies Markdown cells, and wins if `#markdown` is also given.
-- The output relies on CommonMark's HTML block rule: the blank line after an opening tag ends that HTML block, so the cell's content is parsed as ordinary Markdown before the closing tag, and the browser places the result inside the cell. GitHub and other CommonMark renderers handle this; renderers that don't follow the rule may show the Markdown as plain text.
+This relies on a CommonMark rule: a blank line after an HTML tag ends the HTML block, so the cell's content is parsed as Markdown. GitHub and other CommonMark renderers support this; others may show the Markdown as plain text.
 
 ```markdown
 <!--- @@inject: sample-html-table.csv#html-table --->
@@ -323,147 +436,83 @@ Cells can hold **block** Markdown:
 </tbody>
 </table>
 
-## Import Markdown as Code
+### Template variables
 
-It is also possible to inject markdown:
+Injected content can contain `{@ name @}` placeholders. The directive supplies the values, so the same snippet can be reused with different values. Given a `values-example.md` containing `npm install my-package@{@ version @}`:
 
-```markdown
-<!--- @@inject-code: example.md --->
-```
-
-```markdown
-# Example
-
-This is an example bit of markdown.
-
-- first
-- second
-- third
-```
-
-## Import a section from a Markdown file
-
-```markdown
-<!--- @@inject: chapters.md#Chapter 3: Directives --->
-
-or
-
-<!--- @@inject: chapters.md#heading=Chapter 3: Directives --->
-```
-
-> ## Chapter 3: Directives
->
-> - `@@inject: <markdown_file.md>[#heading]` and `@@inject-start:  <markdown_file.md>[#heading]` -- injects the contents of a markdown file.
->   - `<markdown_file.md>` -- the file to import
->   - `heading` -- optional heading to extract.
->   - `code` -- optional embed as a `markdown` code block
->   - `quote` -- optional embed as a block quote.
-> - `@@inject: <non-markdown-file>[#lang]`, `@@inject-start:  <non-markdown-file>[#lang]`, and `@@inject-code: <file>[#lang]`
->   - `<non-markdown-file>`, `<file>` -- the file to import
->   - `lang` -- optional language to use for the code bock.
->   - `quote` -- optional embed as a block quote.
-> - `@@inject: <file.csv|file.tsv>` and `@@inject-table: <file>`
->   - `<file.csv>`, `<file.tsv>` -- a comma or tab separated file, injected as a Markdown table using all of its columns.
->   - `@@inject-table: <file>` -- force any file to be injected as a table, regardless of its extension.
->   - `@@inject-table: <file.json>` -- a JSON array of objects, injected as a table with one column per key.
->   - Use `@@inject-code: <file.csv>` or `#lang=csv` to inject the file as a code block instead of a table.
->   - `header-rows` -- optional; how many leading rows form the header (default `1`; `0` for none).
->   - `start-row`, `end-row`, `num-rows` -- optional; the data rows to include (default: the first 10,000).
->   - `markdown` -- optional; render inline Markdown in the table's cells instead of escaping it.
->   - `html-table` -- optional; emit an HTML table whose cells can hold full Markdown, including lists and paragraphs.
-
-## Import from lines from GitHub
-
-<img width="711" alt="image" src="https://user-images.githubusercontent.com/3740137/210188786-28704fe3-cc2f-447c-97fc-d27715dabbdc.png">
-
-```
-<!--- @@inject: https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe/src/app.mts#L15-L19 --->
-```
-
-```typescript
-async function version(): Promise<string> {
-    const pathSelf = fileURLToPath(import.meta.url);
-    const pathPackageJson = path.join(path.dirname(pathSelf), '../package.json');
-    const packageJson = JSON.parse(await fs.readFile(pathPackageJson, 'utf8'));
-    return (typeof packageJson === 'object' && packageJson?.version) || '0.0.0';
-```
-
-<!--- cspell:dictionaries typescript --->
-
-## Template Variables
-
-Injected content may contain `{@ name @}` placeholders, resolved against values the _directive_ supplies (not the file being injected) and substituted in at injection time — e.g. an injected snippet containing `npm install my-package@{@ version @}` becomes `npm install my-package@1.2.3` in the output. This isn't a full template engine: no conditionals or loops, just name-to-value substitution. Write `\{@ name @}` to show the syntax literally without triggering substitution.
-
-A directive only scans its content for placeholders if it carries `values=`, `values-file=`, `value-alias=`, or the bare `vars` flag; without one of those, `{@ ... @}` text passes through untouched. An unresolved placeholder — nothing defines its name, or every source that has it holds an object, an array or `null` there — is left untouched with a warning saying which; pass `--strict-vars` to make that a directive error instead.
-
-```markdown
-<!--- @@inject-code: install.md#values=version:1.2.3 --->
-```
+````markdown
+<!--- @@inject-code: values-example.md#values=version:1.2.3 --->
 
 ```markdown
 npm install my-package@1.2.3
 ```
 
-Values can also come from a JSON file (`values.json`: `{"version": "1.2.3"}`), namespaced by default under a prefix derived from the file's name (`{@ values.version @}`), or merged directly at the root with a leading `:` (`{@ version @}`):
+<!--- @@inject-end: values-example.md#values=version:1.2.3 --->
+````
 
-```markdown
-<!--- @@inject-code: install.md#values-file=values.json --->
-<!--- @@inject-code: install.md#values-file=:values.json --->
-```
-
-A `value-alias=` entry points one name at another instead of supplying a value: `value-alias=version:release.latest.version` makes `{@ version @}` mean whatever `{@ release.latest.version @}` means, following the sources as they change. It also opts the directive in, it outranks the values the same directive supplies (so it can redefine a name a values file already has), and an alias whose target points at nothing leaves the placeholder untouched with a warning naming both sides.
-
-Any of `values=`, `values-file=` and `value-alias=` may be written more than once in the same directive; the occurrences accumulate, exactly as if their contents had been one comma-separated list. That is also how to give an entry that contains a literal comma without quoting it. Every other option keeps the last value written.
-
-A values file's prefix is two characters or more, so a Windows drive letter is never mistaken for one — `--values-file C:\data\values.json` is a path, and its prefix is derived from the basename as `values`. A prefix may be dotted, in which case it nests: `values-file=pkg.build:data.json` is read as `{@ pkg.build.* @}`.
-
-Run-wide values are available to any directive that opts in via `values=`, `values-file=`, `value-alias=`, or the bare `vars` flag — `--value <name=val>` (repeatable), `--values-file [prefix:]path` (repeatable JSON files, same `[prefix:]path` syntax as the directive-level option), and `--allow-env <NAME>` (repeatable, exposed as `{@ env.NAME @}`) — with a directive's own `values=`/`values-file=` taking precedence on a name collision.
-
-Overriding is per name, not per file. Given a `values.json` of `{"version": "1.2.3", "name": "my-package"}`, a single `--value values.version=2.0.0` changes just that one name and `{@ values.name @}` still comes from the file — and the same holds when two values files are listed together, so a later one patches the earlier rather than replacing it. `--strict-vars` turns an unresolved placeholder into a directive error instead of a warning.
-
-## Per Injections Options
-
-The hash `#` portion of the file URL is used to set injection options. Each option is separated by a `&`.
-
-| Option        | Code | Markdown | Description                                                             |
-| ------------- | ---- | -------- | ----------------------------------------------------------------------- |
-| `heading`     | ❌   | ✅       | Used to extract a section from a markdown file.                         |
-| `code`        | ❌   | ✅       | Convert the injected markdown into a Code Block.                        |
-| `lang`        | ✅   | ✅       | Used to set the language of the code block.                             |
-| `quote`       | ✅   | ✅       | Used to inject the file as a block quote.                               |
-| `L1-L10`      | ✅   | ✅       | Used to inject only specified lines from the source file.               |
-| `values`      | ✅   | ✅       | Inline `{@ name @}` placeholder values: `name:val,name2:val2`.          |
-| `values-file` | ✅   | ✅       | JSON file(s) of placeholder values: `[prefix:]path[,...]`.              |
-| `vars`        | ✅   | ✅       | Opt into placeholder scanning using only CLI/environment value sources. |
-| `value-alias` | ✅   | ✅       | Resolve one name as if it were another: `new:target,new2:target2`.      |
-
-### Example 1
-
-Extract a few lines from a Markdown files and quote them.
-
-```markdown
-<!--- @@inject: example.md#L5-L7&quote --->
-```
-
-> - first
-> - second
-> - third
-
-### Example 2
-
-Extract some lines from a code block in the source.
-
-```markdown
-<!--- @@inject-code: code.md#L24-L26&lang=js --->
-```
-
-> ```js
-> export function sayGoodbye(name) {
->   return `Goodbye ${name}`;
-> }
-> ```
+Placeholders are only replaced when the directive has `values=`, `values-file=`, `value-alias=` or `vars`. Values can also come from JSON files and the command line (`--value`, `--values-file`, `--allow-env`). See [Template variables](docs/guide/template-variables.md) for the full rules.
 
 <!--- @@inject-end: content/README.md --->
+
+## Reference
+
+- [Template variables](docs/guide/template-variables.md) — placeholders, values files, aliases, CLI values and how they combine.
+- [Injection root](docs/guide/injection-root.md) — which local files a directive may read, and `--allow-outside-root`.
+
+### CLI options
+
+<details>
+<summary><code>inject-markdown --help</code></summary>
+
+<!--- @@inject: content/help.txt --->
+
+```
+Usage: inject-markdown [options] <files...>
+
+Inject file content into markdown files.
+
+Arguments:
+  files                          Files to scan for injected content.
+
+Options:
+  --no-must-find-files           No error if files are not found.
+  --output-dir <dir>             Output Directory
+  --cwd <dir>                    Current Directory
+  --allow-outside-root <dir>     Allow local @@inject references to resolve into
+                                 <dir>, outside the injection root (cwd).
+                                 Repeatable.
+  --value <name=val>             Set a run-wide {@ name @} placeholder value.
+                                 Repeatable; a later --value for the same name
+                                 wins.
+  --values-file <[prefix:]path>  Add a run-wide JSON file of {@ name @}
+                                 placeholder values, resolved relative to --cwd.
+                                 Repeatable.
+  --allow-env <name>             Allow a directive to reference the OS
+                                 environment variable <name> via {@ env.name @}.
+                                 Repeatable.
+  --value-alias <new=target>     Resolve the {@ new @} placeholder as if it were
+                                 {@ target @}. Repeatable; a later --value-alias
+                                 for the same name wins.
+  --strict-vars                  Treat an unresolved {@ name @} placeholder as a
+                                 directive error.
+  --clean                        Remove the injected content.
+  --no-inject-only               Update the whole file.
+  --verbose                      Verbose output.
+  --silent                       Only output errors.
+  --no-stop-on-errors            Do not stop if an error occurs.
+  --write-on-error               write the file even if an injection error
+                                 occurs.
+  --color                        Force color.
+  --no-color                     Do not use color.
+  --no-summary                   Do not show the summary
+  --dry-run                      Process the files, but do not write.
+  -V, --version                  output the version number
+  -h, --help                     display help for command
+```
+
+<!--- @@inject-end: content/help.txt --->
+
+</details>
 
 <!--- @@inject: static/footer.md --->
 
