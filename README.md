@@ -163,6 +163,33 @@ export function sayHello(name: string): string {
 
 To force a `.csv`/`.tsv` file to be injected as a code block instead, use `@@inject-code: sample.csv` or `@@inject: sample.csv#lang=csv`. To force any other file to be injected as a table, use `@@inject-table: <file>`.
 
+### Markdown in Cells
+
+By default, cell text is literal: any Markdown in it is escaped. Add `#markdown` to render inline Markdown (emphasis, code, links, images, strikethrough, and inline HTML) in every cell, header included.
+
+- Block syntax such as `# Title` or `- item` stays literal text, because a table cell can't hold blocks.
+- A `|` never needs escaping in the CSV; it's escaped in the output.
+- A newline inside a quoted field becomes `<br />`.
+- Raw HTML is passed through unchanged, so only use `#markdown` on CSV files you trust as much as the Markdown around them.
+
+```markdown
+<!--- @@inject: sample-markdown.csv#markdown --->
+
+| option       | description                                                             |
+| ------------ | ----------------------------------------------------------------------- |
+| `#markdown`  | Render **inline** Markdown, e.g. [links](https://github.com) and `a\|b` |
+| - not a list | Block syntax stays literal<br />and a newline becomes a line break      |
+
+<!--- @@inject-end: sample-markdown.csv#markdown --->
+```
+
+Renders as:
+
+| option       | description                                                             |
+| ------------ | ----------------------------------------------------------------------- |
+| `#markdown`  | Render **inline** Markdown, e.g. [links](https://github.com) and `a\|b` |
+| - not a list | Block syntax stays literal<br />and a newline becomes a line break      |
+
 ## Import Markdown as Code
 
 It is also possible to inject markdown:
@@ -206,6 +233,7 @@ or
 >   - `<file.csv>`, `<file.tsv>` -- a comma or tab separated file, injected as a Markdown table using all of its columns.
 >   - `@@inject-table: <file>` -- force any file to be injected as a table, regardless of its extension.
 >   - Use `@@inject-code: <file.csv>` or `#lang=csv` to inject the file as a code block instead of a table.
+>   - `markdown` -- optional; render inline Markdown in the table's cells instead of escaping it.
 
 ## Import from lines from GitHub
 

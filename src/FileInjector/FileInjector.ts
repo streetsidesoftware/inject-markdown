@@ -521,7 +521,7 @@ async function processFileInjections(
                 }
             });
             return {
-                root: toRoot(rowsToTable(rows)),
+                root: toRoot(rowsToTable(rows, { markdown: info.markdown })),
                 info,
             };
         } catch (e) {
