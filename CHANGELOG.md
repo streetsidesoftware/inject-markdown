@@ -1,5 +1,28 @@
 # Changelog
 
+## [6.0.0](https://github.com/streetsidesoftware/inject-markdown/compare/v5.0.3...v6.0.0) (2026-09-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* enforce injection root boundary for local @@inject file reads ([#814](https://github.com/streetsidesoftware/inject-markdown/issues/814))
+* add --inject-only to rewrite only the injected spans ([#806](https://github.com/streetsidesoftware/inject-markdown/issues/806))
+
+### Features
+
+* add --inject-only to rewrite only the injected spans ([#806](https://github.com/streetsidesoftware/inject-markdown/issues/806)) ([a720cfe](https://github.com/streetsidesoftware/inject-markdown/commit/a720cfece85cf629386535c06c3bc297b67f52fe))
+* Add table generation ([#800](https://github.com/streetsidesoftware/inject-markdown/issues/800)) ([3fafdff](https://github.com/streetsidesoftware/inject-markdown/commit/3fafdffdecac1633ee20175da0ce08ae953de35f))
+* detect and preserve the source file's Markdown style ([#803](https://github.com/streetsidesoftware/inject-markdown/issues/803)) ([eab6723](https://github.com/streetsidesoftware/inject-markdown/commit/eab6723c18c12feb3b3d81635e6aeb1811dce4cc))
+* enforce injection root boundary for local @[@inject](https://github.com/inject) file reads ([#814](https://github.com/streetsidesoftware/inject-markdown/issues/814)) ([355a451](https://github.com/streetsidesoftware/inject-markdown/commit/355a451a2381161fcb84ecc439e42732da680e2f))
+* prefix grammar, Windows drive letters, value-alias, and repeated hash keys (ADR-0009/0010/0011) ([#823](https://github.com/streetsidesoftware/inject-markdown/issues/823)) ([05a55b4](https://github.com/streetsidesoftware/inject-markdown/commit/05a55b41440c6b0f86b2d306ad875bd77b0572a2))
+* template variable substitution ({@ name @} placeholders) ([#816](https://github.com/streetsidesoftware/inject-markdown/issues/816)) ([ae39663](https://github.com/streetsidesoftware/inject-markdown/commit/ae3966308b450340aa62d27bbb02a645d92fd1a6))
+
+
+### Bug Fixes
+
+* harden the injection-root boundary (TOCTOU, silent rejection, existence oracle) ([#818](https://github.com/streetsidesoftware/inject-markdown/issues/818)) ([89ca39c](https://github.com/streetsidesoftware/inject-markdown/commit/89ca39c64f78a2d22f5525a32653e62a31f3bacf))
+* preserve `---` thematic breaks instead of rewriting to `***` ([#802](https://github.com/streetsidesoftware/inject-markdown/issues/802)) ([e48d38e](https://github.com/streetsidesoftware/inject-markdown/commit/e48d38edf64ff3b4ab99ca0b2a24188d9614eb7b))
+
 ## [5.0.3](https://github.com/streetsidesoftware/inject-markdown/compare/v5.0.2...v5.0.3) (2026-08-25)
 
 
