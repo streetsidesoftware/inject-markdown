@@ -106,9 +106,21 @@ export function sayHello(name: string): string {
 
 To force a `.csv`/`.tsv` file to be injected as a code block instead, use `@@inject-code: sample.csv` or `@@inject: sample.csv#lang=csv`. To force any other file to be injected as a table, use `@@inject-table: <file>`.
 
+### Header Rows
+
+By default the first row is the header. `header-rows=N` makes the first `N` rows the header.
+
+- With more than one, each column's header rows are joined with a line break (`<br />`); blank cells are skipped. In an `#html-table` table they stay separate header rows.
+- `header-rows=0` means the file has no header: every row is data, and the pipe table's header is the column numbers (`1`, `2`, ...). An `#html-table` table then has no header at all.
+- `#header-rows` with no value means `header-rows=1`.
+
+```markdown
+<!--- @@inject: data.csv#header-rows=2 --->
+```
+
 ### Selecting Rows
 
-`start-row`, `end-row`, and `num-rows` choose which data rows are injected. Rows are numbered from 1, starting at the first row after the header.
+`start-row`, `end-row`, and `num-rows` choose which data rows are injected. Rows are numbered from 1, starting at the first row after the header rows.
 
 - `start-row=N` -- first data row to include. Default `1`.
 - `end-row=N` -- last data row to include.
@@ -290,6 +302,7 @@ or
 >   - `<file.csv>`, `<file.tsv>` -- a comma or tab separated file, injected as a Markdown table using all of its columns.
 >   - `@@inject-table: <file>` -- force any file to be injected as a table, regardless of its extension.
 >   - Use `@@inject-code: <file.csv>` or `#lang=csv` to inject the file as a code block instead of a table.
+>   - `header-rows` -- optional; how many leading rows form the header (default `1`; `0` for none).
 >   - `start-row`, `end-row`, `num-rows` -- optional; the data rows to include (default: the first 10,000).
 >   - `markdown` -- optional; render inline Markdown in the table's cells instead of escaping it.
 >   - `html-table` -- optional; emit an HTML table whose cells can hold full Markdown, including lists and paragraphs.
