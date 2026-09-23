@@ -19,6 +19,8 @@ export interface InjectInfo {
     markdown?: boolean | undefined;
     /** Bare `#html-table`: emit an HTML table whose cells hold Markdown. See ADR-0010. */
     htmlTable?: boolean | undefined;
+    /** `rebase-links=false` keeps relative URLs as written. See docs/ADRs/relative-links/0002-default-on-with-opt-out.md. */
+    rebaseLinks?: boolean | undefined;
     /** Inline placeholder values: `values=name:val,name2:val2`. See ADR-0002. */
     values?: Map<string, string> | undefined;
     /** `values-file=[prefix:]path[,...]`. See ADR-0002, ADR-0007. */
@@ -86,6 +88,9 @@ export function parseHashString(hash: string): InjectInfo {
                 continue;
             case 'html-table':
                 info.htmlTable = parseFlagValue(value, true);
+                continue;
+            case 'rebase-links':
+                info.rebaseLinks = parseFlagValue(value, true);
                 continue;
             case 'value-alias':
                 // Same `name:target` list shape as `values=` (ADR-0010 point 1).

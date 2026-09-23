@@ -30,6 +30,7 @@ import {
     resolveRunWideValueSources,
     type RunWideValueSources,
 } from './placeholderValues.js';
+import { rebaseLinks } from './rebaseLinks.js';
 import { rowsToHtmlTable, rowsToTable } from './Table.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
@@ -159,6 +160,12 @@ export interface FileInjectorOptions {
      * See docs/ADRs/template-variables/0005-unresolved-placeholders-and-strict-mode.md.
      */
     strictVars?: boolean | undefined;
+
+    /**
+     * Rebase relative URLs in injected Markdown onto the host file (default `true`); a directive's
+     * `rebase-links=` wins. See docs/ADRs/relative-links/0002-default-on-with-opt-out.md.
+     */
+    rebaseLinks?: boolean | undefined;
 }
 
 export class FileInjector {
@@ -520,11 +527,12 @@ async function processFileInjections(
                     }
                 }
             });
-            return {
-                // `#html-table` wins over `#markdown` when both are given (ADR-0010 point 2).
-                root: toRoot(info.htmlTable ? rowsToHtmlTable(rows) : rowsToTable(rows, { markdown: info.markdown })),
-                info,
-            };
+            // `#html-table` wins over `#markdown` when both are given (ADR-0010 point 2).
+            const root = toRoot(
+                info.htmlTable ? rowsToHtmlTable(rows) : rowsToTable(rows, { markdown: info.markdown }),
+            );
+            if (info.htmlTable || info.markdown) maybeRebaseLinks(root, fileName, info);
+            return { root, info };
         } catch (e) {
             const err = toError(e);
             file.error(err.message, directive.node.position);
@@ -569,10 +577,11 @@ async function processFileInjections(
             await applySubstitution(info, directive.node, substitutionDeps, (resolve, onUnresolved) => {
                 substituteInTree(markdown, resolve, onUnresolved);
             });
+            // A code block shows the source verbatim, so its links are left as written (ADR-0005 point 1).
             const root =
                 info.code !== undefined || info.lang !== undefined
                     ? toRoot(toCode(info.lang || 'markdown', markdown))
-                    : markdown;
+                    : maybeRebaseLinks(markdown, targetUrl, info);
             return { root, info };
         } catch (e) {
             const err = toError(e);
@@ -632,6 +641,15 @@ async function processFileInjections(
             `Access denied: "${relativePathNormalized(target)}" is outside the injection root;` +
                 ' use --allow-outside-root to permit it.',
         );
+    }
+
+    /**
+     * Rebase `root`'s relative URLs from `sourceUrl` (as written in the directive, not the realpath)
+     * onto the host file, unless opted out. See docs/ADRs/relative-links/.
+     */
+    function maybeRebaseLinks(root: Root, sourceUrl: URL, info: InjectInfo): Root {
+        if (!(info.rebaseLinks ?? options.rebaseLinks ?? true)) return root;
+        return rebaseLinks(root, sourceUrl, fileUrl);
     }
 
     function parseMarkdownFile(file: VFileEx): Root {

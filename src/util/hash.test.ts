@@ -64,6 +64,13 @@ describe('hash', () => {
         });
         expect(parseHashString('#html-table=false').htmlTable).toBe(false);
     });
+
+    test('#rebase-links', () => {
+        expect(parseHashString('#rebase-links').rebaseLinks).toBe(true);
+        expect(parseHashString('#rebase-links=false').rebaseLinks).toBe(false);
+        expect(parseHashString('#rebase-links=no').rebaseLinks).toBe(false);
+        expect(parseHashString('#heading=x').rebaseLinks).toBeUndefined();
+    });
 });
 
 describe('repeated hash keys (ADR-0011)', () => {
