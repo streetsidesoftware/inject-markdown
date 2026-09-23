@@ -149,7 +149,7 @@ When cells need more than inline Markdown, use `#html-table`. It emits an HTML `
 - Newlines follow normal Markdown rules: a blank line starts a new paragraph.
 - A `|` needs no escaping.
 - `#html-table` implies Markdown cells, and wins if `#markdown` is also given.
-- The output relies on the renderer parsing Markdown inside HTML blocks (CommonMark's HTML block rule), as GitHub does.
+- The output relies on CommonMark's HTML block rule: the blank line after an opening tag ends that HTML block, so the cell's content is parsed as ordinary Markdown before the closing tag, and the browser places the result inside the cell. GitHub and other CommonMark renderers handle this; renderers that don't follow the rule may show the Markdown as plain text.
 
 <!--- @@inject-code: import-sample-html-table-csv.md --->
 
