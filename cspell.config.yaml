@@ -6,6 +6,7 @@ ignorePaths:
   - coverage
   - '*.snap'
   - fixtures/remote-responses
+  - CHANGELOG.md
 dictionaryDefinitions: []
 dictionaries:
   - typescript
