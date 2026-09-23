@@ -544,12 +544,13 @@ async function processFileInjections(
                 }
             });
             // `#html-table` wins over `#markdown` when both are given (ADR-0010 point 2).
-            const root = toRoot(
+            const table = toRoot(
                 info.htmlTable
                     ? rowsToHtmlTable(rows, tableOptions)
                     : rowsToTable(rows, { ...tableOptions, markdown: info.markdown }),
             );
-            if (info.htmlTable || info.markdown) maybeRebaseLinks(root, fileName, info);
+            // Only Markdown cells hold link nodes (ADR-0005 point 3).
+            const root = info.htmlTable || info.markdown ? maybeRebaseLinks(table, fileName, info) : table;
             return { root, info };
         } catch (e) {
             const err = toError(e);
