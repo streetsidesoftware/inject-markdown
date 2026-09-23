@@ -399,7 +399,22 @@ Cells can hold **block** Markdown:
 
 ### Template variables
 
-Injected content can contain `{@ name @}` placeholders. The directive supplies the values, so the same snippet can be reused with different values. Given a `values-example.md` containing `npm install my-package@{@ version @}`:
+Injected content can contain `{@ name @}` placeholders. The directive supplies the values, so the same snippet can be reused with different values. Given this file:
+
+<details>
+<summary><a href="content/values-example.md"><code>values-example.md</code></a></summary>
+
+<!--- @@inject-code: values-example.md --->
+
+```markdown
+npm install my-package@{@ version @}
+```
+
+<!--- @@inject-end: values-example.md --->
+
+</details>
+
+the directive below injects it with `version` set:
 
 <!--- @@inject-code: import-sample-values.md --->
 
