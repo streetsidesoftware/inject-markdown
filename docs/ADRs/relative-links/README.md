@@ -4,12 +4,12 @@ ADRs for rebasing relative URLs in injected Markdown, so a link written relative
 
 | ADR                                     | Title                                                                      | Status   |
 | --------------------------------------- | -------------------------------------------------------------------------- | -------- |
-| [0001](0001-rebase-scope.md)            | What gets rebased: constructs and URL forms                                | Proposed |
-| [0002](0002-default-on-with-opt-out.md) | Rebasing is on by default, with per-directive and run-wide opt-out         | Proposed |
-| [0003](0003-rebase-base-resolution.md)  | Resolving a rebased URL: local sources, remote sources, and `--output-dir` | Proposed |
-| [0004](0004-rebased-path-format.md)     | Format of a rebased path                                                   | Proposed |
-| [0005](0005-interactions.md)            | Interaction with other injection options                                   | Proposed |
-| [0006](0006-rollout.md)                 | Rollout as a minor release                                                 | Proposed |
+| [0001](0001-rebase-scope.md)            | What gets rebased: constructs and URL forms                                | Accepted |
+| [0002](0002-default-on-with-opt-out.md) | Rebasing is on by default, with per-directive and run-wide opt-out         | Accepted |
+| [0003](0003-rebase-base-resolution.md)  | Resolving a rebased URL: local sources, remote sources, and `--output-dir` | Accepted |
+| [0004](0004-rebased-path-format.md)     | Format of a rebased path                                                   | Accepted |
+| [0005](0005-interactions.md)            | Interaction with other injection options                                   | Accepted |
+| [0006](0006-rollout.md)                 | Rollout as a minor release                                                 | Accepted |
 | [0007](0007-rebase-output-links.md)     | `--rebase-output-links [base]`: rebase links onto the output location      | Proposed |
 | [0008](0008-output-link-semantics.md)   | How `--rebase-output-links` interprets a link                              | Proposed |
 | [0009](0009-output-rebase-mechanics.md) | Mechanics of output rebasing                                               | Proposed |

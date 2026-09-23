@@ -1,6 +1,6 @@
 # ADR-0012: Declaration-order value precedence
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-23
 **Deciders:** Jason Dent
 

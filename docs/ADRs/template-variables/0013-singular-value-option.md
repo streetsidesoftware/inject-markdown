@@ -1,6 +1,6 @@
 # ADR-0013: Singular `value=` directive option
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-23
 **Deciders:** Jason Dent
 

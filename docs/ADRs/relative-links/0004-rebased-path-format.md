@@ -1,6 +1,6 @@
 # ADR-0004: Format of a rebased path
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-23
 **Deciders:** Jason Dent
 

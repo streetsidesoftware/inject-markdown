@@ -1,6 +1,6 @@
 # ADR-0011: JSON files as a table source
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-23
 **Deciders:** Jason Dent
 

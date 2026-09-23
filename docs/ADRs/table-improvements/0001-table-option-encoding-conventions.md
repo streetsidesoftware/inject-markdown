@@ -1,6 +1,6 @@
 # ADR-0001: Table option encoding conventions
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 

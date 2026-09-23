@@ -15,7 +15,7 @@ ADRs for template variable substitution: `{@ name @}` placeholders inside inject
 | [0009](0009-prefix-grammar-and-drive-letters.md)        | Values-file prefix grammar and Windows drive letters | Accepted                                                   |
 | [0010](0010-value-alias.md)                             | `value-alias=` redefining a name to point at another | Accepted                                                   |
 | [0011](0011-repeated-hash-keys.md)                      | Repeated directive hash keys                         | Accepted                                                   |
-| [0012](0012-declaration-order-precedence.md)            | Declaration-order value precedence                   | Proposed                                                   |
-| [0013](0013-singular-value-option.md)                   | Singular `value=` directive option                   | Proposed                                                   |
+| [0012](0012-declaration-order-precedence.md)            | Declaration-order value precedence                   | Accepted                                                   |
+| [0013](0013-singular-value-option.md)                   | Singular `value=` directive option                   | Accepted                                                   |
 
 See also: [../../glossary.md](../../glossary.md).

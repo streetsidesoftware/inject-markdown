@@ -1,6 +1,6 @@
 # ADR-0001: What gets rebased: constructs and URL forms
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-23
 **Deciders:** Jason Dent
 
