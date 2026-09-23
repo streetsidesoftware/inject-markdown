@@ -157,7 +157,8 @@ export function parseHashString(hash: string): InjectInfo {
         info.tags = tags;
     }
 
-    // Kept even when empty, so an occurrence that parsed to nothing still opts the directive in.
+    // Kept even when empty, so a `values=`/`values-file=`/`value-alias=` that parsed to nothing still
+    // opts the directive in. A bare `value` is excluded: it keeps its heading meaning (ADR-0013 point 3).
     if (valueDecls.length || hasValueKey(p)) info.valueDecls = valueDecls;
     if (valueErrors.length) info.valueErrors = valueErrors;
 

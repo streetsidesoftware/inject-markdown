@@ -52,7 +52,8 @@ export interface RunWideValueSources {
 
 /**
  * Turn declarations (written oldest first) into resolution entries, newest first, per ADR-0012
- * point 1. A values file that fails to read contributes nothing; `readFile` reports why.
+ * point 1. `readFile` decides a failed read: returning `undefined` skips that file, throwing
+ * (the CLI's `OptionError`) aborts.
  */
 export async function buildResolutionEntries(
     decls: readonly ValueDeclaration[],
