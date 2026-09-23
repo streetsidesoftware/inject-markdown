@@ -6,7 +6,7 @@
 
 ## Context
 
-With `#markdown` ([ADR-0008](0008-table-markdown-cells.md)), a cell's source text and its visible text differ: `**Price**` shows as `Price`, and `` `42` `` shows as `42`. Three existing table options inspect cell text:
+With `#markdown` ([ADR-0008](0008-table-markdown-cells.md)) or `#html-table` ([ADR-0010](0010-table-html-table.md)), a cell's source text and its visible text differ: `**Price**` shows as `Price`, and `` `42` `` shows as `42`. Three existing table options inspect cell text:
 
 - `columns` name references match against the header match string ([ADR-0002](0002-table-header-rows-option.md), [ADR-0003](0003-table-columns-option.md)).
 - Auto-alignment tests data-row values against a numeric/currency pattern ([ADR-0005](0005-table-auto-alignment.md)).
@@ -16,24 +16,24 @@ Each has to pick between source text and visible text once markup is present.
 
 ## Decision
 
-1. **Cell plain text.** For a `#markdown` table, a cell's _plain text_ is the concatenation, in document order, of its parsed Markdown tree's:
+1. **Cell plain text.** For a `#markdown` or `#html-table` table, a cell's _plain text_ is the concatenation, in document order, of its parsed Markdown tree's:
    - text node values
    - inline code and code block values
    - image alt text
 
-   Link text counts through its text children; the URL does not. Raw HTML nodes contribute nothing, except that a `<br>`/`<br />` tag and a hard break each contribute a single space. Adjacent blocks (paragraphs, list items, headings, and so on) are also separated by a single space, because cells can hold block content in an HTML table ([ADR-0008](0008-table-markdown-cells.md) point 5). Examples: `` **a**<br />`b` `` → `a b`, and a list `- a⏎- b` → `a b`. For a literal-text table, plain text is the cell's text, as today.
+   Link text counts through its text children; the URL does not. Raw HTML nodes contribute nothing, except that a `<br>`/`<br />` tag and a hard break each contribute a single space. Adjacent blocks (paragraphs, list items, headings, and so on) are also separated by a single space, because `#html-table` cells can hold block content ([ADR-0010](0010-table-html-table.md) point 6). Examples: `` **a**<br />`b` `` → `a b`, and a list `- a⏎- b` → `a b`. For a literal-text table, plain text is the cell's text, as today.
 
-2. **`columns` name matching uses plain text.** The header match string from ADR-0002 is built from each header cell's plain text. It is still space-joined across header rows, whitespace-normalized, and case-sensitive. So `columns=Price` selects a header written `**Price**`, and toggling `#markdown` never breaks an existing `columns=` reference.
+2. **`columns` name matching uses plain text.** The header match string from ADR-0002 is built from each header cell's plain text. It is still space-joined across header rows, whitespace-normalized, and case-sensitive. So `columns=Price` selects a header written `**Price**`, and toggling `#markdown` or `#html-table` never breaks an existing `columns=` reference.
 
-3. **Auto-alignment tests plain text.** The ADR-0005 numeric/currency pattern and its ≥90% threshold apply to each data cell's plain text. `**$5.00**` and `` `42` `` count as numeric. The resulting alignment is written as the `align` attribute ([ADR-0008](0008-table-markdown-cells.md) point 3).
+3. **Auto-alignment tests plain text.** The ADR-0005 numeric/currency pattern and its ≥90% threshold apply to each data cell's plain text. `**$5.00**` and `` `42` `` count as numeric. In an `#html-table` table the resulting alignment is written as the `align` attribute ([ADR-0010](0010-table-html-table.md) point 4).
 
 4. **`header-format` transforms text nodes only.** Casing applies to the values of `text` nodes anywhere in the header cell, including inside headings, lists, and other blocks. Link URLs, image sources and alt text, inline code, and raw HTML are left untouched. `**unit** [price](x.md)` with `header-format=upper` renders `**UNIT** [PRICE](x.md)`. With `title`, word boundaries are whitespace within and across adjacent text nodes, so `**unit** price` → `**Unit** Price`.
 
-5. **`column-names` labels follow the same rules.** They are parsed as Markdown in a `#markdown` table (ADR-0008 point 3), still bypass `header-format` (ADR-0007), and never affect `columns` matching.
+5. **`column-names` labels follow the same rules.** They are parsed as Markdown in a `#markdown` or `#html-table` table (ADR-0008 point 3, ADR-0010 point 5), still bypass `header-format` (ADR-0007), and never affect `columns` matching.
 
 ## Options Considered
 
-- **Match `columns` against raw source text (`columns=**Price**`).** Rejected: the `*` needs encoding in the fragment, and references break whenever `#markdown` is toggled.
+- **Match `columns` against raw source text (`columns=**Price**`).** Rejected: the `*` needs encoding in the fragment, and references break whenever `#markdown` or `#html-table` is toggled.
 - **Auto-align on raw text.** Rejected: emphasis or code formatting on a number would flip the column to left-aligned.
 - **`header-format` on the whole raw string.** Rejected: uppercasing a URL (`x.md` → `X.MD`) breaks links, and it would change code spans.
 - **Plain text from text nodes only (no inline code or alt text).** Rejected: `` `42` `` would be empty and so never numeric, and a header written as a code span (`` `id` ``) could never be referenced by name.
