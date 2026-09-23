@@ -5,7 +5,7 @@ import { visit } from 'unist-util-visit';
  * Matches `{@ name @}` placeholders (ADR-0001), with an optional leading backslash escape.
  * Whitespace immediately inside the delimiters is optional and trimmed by the regex itself.
  */
-const placeholderRegExp = /(\\)?\{@\s*([A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*)\s*@\}/g;
+const placeholderRegExp = /(\\)?\{@\s*([A-Za-z0-9_][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_][A-Za-z0-9_-]*)*)\s*@\}/g;
 
 export type PlaceholderResolver = (name: string) => string | undefined;
 

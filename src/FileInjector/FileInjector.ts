@@ -26,7 +26,6 @@ import {
     layersFromFlatMap,
     parseValuesFileEntry,
     resolveInLayers,
-    type ResolveResult,
     type UnresolvedReason,
     type ValueLayer,
 } from '../util/values.js';
@@ -153,6 +152,12 @@ export interface FileInjectorOptions {
     allowEnv?: string[] | undefined;
 
     /**
+     * Run-wide placeholder aliases (`--value-alias new=target`), last-wins on a repeated name.
+     * See docs/ADRs/template-variables/0010-value-alias.md.
+     */
+    valueAlias?: Record<string, string> | undefined;
+
+    /**
      * Treat an unresolved placeholder as a directive error instead of a warning.
      * See docs/ADRs/template-variables/0005-unresolved-placeholders-and-strict-mode.md.
      */
@@ -195,6 +200,7 @@ export class FileInjector {
             outputDir: this.options.outputDir ? dirToUrl(this.options.outputDir) : undefined,
             writeOnError: this.options.writeOnError ?? false,
             stopOnErrors: this.options.stopOnErrors ?? true,
+            aliasMap: toFlatMap(this.options.valueAlias) ?? new Map(),
             cliValueLayers: layersFromFlatMap(toFlatMap(this.options.value)),
             cliValuesFileLayers: await this.resolveCliValuesFileLayers(),
             allowEnvSet: new Set(this.options.allowEnv ?? []),
@@ -217,22 +223,33 @@ export class FileInjector {
     }
 }
 
+/** One rank of ADR-0010 point 3's order: either an alias table or a group of value layers. */
+interface ResolutionTier {
+    aliases?: ReadonlyMap<string, string> | undefined;
+    layers?: ValueLayer[] | undefined;
+}
+
+/** `via` names the alias target that failed, so the message can name both sides (ADR-0010 point 9). */
+type NameResolution = { value: string } | { unresolved: UnresolvedReason; via?: string | undefined };
+
 /**
- * ADR-0005 point 4's two unresolved cases: nothing defines the name, versus every layer that has
- * it holds a branch rather than a leaf. The second names the kind so an author can tell a typo
- * from a name that stopped one segment short.
+ * ADR-0005 point 4's unresolved cases: nothing defines the name, versus every layer that has it
+ * holds a branch rather than a leaf — the kind is named so an author can tell a typo from a name
+ * that stopped one segment short. ADR-0010 point 9 adds the aliased forms, which name both sides.
  */
-function explainUnresolved(reason: UnresolvedReason): string {
-    switch (reason) {
-        case 'object':
-            return 'resolves to an object, not a value';
-        case 'array':
-            return 'resolves to an array, not a value';
-        case 'null':
-            return 'resolves to null, not a value';
-        default:
-            return 'no value source defines it';
-    }
+function explainUnresolved(r: NameResolution): string {
+    if ('value' in r) return '';
+    const via = r.via;
+    if (r.unresolved === 'cycle') return `alias cycle through "${via}"`;
+    const why =
+        r.unresolved === 'object'
+            ? 'resolves to an object, not a value'
+            : r.unresolved === 'array'
+              ? 'resolves to an array, not a value'
+              : r.unresolved === 'null'
+                ? 'resolves to null, not a value'
+                : 'no value source defines it';
+    return via === undefined ? why : `aliased to "${via}": ${why}`;
 }
 
 function toFlatMap(value: Record<string, string> | undefined): Map<string, string> | undefined {
@@ -247,6 +264,8 @@ interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outpu
     outputDir: URL | undefined;
     writeOnError: boolean;
     stopOnErrors: boolean;
+    /** Run-wide `--value-alias` entries, as a name -> target lookup. */
+    aliasMap: ReadonlyMap<string, string>;
     /** Run-wide `--value` entries, one layer per flag, highest precedence first. */
     cliValueLayers: ValueLayer[];
     /** Run-wide `--values-file` entries, one layer per entry, read once per run. */
@@ -624,25 +643,28 @@ async function processFileInjections(
         directiveNode: Html,
         apply: (resolve: PlaceholderResolver, onUnresolved: (name: string) => void) => void,
     ): Promise<void> {
-        const optedIn = info.values !== undefined || info.valuesFile !== undefined || info.vars === true;
+        const optedIn =
+            info.values !== undefined ||
+            info.valuesFile !== undefined ||
+            info.valueAlias !== undefined ||
+            info.vars === true;
         if (!optedIn) return;
         const directiveValuesFileLayers = info.valuesFile
             ? await resolveDirectiveValuesFileLayers(info.valuesFile, directiveNode)
             : [];
-        const layers = buildLayers(info, directiveValuesFileLayers);
+        const tiers = buildTiers(info, directiveValuesFileLayers);
         const unresolved = new Set<string>();
         apply(
             (name) => {
-                const r = resolveName(layers, name);
+                const r = resolveName(tiers, name);
                 return 'value' in r ? r.value : undefined;
             },
             (name) => unresolved.add(name),
         );
         for (const name of unresolved) {
             // Re-resolve only the names that failed, to say which of ADR-0005 point 4's two cases it is.
-            const r = resolveName(layers, name);
-            const reason = 'unresolved' in r ? r.unresolved : 'undefined';
-            const message = `Unresolved placeholder "{@ ${name} @}": ${explainUnresolved(reason)}`;
+            const r = resolveName(tiers, name);
+            const message = `Unresolved placeholder "{@ ${name} @}": ${explainUnresolved(r)}`;
             if (options.strictVars) {
                 file.error(message, directiveNode.position);
             } else {
@@ -673,12 +695,14 @@ async function processFileInjections(
      * A directive's value layers in precedence order, per ADR-0004 and ADR-0008 point 2 — each
      * group already ordered last-listed first.
      */
-    function buildLayers(info: InjectInfo, directiveValuesFileLayers: ValueLayer[]): ValueLayer[] {
+    function buildTiers(info: InjectInfo, directiveValuesFileLayers: ValueLayer[]): ResolutionTier[] {
         return [
-            ...layersFromFlatMap(info.values),
-            ...directiveValuesFileLayers,
-            ...options.cliValueLayers,
-            ...options.cliValuesFileLayers,
+            { aliases: info.valueAlias },
+            { layers: layersFromFlatMap(info.values) },
+            { layers: directiveValuesFileLayers },
+            { aliases: options.aliasMap },
+            { layers: options.cliValueLayers },
+            { layers: options.cliValuesFileLayers },
         ];
     }
 
@@ -688,7 +712,7 @@ async function processFileInjections(
      * always means the OS environment and a value source defining a top-level `env` key stays
      * unreachable.
      */
-    function resolveName(layers: ValueLayer[], name: string): ResolveResult {
+    function resolveName(tiers: ResolutionTier[], name: string, seen?: Set<string>): NameResolution {
         if (name === 'env' || name.startsWith('env.')) {
             const segments = name.split('.');
             if (segments.length !== 2) return { unresolved: 'undefined' };
@@ -697,7 +721,24 @@ async function processFileInjections(
             const v = process.env[envName];
             return v === undefined ? { unresolved: 'undefined' } : { value: v };
         }
-        return resolveInLayers(layers, name);
+        // A non-scalar never ends the search (ADR-0008 point 3), so the reason a higher tier gave
+        // is carried down and only reported if no tier below it produces a scalar.
+        let blocked: UnresolvedReason | undefined;
+        for (const tier of tiers) {
+            if (tier.aliases) {
+                const target = tier.aliases.get(name);
+                if (target === undefined) continue;
+                // An alias outranks its own tier's values (ADR-0010 point 3), so its target's
+                // failure is the answer -- resolution does not fall back to the name itself.
+                if (seen?.has(name)) return { unresolved: 'cycle', via: target };
+                const r = resolveName(tiers, target, new Set(seen).add(name));
+                return 'value' in r ? r : { unresolved: r.unresolved, via: r.via ?? target };
+            }
+            const r = resolveInLayers(tier.layers ?? [], name);
+            if ('value' in r) return r;
+            if (r.unresolved !== 'undefined') blocked ??= r.unresolved;
+        }
+        return { unresolved: blocked ?? 'undefined' };
     }
 
     async function resolveAndReadFile(file: URL): Promise<VFileEx> {

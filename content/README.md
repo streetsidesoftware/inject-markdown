@@ -184,7 +184,7 @@ async function version(): Promise<string> {
 
 Injected content may contain `{@ name @}` placeholders, resolved against values the _directive_ supplies (not the file being injected) and substituted in at injection time — e.g. an injected snippet containing `npm install my-package@{@ version @}` becomes `npm install my-package@1.2.3` in the output. This isn't a full template engine: no conditionals or loops, just name-to-value substitution. Write `\{@ name @}` to show the syntax literally without triggering substitution.
 
-A directive only scans its content for placeholders if it carries `values=`, `values-file=`, or the bare `vars` flag; without one of those, `{@ ... @}` text passes through untouched. An unresolved placeholder — nothing defines its name, or every source that has it holds an object, an array or `null` there — is left untouched with a warning saying which; pass `--strict-vars` to make that a directive error instead.
+A directive only scans its content for placeholders if it carries `values=`, `values-file=`, `value-alias=`, or the bare `vars` flag; without one of those, `{@ ... @}` text passes through untouched. An unresolved placeholder — nothing defines its name, or every source that has it holds an object, an array or `null` there — is left untouched with a warning saying which; pass `--strict-vars` to make that a directive error instead.
 
 ```markdown
 <!--- @@inject-code: install.md#values=version:1.2.3 --->
@@ -205,7 +205,13 @@ Values can also come from a JSON file (`values.json`: `{"version": "1.2.3"}`), n
 <!--- @@inject-code: install.md#values-file=:values.json --->
 ```
 
-Run-wide values are available to any directive that opts in via `values=`, `values-file=`, or the bare `vars` flag — `--value <name=val>` (repeatable), `--values-file [prefix:]path` (repeatable JSON files, same `[prefix:]path` syntax as the directive-level option), and `--allow-env <NAME>` (repeatable, exposed as `{@ env.NAME @}`) — with a directive's own `values=`/`values-file=` taking precedence on a name collision.
+A `value-alias=` entry points one name at another instead of supplying a value: `value-alias=version:release.latest.version` makes `{@ version @}` mean whatever `{@ release.latest.version @}` means, following the sources as they change. It also opts the directive in, it outranks the values the same directive supplies (so it can redefine a name a values file already has), and an alias whose target points at nothing leaves the placeholder untouched with a warning naming both sides.
+
+Any of `values=`, `values-file=` and `value-alias=` may be written more than once in the same directive; the occurrences accumulate, exactly as if their contents had been one comma-separated list. That is also how to give an entry that contains a literal comma without quoting it. Every other option keeps the last value written.
+
+A values file's prefix is two characters or more, so a Windows drive letter is never mistaken for one — `--values-file C:\data\values.json` is a path, and its prefix is derived from the basename as `values`. A prefix may be dotted, in which case it nests: `values-file=pkg.build:data.json` is read as `{@ pkg.build.* @}`.
+
+Run-wide values are available to any directive that opts in via `values=`, `values-file=`, `value-alias=`, or the bare `vars` flag — `--value <name=val>` (repeatable), `--values-file [prefix:]path` (repeatable JSON files, same `[prefix:]path` syntax as the directive-level option), and `--allow-env <NAME>` (repeatable, exposed as `{@ env.NAME @}`) — with a directive's own `values=`/`values-file=` taking precedence on a name collision.
 
 Overriding is per name, not per file. Given a `values.json` of `{"version": "1.2.3", "name": "my-package"}`, a single `--value values.version=2.0.0` changes just that one name and `{@ values.name @}` still comes from the file — and the same holds when two values files are listed together, so a later one patches the earlier rather than replacing it. `--strict-vars` turns an unresolved placeholder into a directive error instead of a warning.
 
@@ -223,6 +229,7 @@ The hash `#` portion of the file URL is used to set injection options. Each opti
 | `values`      | ✅   | ✅       | Inline `{@ name @}` placeholder values: `name:val,name2:val2`.          |
 | `values-file` | ✅   | ✅       | JSON file(s) of placeholder values: `[prefix:]path[,...]`.              |
 | `vars`        | ✅   | ✅       | Opt into placeholder scanning using only CLI/environment value sources. |
+| `value-alias` | ✅   | ✅       | Resolve one name as if it were another: `new:target,new2:target2`.      |
 
 ### Example 1
 

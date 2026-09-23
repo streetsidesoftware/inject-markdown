@@ -1,6 +1,6 @@
 # ADR-0010: `value-alias=` — redefining a name to point at another
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-22
 **Deciders:** Jason Dent
 

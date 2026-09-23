@@ -50,6 +50,41 @@ describe('hash', () => {
     });
 });
 
+describe('repeated hash keys (ADR-0011)', () => {
+    test('a repeated values-file= is identical to the equivalent comma list', () => {
+        const repeated = parseHashString('#values-file=:./package.json&values-file=release:releases.json');
+        const commaList = parseHashString('#values-file=:./package.json,release:releases.json');
+        expect(repeated.valuesFile).toEqual(commaList.valuesFile);
+        expect(repeated.valuesFile).toHaveLength(2);
+    });
+
+    test('a repeated values= accumulates, and a repeated name last-wins', () => {
+        const info = parseHashString('#values=a:1&values=b:2&values=a:3');
+        expect([...(info.values ?? [])]).toEqual([
+            ['a', '3'],
+            ['b', '2'],
+        ]);
+    });
+
+    test('a repeated value-alias= accumulates', () => {
+        const info = parseHashString('#value-alias=x:y&value-alias=p:q');
+        expect([...(info.valueAlias ?? [])]).toEqual([
+            ['x', 'y'],
+            ['p', 'q'],
+        ]);
+    });
+
+    test('a repeated scalar key silently last-wins', () => {
+        expect(parseHashString('#heading=Install&heading=Usage').heading).toBe('Usage');
+        expect(parseHashString('#lang=ts&lang=js').lang).toBe('js');
+        expect(parseHashString('#quote=true&quote=false').quote).toBe(false);
+    });
+
+    test('a repeated line range still last-wins, multi-range being out of scope', () => {
+        expect(parseHashString('#L1-L10&L20-L30').lines).toEqual([20, 30]);
+    });
+});
+
 function m(...entries: ([string, string | string[]] | string)[]): Map<string, string | string[]> {
     return new Map(
         entries.map((e) => {

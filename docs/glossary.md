@@ -75,7 +75,7 @@ The dotted path inside a placeholder (e.g. `package.version`), each segment `[A-
 A directive hash option supplying inline placeholder values as comma-separated `name:value` pairs (`values=name:val,name2:val2`), with whole-value quoting for literal commas/colons. Highest-precedence value source for its directive. See [ADR-0002](ADRs/template-variables/0002-directive-value-sources.md).
 
 **`values-file=` option**
-A directive hash option naming one or more JSON files of placeholder values (`values-file=[prefix:]path[,...]`), each resolved relative to the containing document and subject to the injection-root boundary like any directive file reference. See [ADR-0002](ADRs/template-variables/0002-directive-value-sources.md), [ADR-0007](ADRs/template-variables/0007-values-file-prefixing.md).
+A directive hash option naming one or more JSON files of placeholder values (`values-file=[prefix:]path[,...]`, or the key repeated), each resolved relative to the containing document and subject to the injection-root boundary like any directive file reference. See [ADR-0002](ADRs/template-variables/0002-directive-value-sources.md), [ADR-0007](ADRs/template-variables/0007-values-file-prefixing.md).
 
 **`vars` flag**
 A bare directive hash flag (`#vars`) that opts a directive into placeholder scanning against CLI/environment value sources alone, when it defines no `values=`/`values-file=` of its own. See [ADR-0002](ADRs/template-variables/0002-directive-value-sources.md).
