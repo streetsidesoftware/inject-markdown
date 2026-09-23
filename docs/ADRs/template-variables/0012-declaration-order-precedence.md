@@ -20,13 +20,23 @@ An author reading left to right expects `release.json` — declared last — to 
 
 1. **Newest declaration wins.** Value declarations form one sequence in the order they are written, oldest to newest. A newer declaration overrides an older one regardless of which option it came from; the source type carries no rank of its own.
 2. **Per-leaf resolution is kept.** Each declaration is still a [value layer](../../glossary.md#value-layer) ([ADR-0008](0008-value-layering-and-resolution.md) point 1), and a name resolves against the first layer, newest first, that holds it as a scalar. Only the ordering of the layers changes. In `values-file=:package.json&values=package:x`, `{@ package @}` is `x` and `{@ package.version @}` still resolves from `package.json`.
+3. **CLI declarations are older than directive declarations.** The run-wide sequence comes first and each directive's sequence is appended after it, so a directive overrides the CLI. `--value version=2.0` with `#values=version:1.0` yields `1.0`. This keeps [ADR-0004](0004-value-source-precedence.md)'s directive-over-CLI rule: a directive read in isolation means what it says, and CLI values act as run-wide defaults.
+4. **CLI flags keep their command-line order.** `--value`, `--values-file` and `--value-alias` form one sequence in argv order. With `--values-file :a.json --value version=1.0 --values-file :b.json`, `b.json` wins for `version`.
+5. **Aliases are declarations in the same sequence.** An alias has no tier of its own. For a given name, whichever is newest — an alias for it or a layer holding it as a scalar — decides it. In `#values=version:1.0&value-alias=version:release.version`, the alias applies; reversed, `1.0` does.
+   - The alias's _target_ still resolves lazily against the whole sequence ([ADR-0010](0010-value-alias.md) point 4), so a values file declared after the alias can satisfy it.
+   - An alias that decides a name and whose target does not resolve leaves the placeholder unresolved; resolution does not fall back to older layers for the name ([ADR-0010](0010-value-alias.md) point 9). Cycles are reported as before (point 5).
 
 ## Options Considered
 
 - **Keep the type ranking** — rejected: with repeated keys ([ADR-0011](0011-repeated-hash-keys.md)) the directive text is an ordered list, and ranking by type makes its order matter only within each type, which is invisible when reading it.
 - **Deep-merge declarations oldest to newest into one tree** (objects merge, a scalar or array replaces) — rejected: a newer scalar at `package` would erase every `package.*` leaf an older file supplied, reintroducing the data loss [ADR-0008](0008-value-layering-and-resolution.md) removed. Keeping per-leaf lookup changes only the order, not the resolution rule.
+- **CLI declarations newer than the directive** — rejected: lets CI override a hard-coded directive value, but then a directive's text no longer tells a reader what it produces. [ADR-0004](0004-value-source-precedence.md) rejected global-over-directive for the same reason.
+- **Declaration order in the directive, type ranking on the CLI** — rejected: two rules for the same three kinds of entry. Commander collects each option separately, so argv order costs a shared collector, which is small.
+- **Aliases keep outranking values in their scope** ([ADR-0010](0010-value-alias.md) point 3) — rejected: it leaves one exception to "newest wins" that the directive text doesn't show.
 
 ## Consequences
 
 - [ADR-0004](0004-value-source-precedence.md)'s type ranking and [ADR-0010](0010-value-alias.md) point 3 are superseded by this ADR once it is accepted.
 - `buildValueTiers` stops grouping layers by type; the hash parser has to keep declarations in one ordered list instead of per-option fields.
+- `app.mts` needs one shared argv-order collector for `--value`, `--values-file` and `--value-alias` instead of three independent arrays.
+- The resolver walks one newest-first list mixing alias entries and value layers, and no longer uses fixed tiers.
