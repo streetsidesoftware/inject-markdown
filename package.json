@@ -69,7 +69,6 @@
     "chalk": "^6.0.0",
     "commander": "^15.0.0",
     "globby": "^16.2.4",
-    "node-fetch": "^3.3.2",
     "remark": "^15.0.1",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",

@@ -15,7 +15,7 @@ async function fetchUrl(url: URL): Promise<string> {
 }
 ```
 
-No timeout, no cap on the response body, no policy on where the request goes, and `node-fetch` follows redirects automatically. A directive is attacker-supplied text under the same threat model — `<!--- @@inject: http://169.254.169.254/latest/meta-data/iam/security-credentials/ --->` in a pull request pulls the runner's cloud credentials into the generated document, and an internal service on a private range is equally reachable. Placing the destination check on the literal URL alone would not hold: an ordinary public host can redirect into those ranges.
+No timeout, no cap on the response body, no policy on where the request goes, and `fetch` follows redirects automatically. A directive is attacker-supplied text under the same threat model — `<!--- @@inject: http://169.254.169.254/latest/meta-data/iam/security-credentials/ --->` in a pull request pulls the runner's cloud credentials into the generated document, and an internal service on a private range is equally reachable. Placing the destination check on the literal URL alone would not hold: an ordinary public host can redirect into those ranges.
 
 This sits in the same class as the disclosure ADR-0001 closed — secrets reaching generated output — and is arguably worse, because it reaches past the machine into the network around it.
 
@@ -29,7 +29,7 @@ Remote references stay enabled by default. `fetchUrl` gains three guardrails.
 
 Before each request, resolve the host and refuse the fetch if any resolved address is loopback, link-local (`127.0.0.0/8`, `::1`, `169.254.0.0/16`, `fe80::/10`), or private (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `fc00::/7`). A literal IP in the URL is checked directly. This covers cloud metadata endpoints and internal services under one rule rather than a list of known metadata addresses.
 
-The check runs on **every hop**. Redirects are therefore followed manually (`redirect: 'manual'`) rather than by `node-fetch`, re-applying the policy to each `Location` before following it, up to a bounded hop count.
+The check runs on **every hop**. Redirects are therefore followed manually (`redirect: 'manual'`) rather than by `fetch`, re-applying the policy to each `Location` before following it, up to a bounded hop count.
 
 `--allow-remote-host <host>` (repeatable, with a matching `FileInjectorOptions` entry per this repo's convention) exempts a named host from the address check, for an internal documentation server that is a legitimate source. It mirrors `--allow-outside-root` and `--allow-env`, which is already this repo's shape for a narrow grant. A redirect hop to any host not itself allow-listed is still refused.
 

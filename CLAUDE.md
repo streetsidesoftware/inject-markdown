@@ -24,7 +24,7 @@ Assume an expert-programmer reader. Keep comments succinct — 1-2 lines. Cover 
 
 ## Code-specific gotchas
 
-- Only `.md` files are processed (enforced in `process.mts`); remote files (GitHub blob URLs) are fetched via `node-fetch`, local files go through `FileSystemAdapter`.
+- Only `.md` files are processed (enforced in `process.mts`); remote files (GitHub blob URLs) are fetched via the built-in `fetch`, local files go through `FileSystemAdapter`.
 - Directive matching is two-step: a quick regex pre-filter (`directiveRegExp`), then a full parse via `parseDirective` — both must pass for a comment to be treated as a directive.
 - The remark stringify options (bullet style, fence char, etc.) are detected per-file from the source document (`detectMarkdownStyle` in `detectStyle.ts`), falling back to fixed defaults for constructs the file doesn't use — this preserves a file's existing formatting across an injection pass instead of normalizing it.
 - `--clean` removes injected sections but keeps the directive comment markers; `--dry-run` processes/reports without writing.
