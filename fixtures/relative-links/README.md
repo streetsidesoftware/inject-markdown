@@ -28,6 +28,10 @@ Table cells:
 
 <!--- @@inject: docs/links.csv --->
 
+JSON table cells:
+
+<!--- @@inject-table: docs/links.json#markdown --->
+
 Same directory, left as written:
 
 <!--- @@inject: sibling.md --->

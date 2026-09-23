@@ -153,6 +153,17 @@ Table cells:
 
 <!--- @@inject-end: docs/links.csv --->
 
+JSON table cells:
+
+<!--- @@inject-table: docs/links.json#markdown --->
+
+| Name  | Link                   | Meta                      |
+| ----- | ---------------------- | ------------------------- |
+| Guide | [guide](docs/guide.md) |                           |
+| Data  | [data](data/x.csv)     | `{"see":"[raw](raw.md)"}` |
+
+<!--- @@inject-end: docs/links.json#markdown --->
+
 Same directory, left as written:
 
 <!--- @@inject: sibling.md --->
