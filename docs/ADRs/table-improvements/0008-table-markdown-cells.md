@@ -48,20 +48,27 @@ The option lives in the `#`-fragment like the other table options ([ADR-0001](00
 
    Example: CSV `Name,Notes` / `x,"**new**⏎⏎- a⏎- b"` with `#markdown`:
 
-   ```html
+   ```text
    <table>
-     <thead>
-       <tr>
-         <th>Name</th>
-         <th>Notes</th>
-       </tr>
-     </thead>
-     <tbody>
-       <tr>
-         <td>x</td>
-         <td>**new** - a - b</td>
-       </tr>
-     </tbody>
+   <thead>
+   <tr>
+   <th>Name</th>
+   <th>Notes</th>
+   </tr>
+   </thead>
+   <tbody>
+   <tr>
+   <td>x</td>
+   <td>
+
+   **new**
+
+   - a
+   - b
+
+   </td>
+   </tr>
+   </tbody>
    </table>
    ```
 
@@ -81,7 +88,7 @@ The option lives in the `#`-fragment like the other table options ([ADR-0001](00
 - **Keep the GFM pipe form, with inline Markdown only.** The original decision here, reversed in favor of the HTML table. It limited cells to phrasing content, rendered block syntax (`# Title`, `- item`) literally, escaped pipes in the output, and turned newlines into `<br />`. The HTML form removes each of those limits, which is the point of the option.
 - **Render cell Markdown to HTML in the tool (`<td><strong>b</strong></td>`).** Rejected: it would add `remark-rehype`/`rehype-stringify` dependencies, and the generated source would be much harder to read and review in a diff. It would render in any renderer, whereas the chosen form depends on the renderer following CommonMark's HTML-block rule. GitHub does.
 - **Blank-line wrap every cell.** Rejected: taller output, and each wrapped cell renders inside a `<p>`, which adds vertical spacing on GitHub. Compact plain cells avoid both. The cost is that a row can mix the two forms.
-- **Indent `<tr>`/`<td>` tags for readability.** Rejected: cell Markdown must still start at column 0. Mixing indented tags with flush content is fragile under Prettier and under this tool's own re-parse.
+- **Indent `<tr>`/`<td>` tags for readability.** Rejected: cell Markdown must still start at column 0. Mixing indented tags with flush-left content makes the indentation misleading, and it is easy to break by hand.
 - **`style="text-align:…"` for alignment.** Rejected: GitHub's sanitizer strips `style`, so alignment would be lost there. `align` is deprecated in HTML5 but kept by GitHub, and it is what GitHub's own pipe-table renderer emits.
 - **`<br />`-joined multi-row headers, or synthesized numbered headers for `header-rows=0`, as in the pipe form.** Rejected: both are workarounds for GFM's single mandatory header row, which an HTML table doesn't have.
 - **Newlines as `<br />`.** Rejected: with block content allowed, a blank line has to mean a paragraph break, as it does everywhere else in Markdown.
@@ -96,4 +103,5 @@ The option lives in the `#`-fragment like the other table options ([ADR-0001](00
 - Each wrapped cell renders its content inside `<p>` (or other block) elements, so spacing differs slightly from a pipe table. Compact plain cells don't have this.
 - A cell's raw HTML can close the surrounding structure (e.g. a stray `</td>` or `</table>`) and corrupt the table. With HTML pass-through this is the author's responsibility, as it is with any raw HTML in Markdown. Similarly, a `#markdown` table built from an untrusted CSV can carry arbitrary HTML into the output: the same exposure as injecting an untrusted `.md` file, and it should be noted alongside the security docs.
 - Enabling `#markdown` on a CSV with incidental `*`/`_` (e.g. `file_name`, `2*3`) changes its rendering, and so does a cell starting with `-`, `#`, `>` or `1.`, which now becomes a list, heading or quote. That is the opt-in's cost and belongs in the README.
+- Prettier (the repo's configured version) leaves the flush-left output unchanged in a `.md` file. It does reformat an example inside a fenced `html` block, so documentation examples use a `text` fence.
 - The output is idempotent across runs because the whole section between the directive markers is regenerated. Tests should still cover a re-run over already-injected output.
