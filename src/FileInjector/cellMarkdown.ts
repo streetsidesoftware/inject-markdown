@@ -1,8 +1,9 @@
-import type { Link, PhrasingContent } from 'mdast';
+import type { Link, PhrasingContent, RootContent } from 'mdast';
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import type { Processor } from 'unified';
 import { unified } from 'unified';
+import { SKIP, visit } from 'unist-util-visit';
 
 /**
  * micromark flow (block) constructs switched off for cell parsing, so block syntax such as
@@ -29,9 +30,32 @@ function remarkInlineOnly(this: Processor) {
 }
 
 let processor: ReturnType<typeof createProcessor> | undefined;
+let blockProcessor: ReturnType<typeof createBlockProcessor> | undefined;
 
 function createProcessor() {
     return unified().use(remarkParse).use(remarkGfm).use(remarkInlineOnly);
+}
+
+function createBlockProcessor() {
+    return unified().use(remarkParse).use(remarkGfm);
+}
+
+/**
+ * Parse a table cell's text as a standalone Markdown document, blocks included (ADR-0010 point 6).
+ */
+export function parseCellBlocks(value: string): RootContent[] {
+    blockProcessor ??= createBlockProcessor();
+    const root = blockProcessor.parse(value);
+    // A definition would apply document-wide once emitted, so keep it as literal text (point 12).
+    visit(root, (node, index, parent) => {
+        if (node.type !== 'definition' && node.type !== 'footnoteDefinition') return;
+        if (!parent || index === undefined) return;
+        // Continuation-line indentation would otherwise be written as `&#x20;` entities.
+        const source = value.slice(node.position?.start.offset, node.position?.end.offset).replace(/\n[ \t]+/g, '\n');
+        parent.children[index] = { type: 'paragraph', children: [{ type: 'text', value: source }] };
+        return SKIP;
+    });
+    return root.children;
 }
 
 /**

@@ -17,6 +17,8 @@ export interface InjectInfo {
     code?: string;
     /** Bare `#markdown`: parse table cells as inline Markdown. See ADR-0008. */
     markdown?: boolean | undefined;
+    /** Bare `#html-table`: emit an HTML table whose cells hold Markdown. See ADR-0010. */
+    htmlTable?: boolean | undefined;
     /** Inline placeholder values: `values=name:val,name2:val2`. See ADR-0002. */
     values?: Map<string, string> | undefined;
     /** `values-file=[prefix:]path[,...]`. See ADR-0002, ADR-0007. */
@@ -81,6 +83,9 @@ export function parseHashString(hash: string): InjectInfo {
                 continue;
             case 'markdown':
                 info.markdown = parseFlagValue(value, true);
+                continue;
+            case 'html-table':
+                info.htmlTable = parseFlagValue(value, true);
                 continue;
             case 'value-alias':
                 // Same `name:target` list shape as `values=` (ADR-0010 point 1).

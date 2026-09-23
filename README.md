@@ -190,6 +190,84 @@ Renders as:
 | `#markdown`  | Render **inline** Markdown, e.g. [links](https://github.com) and `a\|b` |
 | - not a list | Block syntax stays literal<br />and a newline becomes a line break      |
 
+### HTML Table with Markdown Cells
+
+When cells need more than inline Markdown, use `#html-table`. It emits an HTML `<table>` instead of a pipe table, and each cell can hold full Markdown, including lists and paragraphs.
+
+- A cell with Markdown is wrapped in blank lines so the renderer parses it; plain cells stay on one line.
+- Newlines follow normal Markdown rules: a blank line starts a new paragraph.
+- A `|` needs no escaping.
+- `#html-table` implies Markdown cells, and wins if `#markdown` is also given.
+- The output relies on CommonMark's HTML block rule: the blank line after an opening tag ends that HTML block, so the cell's content is parsed as ordinary Markdown before the closing tag, and the browser places the result inside the cell. GitHub and other CommonMark renderers handle this; renderers that don't follow the rule may show the Markdown as plain text.
+
+```markdown
+<!--- @@inject: sample-html-table.csv#html-table --->
+
+<table>
+<thead>
+<tr>
+<th>option</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+
+`#html-table`
+
+</td>
+<td>
+
+Cells can hold **block** Markdown:
+
+- lists
+- several paragraphs
+
+</td>
+</tr>
+<tr>
+<td>plain</td>
+<td>Plain cells stay on one line</td>
+</tr>
+</tbody>
+</table>
+
+<!--- @@inject-end: sample-html-table.csv#html-table --->
+```
+
+Renders as:
+
+<table>
+<thead>
+<tr>
+<th>option</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+
+`#html-table`
+
+</td>
+<td>
+
+Cells can hold **block** Markdown:
+
+- lists
+- several paragraphs
+
+</td>
+</tr>
+<tr>
+<td>plain</td>
+<td>Plain cells stay on one line</td>
+</tr>
+</tbody>
+</table>
+
 ## Import Markdown as Code
 
 It is also possible to inject markdown:
@@ -234,6 +312,7 @@ or
 >   - `@@inject-table: <file>` -- force any file to be injected as a table, regardless of its extension.
 >   - Use `@@inject-code: <file.csv>` or `#lang=csv` to inject the file as a code block instead of a table.
 >   - `markdown` -- optional; render inline Markdown in the table's cells instead of escaping it.
+>   - `html-table` -- optional; emit an HTML table whose cells can hold full Markdown, including lists and paragraphs.
 
 ## Import from lines from GitHub
 

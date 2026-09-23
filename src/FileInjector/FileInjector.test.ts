@@ -579,6 +579,29 @@ describe('#markdown table cells (ADR-0008)', () => {
     });
 });
 
+describe('#html-table (ADR-0010)', () => {
+    async function processTables() {
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
+        const r = await fi.processFile('README.md');
+        return r.file.value as string;
+    }
+
+    test('emits an HTML table with compact plain cells and wrapped Markdown cells', async () => {
+        const written = await processTables();
+        expect(written).toContain('<td>a &lt; b &amp; c</td>');
+        expect(written).toContain('<td>\n\n**new**\n\n- a\n- b\n\n</td>');
+    });
+
+    test('wins over #markdown when both are given', async () => {
+        const written = await processTables();
+        const start = written.indexOf('<!--- @@inject: markdown.csv#markdown&html-table --->');
+        const end = written.indexOf('<!--- @@inject-end: markdown.csv#markdown&html-table --->');
+        const section = written.slice(start, end);
+        expect(section).toContain('<table>');
+        expect(section).not.toContain('| Option');
+    });
+});
+
 function normalizeWriteFileCalls(
     writeFile: MockedFileSystemAdapter['writeFile'],
 ): MockedFileSystemAdapter['writeFile']['mock']['calls'] {

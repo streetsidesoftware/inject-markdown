@@ -27,3 +27,11 @@
 ## Without `#markdown` the same cells are literal
 
 <!--- @@inject: markdown.csv --->
+
+## `#html-table` emits an HTML table with Markdown cells
+
+<!--- @@inject: html-table.csv#html-table --->
+
+## `#html-table` wins over `#markdown`
+
+<!--- @@inject: markdown.csv#markdown&html-table --->

@@ -84,3 +84,153 @@ Bob,25,"Los Angeles, CA"
 | plain               | has {@ name @}                                                                    |             |
 
 <!--- @@inject-end: markdown.csv --->
+
+## `#html-table` emits an HTML table with Markdown cells
+
+<!--- @@inject: html-table.csv#html-table --->
+
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Notes</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>plain</td>
+<td>a &lt; b &amp; c</td>
+<td>42</td>
+</tr>
+<tr>
+<td>
+
+**bold**
+
+</td>
+<td>
+
+**new**
+
+- a
+- b
+
+</td>
+<td>
+
+`7`
+
+</td>
+</tr>
+<tr>
+<td>empty</td>
+<td></td>
+<td>
+
+line one
+line two
+
+</td>
+</tr>
+<tr>
+<td>pipe</td>
+<td>a | b</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<!--- @@inject-end: html-table.csv#html-table --->
+
+## `#html-table` wins over `#markdown`
+
+<!--- @@inject: markdown.csv#markdown&html-table --->
+
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+
+**`columns`**
+
+</td>
+<td>
+
+Pick columns, e.g. `a|b` or a | b
+
+</td>
+<td>
+
+_all_
+
+</td>
+</tr>
+<tr>
+<td>
+
+`#markdown`
+
+</td>
+<td>
+
+See [ADR-0008](../../docs/ADRs/table-improvements/0008-table-markdown-cells.md)
+
+</td>
+<td>
+
+~~off~~
+
+</td>
+</tr>
+<tr>
+<td>
+
+# Title
+
+</td>
+<td>
+
+- item stays literal
+
+</td>
+<td>
+
+1. first
+
+</td>
+</tr>
+<tr>
+<td>
+
+<sup>1</sup>
+
+</td>
+<td>
+
+line one
+line two
+
+</td>
+<td>
+
+> note
+
+</td>
+</tr>
+<tr>
+<td>plain</td>
+<td>has {@ name @}</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<!--- @@inject-end: markdown.csv#markdown&html-table --->

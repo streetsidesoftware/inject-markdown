@@ -30,7 +30,7 @@ import {
     resolveRunWideValueSources,
     type RunWideValueSources,
 } from './placeholderValues.js';
-import { rowsToTable } from './Table.js';
+import { rowsToHtmlTable, rowsToTable } from './Table.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
 
@@ -521,7 +521,8 @@ async function processFileInjections(
                 }
             });
             return {
-                root: toRoot(rowsToTable(rows, { markdown: info.markdown })),
+                // `#html-table` wins over `#markdown` when both are given (ADR-0010 point 2).
+                root: toRoot(info.htmlTable ? rowsToHtmlTable(rows) : rowsToTable(rows, { markdown: info.markdown })),
                 info,
             };
         } catch (e) {
