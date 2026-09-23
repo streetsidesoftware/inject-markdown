@@ -7,5 +7,6 @@ ADRs for rebasing relative URLs in injected Markdown, so a link written relative
 | [0001](0001-rebase-scope.md)            | What gets rebased: constructs and URL forms                                | Proposed |
 | [0002](0002-default-on-with-opt-out.md) | Rebasing is on by default, with per-directive and run-wide opt-out         | Proposed |
 | [0003](0003-rebase-base-resolution.md)  | Resolving a rebased URL: local sources, remote sources, and `--output-dir` | Proposed |
+| [0004](0004-rebased-path-format.md)     | Format of a rebased path                                                   | Proposed |
 
 See also: [../../glossary.md](../../glossary.md).
