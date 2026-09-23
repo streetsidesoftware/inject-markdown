@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.1.0](https://github.com/streetsidesoftware/inject-markdown/compare/v6.0.0...v6.1.0) (2026-09-23)
+
+
+### Features
+
+* `#html-table` emits an HTML table with Markdown cells ([#834](https://github.com/streetsidesoftware/inject-markdown/issues/834)) ([18bdf71](https://github.com/streetsidesoftware/inject-markdown/commit/18bdf715503bc790fc0fe992982ea4571da08eb3))
+* `#markdown` renders inline Markdown in table cells ([#833](https://github.com/streetsidesoftware/inject-markdown/issues/833)) ([249df26](https://github.com/streetsidesoftware/inject-markdown/commit/249df268bad6871c5e4a041f889eaadcce026fe5))
+* `header-rows` and the `start-row`/`end-row`/`num-rows` row window for tables ([#838](https://github.com/streetsidesoftware/inject-markdown/issues/838)) ([a393b74](https://github.com/streetsidesoftware/inject-markdown/commit/a393b7430186677180236e8c19e40e0f3e4ad8ce))
+* `inject-table` directive accepts a JSON array of objects ([#839](https://github.com/streetsidesoftware/inject-markdown/issues/839)) ([f1b23bd](https://github.com/streetsidesoftware/inject-markdown/commit/f1b23bdea3925b41ee06faf161e659b614838090))
+* declaration-order value precedence and `value=` ([#845](https://github.com/streetsidesoftware/inject-markdown/issues/845)) ([126881a](https://github.com/streetsidesoftware/inject-markdown/commit/126881a9731db6f67f370d37eef09eadf3b11872))
+* rebase relative links in injected Markdown ([#841](https://github.com/streetsidesoftware/inject-markdown/issues/841)) ([bf9664f](https://github.com/streetsidesoftware/inject-markdown/commit/bf9664fd94f7e3c1863bc2898fb6a8f03a6049fa))
+
 ## [6.0.0](https://github.com/streetsidesoftware/inject-markdown/compare/v5.0.3...v6.0.0) (2026-09-23)
 
 
