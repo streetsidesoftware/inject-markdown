@@ -148,3 +148,12 @@ A directive hash option declaring aliases as comma-separated `new:target` pairs 
 
 **`--value-alias`**
 A repeatable CLI option (`--value-alias <new>=<target>`) declaring a run-wide [value alias](#value-alias). Ordered with `--value`/`--values-file` by argv position, and older than anything the directive declares. See [ADR-0010](ADRs/template-variables/0010-value-alias.md), [ADR-0012](ADRs/template-variables/0012-declaration-order-precedence.md).
+
+**Rebasing (relative links)**
+Rewriting a path-relative URL in injected Markdown (including `#markdown`/`#html-table` table cells, but not Markdown injected as a code block) so it resolves from the host file the same way it resolved from the source file. Applies to `link`, `image`, and `definition` nodes. Absolute, protocol-relative (`//`), root-relative (`/`), and fragment-only (`#`) URLs, and raw HTML attributes, are left untouched. See [relative-links/ADR-0001](ADRs/relative-links/0001-rebase-scope.md), [relative-links/ADR-0003](ADRs/relative-links/0003-rebase-base-resolution.md), and [relative-links/ADR-0005](ADRs/relative-links/0005-interactions.md).
+
+**`rebase-links` option**
+A boolean hash key (`part.md#rebase-links=false`) that turns rebasing off (or explicitly on) for one directive. Rebasing is on by default; the run-wide `--no-rebase-links` CLI flag turns it off, and a directive's own value wins over the CLI. See [relative-links/ADR-0002](ADRs/relative-links/0002-default-on-with-opt-out.md).
+
+**`--rebase-output-links`**
+An opt-in CLI flag, requiring `--output-dir`, that rebases the relative links of every written file (the host's own links and injected content alike) so they resolve from the output location. With an `http(s)` URL value, links become that base plus the path from `--cwd` instead. It implies `--no-inject-only`, and runs after source-to-host rebasing, whatever `rebase-links` says. Designed, not yet implemented. See [relative-links/ADR-0007](ADRs/relative-links/0007-rebase-output-links.md) to [relative-links/ADR-0010](ADRs/relative-links/0010-output-rebase-surface.md).

@@ -1,0 +1,4 @@
+[
+    { "name": "Ada Lovelace", "born": 1815, "fields": ["mathematics", "computing"] },
+    { "name": "Grace Hopper", "born": 1906, "rank": "Rear Admiral" }
+]

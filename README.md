@@ -98,13 +98,13 @@ git diff --exit-code
 
 ## Directives
 
-| Directive                | Effect                                                                             |
-| ------------------------ | ---------------------------------------------------------------------------------- |
-| `@@inject: <file>`       | Inject the file: Markdown as Markdown, CSV/TSV as a table, anything else as code.  |
-| `@@inject-code: <file>`  | Always inject as a fenced code block, including Markdown and CSV/TSV files.        |
-| `@@inject-table: <file>` | Always inject as a table, whatever the file extension.                             |
-| `@@inject-start: <file>` | Same as `@@inject`.                                                                |
-| `@@inject-end: <file>`   | Marks the end of injected content. The tool writes it; you don't normally need to. |
+| Directive                | Effect                                                                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@@inject: <file>`       | Inject the file: Markdown as Markdown, CSV/TSV as a table, anything else as code.                                                                      |
+| `@@inject-code: <file>`  | Always inject as a fenced code block, including Markdown and CSV/TSV files.                                                                            |
+| `@@inject-table: <file>` | Always inject as a table, whatever the file extension. A `.json` file must hold an array of objects; `@@inject: <file>.json` still injects it as code. |
+| `@@inject-start: <file>` | Same as `@@inject`.                                                                                                                                    |
+| `@@inject-end: <file>`   | Marks the end of injected content. The tool writes it; you don't normally need to.                                                                     |
 
 ## Injection options
 
@@ -307,6 +307,35 @@ Renders as:
 
 <!--- @@inject-end: sample-rows.csv#start-row=2&num-rows=2 --->
 ```
+
+#### JSON as a table
+
+`@@inject-table:` also accepts a `.json` file holding an array of objects. Each object is a row, and its keys are the columns. `@@inject:` on a `.json` file still injects a code block.
+
+```markdown
+<!--- @@inject-table: sample-table.json --->
+
+| name         | born | fields                       | rank         |
+| ------------ | ---- | ---------------------------- | ------------ |
+| Ada Lovelace | 1815 | \["mathematics","computing"] |              |
+| Grace Hopper | 1906 |                              | Rear Admiral |
+
+<!--- @@inject-end: sample-table.json --->
+```
+
+Renders as:
+
+| name         | born | fields                       | rank         |
+| ------------ | ---- | ---------------------------- | ------------ |
+| Ada Lovelace | 1815 | \["mathematics","computing"] |              |
+| Grace Hopper | 1906 |                              | Rear Admiral |
+
+- The columns are every key found in the rows being shown, in the order they first appear. A missing key is an empty cell.
+- Numbers and booleans are shown as text, and `null` is an empty cell.
+- A nested object or array is shown as compact JSON. With `#markdown` it's a code span, and with `#html-table` it's a formatted `json` code block.
+- `start-row`, `end-row` and `num-rows` work as for CSV. A line range (`#L1-L10`) is an error on a JSON source.
+- The keys are the one header row: `header-rows=0` hides it, and a larger value is an error.
+- The file must be a non-empty array of objects; anything else is an error.
 
 #### Markdown in table cells
 
