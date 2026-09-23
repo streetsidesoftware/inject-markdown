@@ -26,5 +26,5 @@ Boolean hash options already exist: `quote`, `vars`, `markdown` and `html-table`
 
 ## Consequences
 
-- Existing documents whose injected Markdown contains relative links change on the next run. See the rollout ADR for how this is released.
+- Existing documents whose injected Markdown contains relative links change on the next run. See [ADR-0006](0006-rollout.md) for how this is released.
 - `parseHashString` gains one key, and `app.mts` gains one option, which must also be added to the `Options`/`FileInjectorOptions` interfaces (see [CLAUDE.md](../../../CLAUDE.md)).
