@@ -63,7 +63,19 @@ describe('parseCellMarkdown', () => {
         '<https://a.b/c|d>',
         '[x](u|v)',
         '![i|j](p|q.png)',
+        '[https://a.b/c|d](https://a.b/c|d)',
     ])('a pipe never splits the cell: %s', (value) => {
         expect(cellCountAfterRoundTrip(value)).toBe(1);
+    });
+
+    test.each`
+        value                                   | url
+        ${'[c|d](https://a.b/c|d)'}             | ${'https://a.b/c|d'}
+        ${'[x](u|v)'}                           | ${'u|v'}
+        ${'<https://a.b/c|d>'}                  | ${'https://a.b/c%7Cd'}
+        ${'[https://a.b/c|d](https://a.b/c|d)'} | ${'https://a.b/c%7Cd'}
+    `('only a link stringify would write as `<url>` has its URL encoded: $value', ({ value, url }) => {
+        const [link] = parseCellMarkdown(value);
+        expect(link).toEqual(expect.objectContaining({ type: 'link', url }));
     });
 });

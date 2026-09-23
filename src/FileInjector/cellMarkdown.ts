@@ -74,7 +74,9 @@ function escapePipes(node: PhrasingContent): PhrasingContent {
     return node;
 }
 
+/** A link mdast-util-to-markdown may write as `<url>` (its `formatLinkAsAutolink` text/URL match). */
 function isAutolink(node: Link): boolean {
     const [child] = node.children;
-    return node.children.length === 1 && child.type === 'text' && node.url.endsWith(child.value);
+    if (node.title || node.children.length !== 1 || child.type !== 'text') return false;
+    return child.value === node.url || 'mailto:' + child.value === node.url;
 }
