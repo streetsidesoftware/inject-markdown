@@ -8,6 +8,7 @@ import * as path from 'path';
 import { type Options, processGlobs } from './processor/process.mjs';
 import { formatSummary } from './reporting/formatSummary.mjs';
 import { OptionError } from './util/errors.js';
+import { parseValuesFileEntry, type ValueDeclaration } from './util/values.js';
 
 async function version(): Promise<string> {
     const pathSelf = fileURLToPath(import.meta.url);
@@ -16,7 +17,17 @@ async function version(): Promise<string> {
     return (typeof packageJson === 'object' && packageJson?.version) || '0.0.0';
 }
 
+/** A CLI value declaration tagged with its argv position, since commander collects each option separately. */
+interface SequencedDeclaration {
+    seq: number;
+    decl: ValueDeclaration;
+}
+
 interface CliOptions extends Options {
+    value?: SequencedDeclaration[];
+    valuesFile?: SequencedDeclaration[];
+    valueAlias?: SequencedDeclaration[];
+
     /**
      * alternate spelling of option
      */
@@ -29,7 +40,11 @@ interface CliOptions extends Options {
 }
 
 function fixOptions(options: CliOptions): Options {
-    const opts: Options = options;
+    const { value, valuesFile, valueAlias, ...opts } = options;
+    // Restore command-line order across the three options (ADR-0012 point 4).
+    opts.valueDeclarations = [...(value ?? []), ...(valuesFile ?? []), ...(valueAlias ?? [])]
+        .sort((a, b) => a.seq - b.seq)
+        .map((d) => d.decl);
 
     if (options.stopOnError !== undefined) opts.stopOnErrors = options.stopOnError;
     if (options.stopOnErrors !== undefined) opts.stopOnErrors = options.stopOnErrors;
@@ -38,6 +53,11 @@ function fixOptions(options: CliOptions): Options {
 }
 
 export async function app(program = defaultCommand): Promise<Command> {
+    let seq = 0;
+    const declare = (acc: SequencedDeclaration[] = [], decl: ValueDeclaration): SequencedDeclaration[] => [
+        ...acc,
+        { seq: seq++, decl },
+    ];
     program
         .name('inject-markdown')
         .description('Inject file content into markdown files.')
@@ -52,18 +72,18 @@ export async function app(program = defaultCommand): Promise<Command> {
         )
         .option(
             '--value <name=val>',
-            'Set a run-wide {@ name @} placeholder value. Repeatable; a later --value for the same name wins.',
-            (entry: string, acc: Record<string, string> = Object.create(null)) => {
+            'Set a run-wide {@ name @} placeholder value. Repeatable; the last --value, --values-file or --value-alias defining a name wins.',
+            (entry: string, acc?: SequencedDeclaration[]) => {
                 const idx = entry.indexOf('=');
-                if (idx < 0) return acc;
-                acc[entry.slice(0, idx).trim()] = entry.slice(idx + 1);
-                return acc;
+                if (idx < 0) return acc ?? [];
+                return declare(acc, { kind: 'value', name: entry.slice(0, idx).trim(), value: entry.slice(idx + 1) });
             },
         )
         .option(
             '--values-file <[prefix:]path>',
             'Add a run-wide JSON file of {@ name @} placeholder values, resolved relative to --cwd. Repeatable.',
-            (path: string, paths: string[] = []) => [...paths, path],
+            (path: string, acc?: SequencedDeclaration[]) =>
+                declare(acc, { kind: 'values-file', entry: parseValuesFileEntry(path) }),
         )
         .option(
             '--allow-env <name>',
@@ -72,12 +92,15 @@ export async function app(program = defaultCommand): Promise<Command> {
         )
         .option(
             '--value-alias <new=target>',
-            'Resolve the {@ new @} placeholder as if it were {@ target @}. Repeatable; a later --value-alias for the same name wins.',
-            (entry: string, acc: Record<string, string> = Object.create(null)) => {
+            'Resolve the {@ new @} placeholder as if it were {@ target @}. Repeatable; ordered with --value and --values-file.',
+            (entry: string, acc?: SequencedDeclaration[]) => {
                 const idx = entry.indexOf('=');
-                if (idx < 0) return acc;
-                acc[entry.slice(0, idx).trim()] = entry.slice(idx + 1).trim();
-                return acc;
+                if (idx < 0) return acc ?? [];
+                return declare(acc, {
+                    kind: 'alias',
+                    name: entry.slice(0, idx).trim(),
+                    target: entry.slice(idx + 1).trim(),
+                });
             },
         )
         .option('--strict-vars', 'Treat an unresolved {@ name @} placeholder as a directive error.')

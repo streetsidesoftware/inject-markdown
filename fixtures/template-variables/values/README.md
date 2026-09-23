@@ -16,9 +16,13 @@
 
 <!--- @@inject-code: snippet-bare.txt#values-file=:data.json --->
 
-## Inline values take precedence over values-file
+## The newest declaration wins: values-file after values
 
 <!--- @@inject-code: snippet-bare.txt#values=version:9.9.9&values-file=:data.json --->
+
+## The newest declaration wins: value after values-file
+
+<!--- @@inject-code: snippet-bare.txt#values-file=:data.json&value=version:9.9.9 --->
 
 ## Escaped placeholder stays literal
 

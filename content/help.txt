@@ -13,8 +13,8 @@ Options:
                                  <dir>, outside the injection root (cwd).
                                  Repeatable.
   --value <name=val>             Set a run-wide {@ name @} placeholder value.
-                                 Repeatable; a later --value for the same name
-                                 wins.
+                                 Repeatable; the last --value, --values-file or
+                                 --value-alias defining a name wins.
   --values-file <[prefix:]path>  Add a run-wide JSON file of {@ name @}
                                  placeholder values, resolved relative to --cwd.
                                  Repeatable.
@@ -22,8 +22,8 @@ Options:
                                  environment variable <name> via {@ env.name @}.
                                  Repeatable.
   --value-alias <new=target>     Resolve the {@ new @} placeholder as if it were
-                                 {@ target @}. Repeatable; a later --value-alias
-                                 for the same name wins.
+                                 {@ target @}. Repeatable; ordered with --value
+                                 and --values-file.
   --strict-vars                  Treat an unresolved {@ name @} placeholder as a
                                  directive error.
   --clean                        Remove the injected content.

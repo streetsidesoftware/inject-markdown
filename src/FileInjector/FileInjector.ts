@@ -20,6 +20,7 @@ import { type InjectInfo, parseHash } from '../util/hash.js';
 import { isDefined } from '../util/isDefined.js';
 import { substituteInString, substituteInTree } from '../util/placeholders.js';
 import { dirToUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
+import type { ValueDeclaration } from '../util/values.js';
 import { detectMarkdownStyle } from './detectStyle.js';
 import { type Directive, directiveRegExp, type DirectiveType, parseDirective } from './Directive.js';
 import { jsonToRows, mapJsonStrings } from './jsonTable.js';
@@ -132,29 +133,18 @@ export interface FileInjectorOptions {
     allowOutsideRoot?: string[] | undefined;
 
     /**
-     * Run-wide placeholder values (`--value name=val`), last-wins on a repeated name.
-     * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md.
+     * Run-wide `--value`/`--values-file`/`--value-alias` declarations in command-line order; a
+     * later one wins, and every directive declaration is newer (ADR-0012). `--values-file`
+     * paths resolve relative to `cwd`, not subject to the injection-root boundary.
+     * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md, 0012-declaration-order-precedence.md.
      */
-    value?: Record<string, string> | undefined;
-
-    /**
-     * Run-wide placeholder values files (`--values-file [prefix:]path`), repeatable.
-     * Resolved relative to `cwd`, not subject to the injection-root boundary.
-     * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md, 0007-values-file-prefixing.md.
-     */
-    valuesFile?: string[] | undefined;
+    valueDeclarations?: ValueDeclaration[] | undefined;
 
     /**
      * Environment variable names a directive may reference via `{@ env.NAME @}`.
      * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md.
      */
     allowEnv?: string[] | undefined;
-
-    /**
-     * Run-wide placeholder aliases (`--value-alias new=target`), last-wins on a repeated name.
-     * See docs/ADRs/template-variables/0010-value-alias.md.
-     */
-    valueAlias?: Record<string, string> | undefined;
 
     /**
      * Treat an unresolved placeholder as a directive error instead of a warning.
