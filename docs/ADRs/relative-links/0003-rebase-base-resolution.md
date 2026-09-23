@@ -28,5 +28,5 @@ Rebasing a relative URL ([ADR-0001](0001-rebase-scope.md)) takes two bases: the 
 ## Consequences
 
 - An image in a remote GitHub source may not display if GitHub serves `blob/` URLs as HTML pages rather than image bytes. This hasn't been verified. If it's confirmed, a later ADR can add raw-URL mapping for images.
-- With `--output-dir`, relative links in both the host file and the injected content work from the source tree, not from the output directory. This is unchanged from today's behavior for the host file's own links. An opt-in flag to rebase onto the output location instead is listed under Future work in the [group index](README.md#future-work).
+- With `--output-dir`, relative links in both the host file and the injected content work from the source tree, not from the output directory. This is unchanged from today's behavior for the host file's own links. The opt-in `--rebase-output-links` rebases onto the output location instead ([ADR-0007](0007-rebase-output-links.md)).
 - A rebased local link may point outside the injection root (for example, `../../other/x.md`). Rebasing only rewrites text and reads nothing, so the injection-root boundary ([file-access-security ADR-0001](../file-access-security/0001-injection-root-boundary.md)) doesn't apply to it.
