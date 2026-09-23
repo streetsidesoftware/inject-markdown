@@ -149,7 +149,7 @@ This is an example bit of markdown.
 
 ### Keep relative links working
 
-Relative links in an injected file are rewritten to resolve from the file they're injected into. Here `parts/links.md` links to `../example.md`:
+Relative links in an injected file are rewritten to resolve from the file they're injected into. Here `parts/links.md`, one directory down, links to `../example.md`. Injected into a file next to `example.md`, that link becomes `example.md`:
 
 <!--- @@inject-code: import-sample-links.md --->
 
