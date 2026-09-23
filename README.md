@@ -1,6 +1,8 @@
 # inject-markdown
 
-Keep Markdown files in sync with the files they show. Mark a spot with an HTML comment, run `inject-markdown`, and the referenced file's content is written into place — and refreshed on every run.
+Insert the content of other files, such as code samples, command output or parts of other docs, into your Markdown files, and keep it up to date when those files change.
+
+Mark where the content goes with an HTML comment:
 
 ```markdown
 <!--- @@inject: src/example.ts --->
