@@ -29,7 +29,7 @@ Much tabular data (API exports, generated reports, config lists) is JSON, typica
 
    renders as a table with the columns `name`, `born`, `role` (see point 4 for which elements contribute).
 
-4. **Columns come from the objects in the row window.** The columns are the union of keys of the elements inside the row window (`start-row`, `end-row`, `num-rows`, [ADR-0004](0004-table-row-window-options.md)), in the order they first appear. Each array element is one data row, numbered from 1 as ADR-0004 defines. Without window options, the window is every element. A key present in the window with a `null` value still counts as a column. An element in the window that lacks a key gets an empty cell. The keys form the header row.
+4. **Columns come from the objects in the row window.** The columns are the union of keys of the elements inside the row window (`start-row`, `end-row`, `num-rows`, [ADR-0004](0004-table-row-window-options.md)), in the order they first appear. Each array element is one data row, numbered from 1 as ADR-0004 defines. Without window options, the window is ADR-0004's default: the first 10,000 elements (`num-rows=10000`). A key present in the window with a `null` value still counts as a column. An element in the window that lacks a key gets an empty cell. The keys form the header row.
 
    A key that appears only outside the window is not a column. So `columns=role` (ADR-0003) against a window whose objects have no `role` key is an unmatched name, which is a directive error ([ADR-0001](0001-table-option-encoding-conventions.md) point 6). Example: with `start-row=2&end-row=2` on the array in point 3, the columns are `name`, `role`.
 
@@ -89,7 +89,7 @@ Much tabular data (API exports, generated reports, config lists) is JSON, typica
 ## Consequences
 
 - `readAndParseTableFile` branches on the extension before `parseDelimitedText`. A JSON source can't be flattened to `string[][]` up front: nested values keep their value until the table form is known (point 5), and their string leaves are substituted separately (point 8). The row model needs a cell kind for "nested JSON value" alongside text, and the three table builders each render it.
-- Column collection depends on the row window (point 4). Until ADR-0004 is implemented, the window is every element.
+- Column collection depends on the row window (point 4), so this builds on the ADR-0004 implementation. A key that first appears after element 10,000 is not a column unless `num-rows` is raised.
 - The `#L1-L10` check has to happen before `extractLines` runs, which slices every source today.
 - The `header-rows` rules in point 9 take effect only once ADR-0002 is implemented. Until then the key header is always emitted.
 - JSON files are parsed whole, as `values-file=` already does. A remote source is bounded by the 10 MB response cap ([security-hardening/ADR-0003](../security-hardening/0003-remote-reference-guardrails.md)); a local file has no size limit, the same as any other local injection.
