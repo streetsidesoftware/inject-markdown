@@ -17,10 +17,10 @@ This ADR decides which URLs are rebased. How the new URL is computed is decided 
 1. **Constructs: mdast `link`, `image`, and `definition` nodes.** These cover inline links `[a](x.md)`, images `![a](x.png)`, and reference definitions `[a]: x.md`, which are used by `[a][ref]` and `![a][ref]`. All three hold the target in the same `url` field, so one rewrite covers them. Including definitions means an inline link and a reference-style link to the same file behave the same.
 2. **Raw HTML is not rewritten in this release.** `<img src="…">`, `<a href="…">`, `srcset`, `<source src>` and similar attributes inside `html` nodes are left as-is. Rewriting them needs attribute parsing of raw HTML strings. It can be added later as a separate ADR.
 3. **Only path-relative URLs are rebased.** A URL is rebased when it has no scheme and does not start with `/` or `#`: `x.md`, `./x.md`, `../x.md`, `img/a.png`. These are left untouched:
-    - absolute URLs with any scheme (`https:`, `http:`, `mailto:`, `file:`, `data:`, …),
-    - protocol-relative URLs (`//host/path`),
-    - root-relative URLs (`/docs/x.md`), whose meaning depends on the host (on GitHub, `/` is the repository root) and doesn't change with the file's location,
-    - fragment-only URLs (`#section`), which point at a heading in the rendered page, not at a file.
+   - absolute URLs with any scheme (`https:`, `http:`, `mailto:`, `file:`, `data:`, …),
+   - protocol-relative URLs (`//host/path`),
+   - root-relative URLs (`/docs/x.md`), whose meaning depends on the host (on GitHub, `/` is the repository root) and doesn't change with the file's location,
+   - fragment-only URLs (`#section`), which point at a heading in the rendered page, not at a file.
 
 ## Options Considered
 
