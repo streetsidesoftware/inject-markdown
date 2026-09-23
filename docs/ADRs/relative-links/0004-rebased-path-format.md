@@ -10,7 +10,7 @@
 
 ## Decision
 
-1. **Normalized POSIX relative path.** A rebased local URL is the shortest relative path from the host file's directory to the target, with `/` separators and no leading `./`. It uses `../` only as needed. `[a](./img/x.png)` in `docs/part.md`, injected into `README.md`, becomes `docs/img/x.png`.
+1. **Normalized POSIX relative path.** A rebased local URL is the shortest relative path from the host file's directory to the target, with `/` separators and no leading `./`. It uses `../` only as needed. The one exception is a link to the host file's own directory, which becomes `./` (point 4), because an empty URL would not be a link. `[a](./img/x.png)` in `docs/part.md`, injected into `README.md`, becomes `docs/img/x.png`.
 2. **Query and fragment are kept verbatim.** `x.md?plain=1#usage` keeps `?plain=1#usage` after the rewritten path.
 3. **Encoding is kept as written.** The rewrite changes only the path segments, and does not decode and re-encode percent-escapes (`my%20file.png` stays `my%20file.png` under its new directory). Whether the output uses the `<…>` destination form is left to `remark-stringify`, as for all injected content.
 4. **Trailing slash is kept.** A directory link keeps its trailing `/`. If the target is the host file's own directory, the result is `./`.
