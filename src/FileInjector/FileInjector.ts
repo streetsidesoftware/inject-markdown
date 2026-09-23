@@ -30,6 +30,7 @@ import {
     resolveRunWideValueSources,
     type RunWideValueSources,
 } from './placeholderValues.js';
+import { applyRowWindow, resolveRowWindow } from './rowWindow.js';
 import { rowsToHtmlTable, rowsToTable } from './Table.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
@@ -507,12 +508,15 @@ async function processFileInjections(
         const info = parseHash(fileName);
         const lines = info.lines;
         try {
+            const window = resolveRowWindow(info);
             const vFile = await resolveAndReadFile(fileName);
             const content = extractLines(extractContent(vFile), lines);
             const delimiter = delimiterForExtension(path.extname(fileName.pathname));
             // Substitution runs on the parsed cell values, per ADR-0006 point 3 — substituting into
             // the raw text first would let a value containing the delimiter add phantom columns.
-            const rows = parseDelimitedText(content, delimiter);
+            const [header, ...body] = parseDelimitedText(content, delimiter);
+            // The first row is the header; the window counts data rows only (ADR-0004).
+            const rows = header ? [header, ...applyRowWindow(body, window)] : [];
             await applySubstitution(info, directive.node, substitutionDeps, (resolve, onUnresolved) => {
                 for (const row of rows) {
                     for (let i = 0; i < row.length; ++i) {

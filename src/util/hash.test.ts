@@ -64,6 +64,16 @@ describe('hash', () => {
         });
         expect(parseHashString('#html-table=false').htmlTable).toBe(false);
     });
+
+    test('row window options are captured as raw strings, not headings', () => {
+        expect(parseHashString('#start-row=2&end-row=5&num-rows=3')).toEqual({
+            startRow: '2',
+            endRow: '5',
+            numRows: '3',
+            params: m('start-row=2', 'end-row=5', 'num-rows=3'),
+        });
+        expect(parseHashString('#start-row').heading).toBeUndefined();
+    });
 });
 
 describe('repeated hash keys (ADR-0011)', () => {

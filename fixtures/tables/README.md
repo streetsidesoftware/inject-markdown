@@ -35,3 +35,15 @@
 ## `#html-table` wins over `#markdown`
 
 <!--- @@inject: markdown.csv#markdown&html-table --->
+
+## Row window: `start-row=2&num-rows=2`
+
+<!--- @@inject: rows.csv#start-row=2&num-rows=2 --->
+
+## Row window: `end-row=2`
+
+<!--- @@inject: rows.csv#end-row=2 --->
+
+## Row window past the end is a header-only table
+
+<!--- @@inject: rows.csv#start-row=100 --->

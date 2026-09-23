@@ -602,6 +602,33 @@ describe('#html-table (ADR-0010)', () => {
     });
 });
 
+describe('row window (ADR-0004)', () => {
+    test('windows data rows and keeps the header', async () => {
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
+        const written = (await fi.processFile('README.md')).file.value as string;
+        const section = (hash: string) =>
+            written.slice(
+                written.indexOf(`<!--- @@inject: rows.csv#${hash} --->`),
+                written.indexOf(`<!--- @@inject-end: rows.csv#${hash} --->`),
+            );
+        expect(section('start-row=2&num-rows=2')).toMatch(/\| 2 +\| two +\|\n\| 3 +\| three +\|\n\n$/);
+        expect(section('end-row=2')).toMatch(/\| 1 +\| one +\|\n\| 2 +\| two +\|\n\n$/);
+        const empty = section('start-row=100');
+        expect(empty).toContain('| n | name |');
+        expect(empty).not.toContain('one');
+    });
+
+    test('an invalid window value is a directive error', async () => {
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/with-errors'), silent: true });
+        const r = await fi.processFile('table-row-window.md');
+        expect(r.hasErrors).toBe(true);
+        const messages = r.file.messages.map(String).join('\n');
+        expect(messages).toContain('Invalid start-row "abc": expected a whole number.');
+        expect(messages).toContain('Invalid start-row "0": row numbers start at 1.');
+        expect(messages).toContain('Invalid num-rows "-1": expected a whole number.');
+    });
+});
+
 function normalizeWriteFileCalls(
     writeFile: MockedFileSystemAdapter['writeFile'],
 ): MockedFileSystemAdapter['writeFile']['mock']['calls'] {
