@@ -47,3 +47,27 @@
 ## Row window past the end is a header-only table
 
 <!--- @@inject: rows.csv#start-row=100 --->
+
+## Two header rows: `header-rows=2`
+
+<!--- @@inject: grouped.csv#header-rows=2 --->
+
+## Two header rows in an HTML table
+
+<!--- @@inject: grouped.csv#header-rows=2&html-table --->
+
+## Header rows and the row window: `header-rows=2&start-row=2`
+
+<!--- @@inject: grouped.csv#header-rows=2&start-row=2 --->
+
+## No header row: `header-rows=0`
+
+<!--- @@inject: rows.csv#header-rows=0&num-rows=2 --->
+
+## No header row in an HTML table
+
+<!--- @@inject: rows.csv#header-rows=0&num-rows=2&html-table --->
+
+## More header rows than the file has: all header, no data
+
+<!--- @@inject: grouped.csv#header-rows=9 --->

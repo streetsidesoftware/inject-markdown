@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { applyRowWindow, defaultNumRows, resolveRowWindow } from './rowWindow.js';
+import { applyRowWindow, defaultNumRows, resolveHeaderRows, resolveRowWindow } from './rowWindow.js';
 
 const rows = [1, 2, 3, 4, 5];
 
@@ -36,5 +36,19 @@ describe('rowWindow (ADR-0004)', () => {
         ${{ startRow: '0' }}   | ${'Invalid start-row "0": row numbers start at 1.'}
     `('rejects $options', ({ options, message }) => {
         expect(() => resolveRowWindow(options)).toThrow(message);
+    });
+
+    test.each`
+        value        | expected
+        ${undefined} | ${1}
+        ${''}        | ${1}
+        ${'0'}       | ${0}
+        ${'3'}       | ${3}
+    `('resolveHeaderRows($value) is $expected', ({ value, expected }) => {
+        expect(resolveHeaderRows(value)).toBe(expected);
+    });
+
+    test('resolveHeaderRows rejects a non-number', () => {
+        expect(() => resolveHeaderRows('two')).toThrow('Invalid header-rows "two": expected a whole number.');
     });
 });

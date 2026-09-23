@@ -19,6 +19,8 @@ export interface InjectInfo {
     markdown?: boolean | undefined;
     /** Bare `#html-table`: emit an HTML table whose cells hold Markdown. See ADR-0010. */
     htmlTable?: boolean | undefined;
+    /** Raw `header-rows` value; bare means 1. Validated when the table is built. See ADR-0002. */
+    headerRows?: string | undefined;
     /** Row window for tables, validated when the table is built. See ADR-0004. */
     startRow?: string | undefined;
     endRow?: string | undefined;
@@ -90,6 +92,9 @@ export function parseHashString(hash: string): InjectInfo {
                 continue;
             case 'html-table':
                 info.htmlTable = parseFlagValue(value, true);
+                continue;
+            case 'header-rows':
+                info.headerRows = value;
                 continue;
             case 'start-row':
                 info.startRow = value;
