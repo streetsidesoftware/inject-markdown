@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as path from 'path';
@@ -8,7 +9,7 @@ import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemA
 import { nodeFsa } from '../FileSystemAdapter/fsa.js';
 import { createStore, normalizePath, type Store } from '../FileSystemAdapter/fsStore.mjs';
 import { OptionError } from '../util/errors.js';
-import { relativePath } from '../util/url_helper.js';
+import { isURL, relativePath } from '../util/url_helper.js';
 import { FileInjector, type Logger } from './FileInjector.js';
 
 const __file__ = fileURLToPath(import.meta.url);
@@ -16,6 +17,19 @@ const __dirname__ = path.dirname(__file__);
 const __root__ = path.join(__dirname__, '../..');
 
 const appFsa = nodeFsa();
+
+/**
+ * Canned bodies for the remote references the fixtures contain, so the suite never makes a live
+ * request — a network hiccup would otherwise fail an unrelated assertion in an unrelated test.
+ * Keyed by the reference exactly as written: `normalizePath` percent-encodes a remote URL's `#`
+ * into the key rather than stripping it, so the fragment is part of the identity.
+ */
+const remoteResponses: Record<string, string> = {
+    'https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe/src/app.mts#L15-L19': readFileSync(
+        path.join(__root__, 'fixtures/remote-responses/inject-markdown-d7de2f5fe-app.mts.txt'),
+        'utf8',
+    ),
+};
 
 const oc = (e: unknown) => expect.objectContaining(e);
 
@@ -495,10 +509,14 @@ interface FSA extends MockedFileSystemAdapter {
 
 function createFSA(): FSA {
     const store = createStore<string>();
+    for (const [ref, body] of Object.entries(remoteResponses)) {
+        store.set(ref, body);
+    }
 
     async function readFile(p: PathLike, e: BufferEncoding): Promise<string> {
         const found = store.get(p);
         if (typeof found === 'string') return found;
+        assertNotRemote(p);
         const data = await appFsa.readFile(p, e);
         store.set(p, data);
         return data;
@@ -523,6 +541,20 @@ function createFSA(): FSA {
     };
 
     return fsa;
+}
+
+/**
+ * The suite is offline by design. A remote reference has to be seeded in `remoteResponses`;
+ * reaching the network instead makes the run depend on github.com being up and on the response
+ * still matching the snapshots. `resolveAndReadFile` rewrites every read failure to
+ * `Failed to read`, so the reason is logged as well as thrown — otherwise a newly added remote
+ * fixture fails an assertion with nothing pointing at the cause.
+ */
+function assertNotRemote(p: PathLike): void {
+    if (!isURL(p) || p.protocol === 'file:') return;
+    const message = `Refusing to fetch "${p.href}" from a test. Add it to \`remoteResponses\`.`;
+    console.error(message);
+    throw new Error(message);
 }
 
 function createLogger() {
