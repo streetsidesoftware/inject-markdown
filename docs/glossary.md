@@ -27,7 +27,7 @@ The range of data rows actually injected, determined by `start-row`, `end-row`, 
 An entry in the `columns` option identifying one source column, either by 1-based number or by name (matched against the column's header match string, see below), optionally carrying an alignment marker. See [ADR-0003](ADRs/table-improvements/0003-table-columns-option.md).
 
 **Header match string**
-The text a `columns` name reference is compared against: a column's non-empty header-row cells joined with a single space (not `<br />`) and whitespace-normalized, distinct from the `<br />`-joined text actually displayed in the output header. Unaffected by `header-format`. See [ADR-0002](ADRs/table-improvements/0002-table-header-rows-option.md).
+The text a `columns` name reference is compared against: a column's non-empty header-row cells joined with a single space (not `<br />`) and whitespace-normalized, distinct from the `<br />`-joined text actually displayed in the output header. In a `#markdown` or `#html-table` table each cell contributes its [cell plain text](#cell-plain-text), not its Markdown source. Unaffected by `header-format`. See [ADR-0002](ADRs/table-improvements/0002-table-header-rows-option.md), [ADR-0009](ADRs/table-improvements/0009-table-markdown-interactions.md).
 
 **Alignment marker**
 A leading and/or trailing colon on a column reference (`:Name`, `Name:`, `:Name:`) requesting left/right/center alignment for that column, mirroring GFM's own `:---`/`---:`/`:---:` table delimiter-row syntax.
@@ -43,6 +43,15 @@ A display-only casing transform (`none`/`title`/`upper`/`lower`) applied to rend
 
 **`column-names`**
 A comma-separated list, positional against the output column order, that overrides individual header labels verbatim (bypassing `header-format`). An empty entry keeps that column's existing header; it never affects column selection or `columns` name matching. See [ADR-0007](ADRs/table-improvements/0007-table-column-names.md).
+
+**`markdown` option**
+A bare table hash flag (`data.csv#markdown`) that parses every cell of a GFM pipe table as inline Markdown instead of literal text. This covers header cells, data cells, and `column-names` labels. Block syntax stays literal, pipes are escaped by the tool, newlines in a field become `<br />`, and raw HTML passes through. Opt-in, and a no-op on non-table injections. See [ADR-0008](ADRs/table-improvements/0008-table-markdown-cells.md).
+
+**`html-table` option**
+A bare table hash flag (`data.csv#html-table`) that emits the table as an HTML `<table>` and parses every cell as full Markdown, blocks included. Cells with markup are wrapped in blank lines so the renderer parses them; plain cells stay on one line. Newlines follow Markdown, alignment is an `align` attribute, and multiple header rows are real `<thead>` rows. Implies Markdown cells, and wins over `#markdown` when both are given. See [ADR-0010](ADRs/table-improvements/0010-table-html-table.md).
+
+**Cell plain text**
+The visible text of a `#markdown` or `#html-table` table cell: text, code, and image alt text in order, with raw HTML dropped, and `<br />`, hard breaks and block boundaries each counted as a space. `columns` name matching and auto-alignment use it in place of the Markdown source. See [ADR-0009](ADRs/table-improvements/0009-table-markdown-interactions.md).
 
 **Injection root**
 The directory (default: `cwd`) that every local (`file:`) `@@inject`-family directive's resolved, realpath'd target must stay inside; a reference resolving outside it is a fatal error. Applies only to local file reads, not remote `http(s)` fetches. It also bounds which files are discovered and processed, not only which may be read. See [ADR-0001](ADRs/file-access-security/0001-injection-root-boundary.md) and [security-hardening/ADR-0002](ADRs/security-hardening/0002-injection-root-bounds-file-discovery.md).
