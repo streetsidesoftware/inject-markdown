@@ -3,16 +3,16 @@ import remarkStringify from 'remark-stringify';
 import { unified } from 'unified';
 import { describe, expect, test } from 'vitest';
 
-import { rowsToHtmlTable } from './Table.js';
+import { type CellValue, rowsToHtmlTable } from './Table.js';
 
-function render(rows: string[][]): string {
+function render(rows: CellValue[][]): string {
     return unified()
         .use(remarkGfm)
         .use(remarkStringify)
         .stringify({ type: 'root', children: rowsToHtmlTable(rows) });
 }
 
-function render2(rows: string[][], headerRows: number): string {
+function render2(rows: CellValue[][], headerRows: number): string {
     return unified()
         .use(remarkGfm)
         .use(remarkStringify)
@@ -85,7 +85,7 @@ describe('rowsToHtmlTable (ADR-0010)', () => {
     });
 
     test('a nested JSON value becomes a pretty-printed json code block (ADR-0011)', () => {
-        expect(render([['h'], [{ json: { x: [1] } } as never]])).toContain(
+        expect(render([['h'], [{ json: { x: [1] } }]])).toContain(
             '<td>\n\n```json\n{\n  "x": [\n    1\n  ]\n}\n```\n\n</td>',
         );
     });

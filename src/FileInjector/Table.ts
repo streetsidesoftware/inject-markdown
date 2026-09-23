@@ -10,13 +10,15 @@ export interface JsonCell {
 /** A table cell's source: text, or a nested JSON value from a JSON table source. */
 export type CellValue = string | JsonCell;
 
-export function isJsonCell(value: CellValue | undefined): value is JsonCell {
-    return typeof value === 'object';
+export function isJsonCell(value: unknown): value is JsonCell {
+    return typeof value === 'object' && value !== null && 'json' in value;
 }
 
 export interface HeaderRowsOption {
     /** Leading rows that form the header; default 1. See ADR-0002. */
     headerRows?: number | undefined;
+    /** Column count when `rows` can't supply it, e.g. no header and an empty row window. */
+    columnCount?: number | undefined;
 }
 
 export interface RowsToTableOptions extends HeaderRowsOption {
@@ -29,7 +31,7 @@ export interface RowsToTableOptions extends HeaderRowsOption {
  * single GFM header row with `<br />`; with none, the header is the column numbers (ADR-0002).
  */
 export function rowsToTable(rows: CellValue[][], options: RowsToTableOptions = {}): Table {
-    const columnCount = rows.reduce((max, row) => Math.max(max, row.length), 0);
+    const columnCount = options.columnCount ?? widestRow(rows);
 
     function toChildren(value: CellValue | undefined): PhrasingContent[] {
         if (isJsonCell(value)) {
@@ -80,13 +82,14 @@ export function rowsToTable(rows: CellValue[][], options: RowsToTableOptions = {
 }
 
 /**
- * Convert parsed rows into an HTML `<table>` whose cells hold Markdown (ADR-0010), using the first
- * row as the header. Returns sibling nodes: `html` nodes for the tags, interleaved with the parsed
+ * Convert parsed rows into an HTML `<table>` whose cells hold Markdown (ADR-0010). The first
+ * `headerRows` rows (default 1) each become a `<thead>` row; with none there is no `<thead>`.
+ * Returns sibling nodes: `html` nodes for the tags, interleaved with the parsed
  * blocks of each cell that has markup. The blank line remark-stringify puts between siblings is what
  * lets a renderer parse that Markdown.
  */
 export function rowsToHtmlTable(rows: CellValue[][], options: HeaderRowsOption = {}): RootContent[] {
-    const columnCount = rows.reduce((max, row) => Math.max(max, row.length), 0);
+    const columnCount = options.columnCount ?? widestRow(rows);
     const nodes: RootContent[] = [];
     let html = '';
 
@@ -136,6 +139,10 @@ export function rowsToHtmlTable(rows: CellValue[][], options: HeaderRowsOption =
     html += '</tbody>\n</table>\n';
     flush();
     return nodes;
+}
+
+export function widestRow(rows: unknown[][]): number {
+    return rows.reduce((max, row) => Math.max(max, row.length), 0);
 }
 
 /** The leading `headerRows` rows (default 1) and the rest. An empty source keeps one empty header row. */

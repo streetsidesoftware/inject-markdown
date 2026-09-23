@@ -95,3 +95,11 @@
 ## JSON with `header-rows=0` drops the key header
 
 <!--- @@inject-table: people.json#header-rows=0&end-row=2 --->
+
+## No header row and a window past the end: numbered header, no data
+
+<!--- @@inject: rows.csv#header-rows=0&start-row=100 --->
+
+## JSON with no key header and a window past the end: numbered columns, no data
+
+<!--- @@inject-table: people.json#header-rows=0&start-row=100 --->

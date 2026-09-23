@@ -34,6 +34,7 @@ describe('rowWindow (ADR-0004)', () => {
         ${{ endRow: '1.5' }}   | ${'Invalid end-row "1.5": expected a whole number.'}
         ${{ startRow: '' }}    | ${'Invalid start-row "": expected a whole number.'}
         ${{ startRow: '0' }}   | ${'Invalid start-row "0": row numbers start at 1.'}
+        ${{ startRow: '00' }}  | ${'Invalid start-row "00": row numbers start at 1.'}
     `('rejects $options', ({ options, message }) => {
         expect(() => resolveRowWindow(options)).toThrow(message);
     });

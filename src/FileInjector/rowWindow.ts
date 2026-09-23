@@ -19,7 +19,7 @@ export interface RowWindow {
  */
 export function resolveRowWindow(options: RowWindowOptions): RowWindow {
     const first = parseCount('start-row', options.startRow) ?? 1;
-    if (first < 1) throw new Error('Invalid start-row "0": row numbers start at 1.');
+    if (first < 1) throw new Error(`Invalid start-row "${options.startRow}": row numbers start at 1.`);
     const numRows = parseCount('num-rows', options.numRows) ?? defaultNumRows;
     const endRow = parseCount('end-row', options.endRow);
     const last = first + numRows - 1;

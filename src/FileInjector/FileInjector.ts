@@ -32,7 +32,7 @@ import {
     type RunWideValueSources,
 } from './placeholderValues.js';
 import { applyRowWindow, resolveHeaderRows, resolveRowWindow, type RowWindow } from './rowWindow.js';
-import { type CellValue, type HeaderRowsOption, isJsonCell, rowsToHtmlTable, rowsToTable } from './Table.js';
+import { type CellValue, type HeaderRowsOption, isJsonCell, rowsToHtmlTable, rowsToTable, widestRow } from './Table.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
 
@@ -564,14 +564,21 @@ async function processFileInjections(
         // than `header-rows` is all header and no data.
         const header = parsed.slice(0, headerRows);
         const rows = [...header, ...applyRowWindow(parsed.slice(headerRows), window)];
-        // An empty source keeps the requested count, so it still renders an empty header row.
-        return { rows, tableOptions: { headerRows: parsed.length ? header.length : headerRows } };
+        const tableOptions = {
+            // An empty source keeps the requested count, so it still renders an empty header row.
+            headerRows: parsed.length ? header.length : headerRows,
+            // With no header and an empty window, the source still says how many columns there are.
+            columnCount: rows.length ? undefined : widestRow(parsed),
+        };
+        return { rows, tableOptions };
     }
 
     /** The keys are the one header row; `header-rows=0` drops it (ADR-0011 point 9). */
     function jsonTableRows(content: string, window: RowWindow, headerRows: number): TableRows {
         const [keys, ...data] = jsonToRows(content, window);
-        return { rows: headerRows ? [keys, ...data] : data, tableOptions: { headerRows } };
+        if (headerRows) return { rows: [keys, ...data], tableOptions: { headerRows } };
+        // Without the key row, an empty window would leave no columns; the keys still count them.
+        return { rows: data, tableOptions: { headerRows, columnCount: data.length ? undefined : keys.length } };
     }
 
     async function readAndParseCodeFile(fileName: URL, directive: DirectiveNode): Promise<ParseResult> {
