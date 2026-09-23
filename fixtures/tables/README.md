@@ -71,3 +71,7 @@
 ## More header rows than the file has: all header, no data
 
 <!--- @@inject: grouped.csv#header-rows=9 --->
+
+## No header row and a window past the end: numbered header, no data
+
+<!--- @@inject: rows.csv#header-rows=0&start-row=100 --->

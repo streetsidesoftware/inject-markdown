@@ -31,7 +31,7 @@ import {
     type RunWideValueSources,
 } from './placeholderValues.js';
 import { applyRowWindow, resolveHeaderRows, resolveRowWindow } from './rowWindow.js';
-import { rowsToHtmlTable, rowsToTable } from './Table.js';
+import { rowsToHtmlTable, rowsToTable, widestRow } from './Table.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
 
@@ -520,8 +520,12 @@ async function processFileInjections(
             // than `header-rows` is all header and no data.
             const header = parsed.slice(0, headerRows);
             const rows = [...header, ...applyRowWindow(parsed.slice(headerRows), window)];
-            // An empty source keeps the requested count, so it still renders an empty header row.
-            const tableOptions = { headerRows: parsed.length ? header.length : headerRows };
+            const tableOptions = {
+                // An empty source keeps the requested count, so it still renders an empty header row.
+                headerRows: parsed.length ? header.length : headerRows,
+                // With no header and an empty window, the source still says how many columns there are.
+                columnCount: rows.length ? undefined : widestRow(parsed),
+            };
             await applySubstitution(info, directive.node, substitutionDeps, (resolve, onUnresolved) => {
                 for (const row of rows) {
                     for (let i = 0; i < row.length; ++i) {

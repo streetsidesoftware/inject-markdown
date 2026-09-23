@@ -642,6 +642,14 @@ describe('row window (ADR-0004)', () => {
         ).toHaveLength(2);
     });
 
+    test('header-rows=0 with a window past the end keeps the numbered header', async () => {
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
+        const written = (await fi.processFile('README.md')).file.value as string;
+        const start = written.indexOf('<!--- @@inject: rows.csv#header-rows=0&start-row=100 --->');
+        const section = written.slice(start, written.indexOf('<!--- @@inject-end', start));
+        expect(section).toContain('| 1 | 2 |');
+    });
+
     test('an invalid window value is a directive error', async () => {
         const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/with-errors'), silent: true });
         const r = await fi.processFile('table-row-window.md');
