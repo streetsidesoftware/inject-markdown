@@ -1,6 +1,6 @@
 # ADR-0005: Interaction with other injection options
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-23
 **Deciders:** Jason Dent
 

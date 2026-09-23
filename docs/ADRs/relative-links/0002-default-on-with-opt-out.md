@@ -1,6 +1,6 @@
 # ADR-0002: Rebasing is on by default, with per-directive and run-wide opt-out
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-23
 **Deciders:** Jason Dent
 

@@ -1,6 +1,6 @@
 # ADR-0003: Resolving a rebased URL: local sources, remote sources, and `--output-dir`
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-23
 **Deciders:** Jason Dent
 
