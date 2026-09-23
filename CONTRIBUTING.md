@@ -141,6 +141,8 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/). Release Ple
 
 Repo maintenance and internal restructuring are never `fix:`/`feat:`, even for a large diff — those two are reserved for changes to the published package's behavior, because `fix:`/`feat:` are what show up in the changelog and bump the version.
 
+Don't use `@@` (e.g. `@@inject-table`) in commit messages or PR titles, not even inside backticks. The changelog generator turns `@name` into a link to a GitHub user, so it would show up in the release notes as `@[@inject-table](https://github.com/inject-table)`. Write the directive name without the `@@` instead (e.g. `` `inject-table` directive ``).
+
 If a PR merges under the wrong type, see the `release-notes` Claude Code skill for correcting the entry after the fact via a `BEGIN_COMMIT_OVERRIDE` block, rather than rewriting history.
 
 ### PR descriptions
