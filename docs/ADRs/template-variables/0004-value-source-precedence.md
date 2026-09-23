@@ -1,6 +1,6 @@
 # ADR-0004: Value source precedence and combination
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-0012](0012-declaration-order-precedence.md)
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 
