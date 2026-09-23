@@ -1,6 +1,6 @@
 # ADR-0011: Repeated directive hash keys
 
-**Status:** Accepted
+**Status:** Accepted; point 3's layer order superseded by [ADR-0012](0012-declaration-order-precedence.md)
 **Date:** 2026-09-22
 **Deciders:** Jason Dent
 
