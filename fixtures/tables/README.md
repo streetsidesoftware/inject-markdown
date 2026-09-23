@@ -47,3 +47,23 @@
 ## Row window past the end is a header-only table
 
 <!--- @@inject: rows.csv#start-row=100 --->
+
+## JSON table source
+
+<!--- @@inject-table: people.json#values=version:1.0 --->
+
+## JSON table source with `#markdown`
+
+<!--- @@inject-table: people.json#markdown&values=version:1.0 --->
+
+## JSON table source with `#html-table`
+
+<!--- @@inject-table: people.json#html-table&values=version:1.0 --->
+
+## JSON columns come from the row window
+
+<!--- @@inject-table: people.json#start-row=2&end-row=2 --->
+
+## JSON window past the end keeps a header of all keys
+
+<!--- @@inject-table: people.json#start-row=100 --->

@@ -265,3 +265,112 @@ line two
 | - | ---- |
 
 <!--- @@inject-end: rows.csv#start-row=100 --->
+
+## JSON table source
+
+<!--- @@inject-table: people.json#values=version:1.0 --->
+
+| name  | born | tags               | meta        | role            | active | note |
+| ----- | ---- | ------------------ | ----------- | --------------- | ------ | ---- |
+| Ada   | 1815 | \["math","poetry"] | {"v":"1.0"} |                 |        |      |
+| Grace |      |                    |             | Admiral \| Navy | true   |      |
+| Linus | 1969 |                    |             |                 |        |      |
+
+<!--- @@inject-end: people.json#values=version:1.0 --->
+
+## JSON table source with `#markdown`
+
+<!--- @@inject-table: people.json#markdown&values=version:1.0 --->
+
+| name  | born | tags                | meta          | role            | active | note |
+| ----- | ---- | ------------------- | ------------- | --------------- | ------ | ---- |
+| Ada   | 1815 | `["math","poetry"]` | `{"v":"1.0"}` |                 |        |      |
+| Grace |      |                     |               | Admiral \| Navy | true   |      |
+| Linus | 1969 |                     |               |                 |        |      |
+
+<!--- @@inject-end: people.json#markdown&values=version:1.0 --->
+
+## JSON table source with `#html-table`
+
+<!--- @@inject-table: people.json#html-table&values=version:1.0 --->
+
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>born</th>
+<th>tags</th>
+<th>meta</th>
+<th>role</th>
+<th>active</th>
+<th>note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ada</td>
+<td>1815</td>
+<td>
+
+```json
+[
+  "math",
+  "poetry"
+]
+```
+
+</td>
+<td>
+
+```json
+{
+  "v": "1.0"
+}
+```
+
+</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Grace</td>
+<td></td>
+<td></td>
+<td></td>
+<td>Admiral | Navy</td>
+<td>true</td>
+<td></td>
+</tr>
+<tr>
+<td>Linus</td>
+<td>1969</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<!--- @@inject-end: people.json#html-table&values=version:1.0 --->
+
+## JSON columns come from the row window
+
+<!--- @@inject-table: people.json#start-row=2&end-row=2 --->
+
+| name  | role            | active | note |
+| ----- | --------------- | ------ | ---- |
+| Grace | Admiral \| Navy | true   |      |
+
+<!--- @@inject-end: people.json#start-row=2&end-row=2 --->
+
+## JSON window past the end keeps a header of all keys
+
+<!--- @@inject-table: people.json#start-row=100 --->
+
+| name | born | tags | meta | role | active | note |
+| ---- | ---- | ---- | ---- | ---- | ------ | ---- |
+
+<!--- @@inject-end: people.json#start-row=100 --->

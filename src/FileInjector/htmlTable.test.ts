@@ -76,4 +76,10 @@ describe('rowsToHtmlTable (ADR-0010)', () => {
         expect(out).not.toMatch(/^\[a\]:/m);
         expect(out).not.toMatch(/^\[\^1\]:/m);
     });
+
+    test('a nested JSON value becomes a pretty-printed json code block (ADR-0011)', () => {
+        expect(render([['h'], [{ json: { x: [1] } } as never]])).toContain(
+            '<td>\n\n```json\n{\n  "x": [\n    1\n  ]\n}\n```\n\n</td>',
+        );
+    });
 });

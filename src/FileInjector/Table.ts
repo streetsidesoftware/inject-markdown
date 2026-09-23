@@ -2,6 +2,18 @@ import type { Html, PhrasingContent, RootContent, Table, TableCell, TableRow } f
 
 import { parseCellBlocks, parseCellMarkdown } from './cellMarkdown.js';
 
+/** A nested JSON object or array, rendered per table form (ADR-0011 point 5). */
+export interface JsonCell {
+    json: object;
+}
+
+/** A table cell's source: text, or a nested JSON value from a JSON table source. */
+export type CellValue = string | JsonCell;
+
+export function isJsonCell(value: CellValue | undefined): value is JsonCell {
+    return typeof value === 'object';
+}
+
 export interface RowsToTableOptions {
     /** Parse cell text as inline Markdown instead of literal text. See ADR-0008. */
     markdown?: boolean | undefined;
@@ -10,10 +22,17 @@ export interface RowsToTableOptions {
 /**
  * Convert parsed rows into a GFM table, using the first row as the header.
  */
-export function rowsToTable(rows: string[][], options: RowsToTableOptions = {}): Table {
+export function rowsToTable(rows: CellValue[][], options: RowsToTableOptions = {}): Table {
     const columnCount = rows.reduce((max, row) => Math.max(max, row.length), 0);
 
-    function toCell(value: string | undefined): TableCell {
+    function toCell(value: CellValue | undefined): TableCell {
+        if (isJsonCell(value)) {
+            const text = JSON.stringify(value.json);
+            const node: PhrasingContent = options.markdown
+                ? { type: 'inlineCode', value: text }
+                : { type: 'text', value: text };
+            return { type: 'tableCell', children: [node] };
+        }
         const children: PhrasingContent[] = !value
             ? []
             : options.markdown
@@ -22,7 +41,7 @@ export function rowsToTable(rows: string[][], options: RowsToTableOptions = {}):
         return { type: 'tableCell', children };
     }
 
-    function toTableRow(cells: string[]): TableRow {
+    function toTableRow(cells: CellValue[]): TableRow {
         const children: TableCell[] = [];
         for (let i = 0; i < columnCount; ++i) {
             children.push(toCell(cells[i]));
@@ -45,7 +64,7 @@ export function rowsToTable(rows: string[][], options: RowsToTableOptions = {}):
  * blocks of each cell that has markup. The blank line remark-stringify puts between siblings is what
  * lets a renderer parse that Markdown.
  */
-export function rowsToHtmlTable(rows: string[][]): RootContent[] {
+export function rowsToHtmlTable(rows: CellValue[][]): RootContent[] {
     const columnCount = rows.reduce((max, row) => Math.max(max, row.length), 0);
     const nodes: RootContent[] = [];
     let html = '';
@@ -57,8 +76,12 @@ export function rowsToHtmlTable(rows: string[][]): RootContent[] {
         html = '';
     }
 
-    function addCell(tag: 'th' | 'td', value: string | undefined) {
-        const blocks = value ? parseCellBlocks(value) : [];
+    function addCell(tag: 'th' | 'td', value: CellValue | undefined) {
+        const blocks: RootContent[] = isJsonCell(value)
+            ? [{ type: 'code', lang: 'json', value: JSON.stringify(value.json, null, 2) }]
+            : value
+              ? parseCellBlocks(value)
+              : [];
         const plain = plainParagraphText(blocks);
         if (plain !== undefined) {
             html += `<${tag}>${escapeHtml(plain)}</${tag}>\n`;
@@ -70,7 +93,7 @@ export function rowsToHtmlTable(rows: string[][]): RootContent[] {
         html = `</${tag}>\n`;
     }
 
-    function addRow(tag: 'th' | 'td', cells: string[]) {
+    function addRow(tag: 'th' | 'td', cells: CellValue[]) {
         html += '<tr>\n';
         for (let i = 0; i < columnCount; ++i) {
             addCell(tag, cells[i]);

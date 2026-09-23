@@ -59,4 +59,12 @@ describe('rowsToTable', () => {
             children: [{ type: 'text', value: '**h**' }],
         });
     });
+
+    test('a nested JSON value is compact text, or a code span with markdown (ADR-0011)', () => {
+        const rows = [['h'], [{ json: { x: 1 } }]];
+        expect(rowsToTable(rows).children[1].children[0].children).toEqual([{ type: 'text', value: '{"x":1}' }]);
+        expect(rowsToTable(rows, { markdown: true }).children[1].children[0].children).toEqual([
+            { type: 'inlineCode', value: '{"x":1}' },
+        ]);
+    });
 });

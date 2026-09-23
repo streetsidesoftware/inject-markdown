@@ -22,6 +22,7 @@ import { substituteInString, substituteInTree } from '../util/placeholders.js';
 import { dirToUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
 import { detectMarkdownStyle } from './detectStyle.js';
 import { type Directive, directiveRegExp, type DirectiveType, parseDirective } from './Directive.js';
+import { jsonToRows, mapJsonStrings } from './jsonTable.js';
 import { applyQuote, errorToComment, extractHeader, isHtmlNode, sanitizeImport, toCode, toRoot } from './Markdown.js';
 import { applyPatches, indentContinuationLines, lineIndent, type Patch, stringifyFragment } from './patchContent.js';
 import {
@@ -30,8 +31,8 @@ import {
     resolveRunWideValueSources,
     type RunWideValueSources,
 } from './placeholderValues.js';
-import { applyRowWindow, resolveRowWindow } from './rowWindow.js';
-import { rowsToHtmlTable, rowsToTable } from './Table.js';
+import { applyRowWindow, resolveRowWindow, type RowWindow } from './rowWindow.js';
+import { type CellValue, isJsonCell, rowsToHtmlTable, rowsToTable } from './Table.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
 
@@ -509,18 +510,21 @@ async function processFileInjections(
         const lines = info.lines;
         try {
             const window = resolveRowWindow(info);
+            const isJson = path.extname(fileName.pathname).toLowerCase() === '.json';
+            if (isJson && lines) {
+                throw new Error('A line range can not be used on a JSON table; use start-row, end-row or num-rows.');
+            }
             const vFile = await resolveAndReadFile(fileName);
             const content = extractLines(extractContent(vFile), lines);
-            const delimiter = delimiterForExtension(path.extname(fileName.pathname));
             // Substitution runs on the parsed cell values, per ADR-0006 point 3 — substituting into
             // the raw text first would let a value containing the delimiter add phantom columns.
-            const [header, ...body] = parseDelimitedText(content, delimiter);
-            // The first row is the header; the window counts data rows only (ADR-0004).
-            const rows = header ? [header, ...applyRowWindow(body, window)] : [];
+            const rows = isJson ? jsonToRows(content, window) : parseDelimitedRows(content, fileName, window);
             await applySubstitution(info, directive.node, substitutionDeps, (resolve, onUnresolved) => {
+                const sub = (text: string) => substituteInString(text, resolve, onUnresolved);
                 for (const row of rows) {
                     for (let i = 0; i < row.length; ++i) {
-                        row[i] = substituteInString(row[i], resolve, onUnresolved);
+                        const cell = row[i];
+                        row[i] = isJsonCell(cell) ? { json: mapJsonStrings(cell.json, sub) as object } : sub(cell);
                     }
                 }
             });
@@ -534,6 +538,13 @@ async function processFileInjections(
             file.error(err.message, directive.node.position);
             return { root: errorToComment(err), info };
         }
+    }
+
+    function parseDelimitedRows(content: string, fileName: URL, window: RowWindow): CellValue[][] {
+        const delimiter = delimiterForExtension(path.extname(fileName.pathname));
+        const [header, ...body] = parseDelimitedText(content, delimiter);
+        // The first row is the header; the window counts data rows only (ADR-0004).
+        return header ? [header, ...applyRowWindow(body, window)] : [];
     }
 
     async function readAndParseCodeFile(fileName: URL, directive: DirectiveNode): Promise<ParseResult> {
