@@ -6,7 +6,10 @@ Terms used across [docs/ADRs](ADRs/) and the table-injection feature. Keep this 
 An HTML-comment instruction in a Markdown file (`<!--- @@inject: file --->` and variants) that tells `inject-markdown` to pull content from another file. See [Directive.ts](../src/FileInjector/Directive.ts).
 
 **Table injection**
-A directive whose source file resolves to a `.csv`/`.tsv` file (or is explicitly `@@inject-table`), rendered as a GFM Markdown table instead of Markdown content or a code block. See [FileInjector.ts](../src/FileInjector/FileInjector.ts).
+A directive whose source file resolves to a `.csv`/`.tsv` file (or is explicitly `@@inject-table`), rendered as a GFM Markdown table instead of Markdown content or a code block. Under `@@inject-table`, a `.json` file is a [JSON table source](#json-table-source). See [FileInjector.ts](../src/FileInjector/FileInjector.ts).
+
+**JSON table source**
+A `.json` file referenced by `@@inject-table:` (never by plain `@@inject:`, which still gives a code block), parsed with strict `JSON.parse`. It must be a non-empty top-level array of objects. The columns are the union of keys in first-seen order, and the keys form the single header row. Numbers and booleans render via `String()`, `null` is empty, and nested values become compact JSON text. See [ADR-0011](ADRs/table-improvements/0011-table-json-source.md).
 
 **Hash/fragment options**
 Directive options encoded in the `#` fragment of the file reference (e.g. `file.csv#header-rows&columns=Name,Age:`), parsed by `parseHashString`. See [hash.ts](../src/util/hash.ts) and [ADR-0001](ADRs/table-improvements/0001-table-option-encoding-conventions.md).
