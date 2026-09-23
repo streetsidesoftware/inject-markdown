@@ -12,6 +12,7 @@ dictionaries:
   - typescript
 words:
   - autobuild
+  - autolinks
   - basenames
   - buildscript
   - codecov
@@ -29,8 +30,10 @@ words:
   - restringify
   - setext
   - stringifying
+  - strikethrough
   - syscall
   - unist
+  - uppercasing
   - vfile
   - worktree
   - worktrees
