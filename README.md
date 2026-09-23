@@ -1,7 +1,5 @@
 # inject-markdown
 
-[![npm](https://img.shields.io/npm/v/inject-markdown.svg)](https://www.npmjs.com/package/inject-markdown)
-
 Keep Markdown files in sync with the files they show. Mark a spot with an HTML comment, run `inject-markdown`, and the referenced file's content is written into place — and refreshed on every run.
 
 ```markdown
