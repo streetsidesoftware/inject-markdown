@@ -45,10 +45,11 @@ Fetch the current body (`gh pr view <N> --json body --jq .body`) and check wheth
 - **No existing block**: append one at the end, on its own blank-line-separated section:
   ```
   BEGIN_COMMIT_OVERRIDE
-  chore: exclude .claude/worktrees from eslint
+  chore: exclude .claude/worktrees from eslint (#825)
   END_COMMIT_OVERRIDE
   ```
-  Multiple messages (e.g. a PR that squashed what were really two logical changes) go one per paragraph inside the same block, each its own `type: description`.
+  End each message with the PR number, `(#N)`. The override replaces the whole squash commit message, including the `(#N)` suffix that Release Please turns into the changelog's PR link, so without it the entry has no PR link. Don't use `@@` in the message either (see CONTRIBUTING.md).
+  Multiple messages (e.g. a PR that squashed what were really two logical changes) go one per paragraph inside the same block, each its own `type: description (#N)`.
 - **Existing block**: replace its contents rather than adding a second one — Release Please reads by marker, and duplicate blocks are undefined behavior.
 
 Preserve everything else in the body untouched — this is an append/replace of one section, not a rewrite. Show the user the new body (or a clear diff of it) before applying via `gh pr edit <N> --body "..."`. Editing a merged PR's description is visible to anyone who reads it later, so confirm first, the same as any other action visible to others.
