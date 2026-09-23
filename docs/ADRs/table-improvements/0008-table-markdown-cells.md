@@ -1,4 +1,4 @@
-# ADR-0008: `markdown` option — Markdown in table cells
+# ADR-0008: `markdown` option — Markdown cells in an HTML table
 
 **Status:** Proposed
 **Date:** 2026-09-23
@@ -16,29 +16,60 @@ see [docs](https://x.y) and `a|b`    see \[docs]\(https\://x.y) and \`a\|b\`
 "line1<newline>line2" (quoted)       line1&#xA;line2
 ```
 
-That is the right default for plain data. But CSVs are often hand-maintained doc tables (feature matrices, option lists) whose cells hold links, code spans, and emphasis the author wants rendered. There is currently no way to get them.
+That is the right default for plain data. But CSVs are often hand-maintained doc tables (feature matrices, option lists) whose cells hold links, code spans, emphasis, and sometimes lists or several paragraphs, all of which the author wants rendered. There is currently no way to get them.
+
+A GFM pipe table can't hold any of that. Each cell is a single line of inline content, a literal `|` has to be escaped, and a line break needs raw `<br />`. An HTML `<table>` has none of these limits. CommonMark ends an HTML block (type 6, which covers `table`/`tr`/`td`/...) at a blank line and parses what follows as Markdown. So Markdown set off by blank lines inside `<td>` is rendered by GFM renderers such as GitHub's.
 
 The option lives in the `#`-fragment like the other table options ([ADR-0001](0001-table-option-encoding-conventions.md)). Note that `parseHashString` ([hash.ts](../../../src/util/hash.ts)) today assigns any unrecognized bare key to `info.heading`, so a new bare flag must be recognized explicitly.
 
 ## Decision
 
-1. **Opt-in bare flag `#markdown`.** `data.csv#markdown` parses cell text as Markdown. It uses the same `parseFlagValue` handling as `quote`/`vars`, so `markdown=false` is also accepted. Without it, behavior is unchanged: cells are literal text. `parseHashString` handles `markdown` explicitly and sets `InjectInfo.markdown`, so the bare key never falls through to `heading`.
+1. **Opt-in bare flag `#markdown`.** `data.csv#markdown` parses cell text as Markdown and emits the table as HTML. It uses the same `parseFlagValue` handling as `quote`/`vars`, so `markdown=false` is also accepted. Without it, behavior is unchanged: a GFM pipe table of literal text. `parseHashString` handles `markdown` explicitly and sets `InjectInfo.markdown`, so the bare key never falls through to `heading`.
 
 2. **Table injections only; a no-op elsewhere.** On a Markdown or code injection (`notes.md#markdown`, `script.ts#markdown`) the flag has no effect and is not an error. It does not force table mode, and it does not turn a code-block injection into a Markdown injection.
 
-3. **Header and data cells alike.** The flag applies to every cell: header rows ([ADR-0002](0002-table-header-rows-option.md)), data rows, and `column-names` override labels ([ADR-0007](0007-table-column-names.md)). Synthesized numeric headers under `header-rows=0` are plain numbers and unaffected.
+3. **Output is an HTML `<table>`.**
+   - Structure: `<table>`, a `<thead>` of header rows, and a `<tbody>` of data rows. Header cells are `<th>`, data cells are `<td>`.
+   - Every line starts at column 0, both tags and cell content. Indenting cell Markdown 4+ spaces would turn it into an indented code block, and a single flat rule can't collide with that.
+   - Multiple header rows (`header-rows=N`, [ADR-0002](0002-table-header-rows-option.md)) become N real `<tr>` rows in `<thead>`. They are not `<br />`-joined as in the pipe form.
+   - With `header-rows=0` there is no `<thead>` at all. An HTML table doesn't need a header row, so the pipe form's synthesized `1`, `2`, `3` headers are not emitted.
+   - Column alignment (explicit `columns` markers per [ADR-0003](0003-table-columns-option.md), and auto-alignment per [ADR-0005](0005-table-auto-alignment.md)) is written as an `align="left|center|right"` attribute on every `<th>`/`<td>` in that column. An unaligned column gets no attribute.
 
-4. **Inline content only.** Each cell is parsed as GFM _phrasing_ content: text, emphasis, strong, delete (strikethrough), inline code, links, autolinks, images, inline HTML, and hard breaks. That is everything a GFM table cell can hold.
+4. **Header and data cells alike.** Markdown parsing applies to every cell: header rows, data rows, and `column-names` override labels ([ADR-0007](0007-table-column-names.md)).
 
-5. **Block syntax renders literally.** A cell whose text would start a block construct (`# Title`, `- item`, `1. first`, `> note`, `---`, a fence) is not an error and is not unwrapped. Its text renders as written, escaped as needed so it stays literal in the output (e.g. `# Title` shows `# Title`). Inline syntax inside it is still parsed.
+5. **Full Markdown per cell.** Each cell's text is parsed as a standalone Markdown document with the same GFM pipeline the tool already uses. Block content is allowed: paragraphs, lists, block quotes, fenced code, headings. A quoted CSV field holding `- a⏎- b` renders a list.
 
-6. **Pipes are escaped by the tool.** The author writes a plain `|` in the CSV, and the output always escapes it (`\|`), including inside code spans, so a cell can never split the table. The author never pre-escapes pipes.
+6. **Newlines follow Markdown.** A newline inside a quoted CSV field means what it means in a `.md` file. A single newline is a soft wrap, and a blank line separates paragraphs. `\r\n` and `\n` are treated alike.
 
-7. **Newlines become `<br />`.** In a `#markdown` table, a newline inside a quoted CSV field becomes an inline `<br />`, the same separator [ADR-0002](0002-table-header-rows-option.md) uses to join multi-row headers. `\r\n` and `\n` are treated alike. Literal-text tables keep today's output.
+7. **Plain cells are compact; cells with markup are blank-line wrapped.**
+   - A cell whose parse is a single paragraph of plain text only (no emphasis, code, links, HTML, or breaks) is emitted on one line, `<td>42</td>`. `&`, `<` and `>` are escaped as HTML entities, because content on a tag line is raw HTML and not parsed as Markdown.
+   - An empty cell is `<td></td>`.
+   - Any other cell is emitted as the opening tag, a blank line, the cell's Markdown, a blank line, and the closing tag. That lets the renderer parse it.
 
-8. **Raw HTML passes through.** Inline HTML in a cell (`<b>`, `<br>`, `<sup>`) is emitted verbatim, as it is when injecting a `.md` file. Sanitizing is the renderer's job; `inject-markdown` does not sanitize HTML anywhere else either.
+   Example: CSV `Name,Notes` / `x,"**new**⏎⏎- a⏎- b"` with `#markdown`:
 
-9. **Placeholders are substituted before parsing.** `{@ name @}` substitution still runs on the parsed CSV field values, per [template-variables/ADR-0006](../template-variables/0006-substitution-mechanics-and-timing.md) (no phantom columns). It runs _before_ the Markdown parse, so a substituted value like `*draft*` renders italic. This matches placeholders in an injected `.md` file.
+   ```html
+   <table>
+     <thead>
+       <tr>
+         <th>Name</th>
+         <th>Notes</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td>x</td>
+         <td>**new** - a - b</td>
+       </tr>
+     </tbody>
+   </table>
+   ```
+
+8. **No pipe escaping.** A `|` in a cell is ordinary text in an HTML table, so it is emitted as-is.
+
+9. **Raw HTML passes through.** Inline and block HTML in a cell (`<b>`, `<br>`, `<sup>`, `<details>`) is emitted verbatim, as it is when injecting a `.md` file. Sanitizing is the renderer's job; `inject-markdown` does not sanitize HTML anywhere else either.
+
+10. **Placeholders are substituted before parsing.** `{@ name @}` substitution still runs on the parsed CSV field values, per [template-variables/ADR-0006](../template-variables/0006-substitution-mechanics-and-timing.md) (no phantom columns). It runs _before_ the Markdown parse, so a substituted value like `*draft*` renders italic. This matches placeholders in an injected `.md` file.
 
 ## Options Considered
 
@@ -47,20 +78,22 @@ The option lives in the `#`-fragment like the other table options ([ADR-0001](00
 - **Flag name `md`.** Rejected: too cryptic next to the full-word options.
 - **Flag name `cell-format=markdown|text`.** Rejected: an enum with one non-default value, which is verbose for the common case.
 - **Flag names `#table-markdown`, with a companion `#table` that forces table mode.** Considered, then dropped. The user chose plain `#markdown` and decided a `#table` flag is out of scope; `@@inject-table:` remains the only way to force a table.
-- **Data cells only (headers stay literal), or separate header/body flags.** Rejected: one rule for the whole table is easier to predict. The interactions with `columns` matching and `header-format` are handled in [ADR-0009](0009-table-markdown-interactions.md) instead of by exempting headers.
-- **Parse full Markdown and flatten blocks into `<br />`-separated inline content.** Rejected: lossy (list markers, heading levels), complex, and surprising.
-- **Block syntax as a directive error.** Rejected: it would force authors to escape ordinary values such as `- 5` or `1. first`.
-- **Unwrap block constructs (`# Title` → `Title`).** Rejected: silently drops what the author wrote.
-- **Author pre-escapes pipes.** Rejected: an unescaped `|` would silently corrupt the table.
-- **Newlines as a space (soft wrap), or keep `&#xA;`.** Rejected: loses the author's intended line break. `<br />` is already the table-group convention.
-- **Escape raw HTML.** Rejected: it would also block `<br>`/`<sup>`, which are common in table cells, and would be inconsistent with `.md` injection.
+- **Keep the GFM pipe form, with inline Markdown only.** The original decision here, reversed in favor of the HTML table. It limited cells to phrasing content, rendered block syntax (`# Title`, `- item`) literally, escaped pipes in the output, and turned newlines into `<br />`. The HTML form removes each of those limits, which is the point of the option.
+- **Render cell Markdown to HTML in the tool (`<td><strong>b</strong></td>`).** Rejected: it would add `remark-rehype`/`rehype-stringify` dependencies, and the generated source would be much harder to read and review in a diff. It would render in any renderer, whereas the chosen form depends on the renderer following CommonMark's HTML-block rule. GitHub does.
+- **Blank-line wrap every cell.** Rejected: taller output, and each wrapped cell renders inside a `<p>`, which adds vertical spacing on GitHub. Compact plain cells avoid both. The cost is that a row can mix the two forms.
+- **Indent `<tr>`/`<td>` tags for readability.** Rejected: cell Markdown must still start at column 0. Mixing indented tags with flush content is fragile under Prettier and under this tool's own re-parse.
+- **`style="text-align:…"` for alignment.** Rejected: GitHub's sanitizer strips `style`, so alignment would be lost there. `align` is deprecated in HTML5 but kept by GitHub, and it is what GitHub's own pipe-table renderer emits.
+- **`<br />`-joined multi-row headers, or synthesized numbered headers for `header-rows=0`, as in the pipe form.** Rejected: both are workarounds for GFM's single mandatory header row, which an HTML table doesn't have.
+- **Newlines as `<br />`.** Rejected: with block content allowed, a blank line has to mean a paragraph break, as it does everywhere else in Markdown.
+- **Escape raw HTML.** Rejected: it would also block `<br>`/`<sup>`/`<details>`, which are common in table cells, and would be inconsistent with `.md` injection.
 - **Substitute placeholders after parsing, into text nodes only.** Rejected: inconsistent with how placeholders behave in injected Markdown.
 - **`#markdown` as a directive error on non-table injections.** Rejected: the flag is harmless there, and an error would be noise.
 
 ## Consequences
 
-- `InjectInfo` gains `markdown?: boolean`. `rowsToTable` needs a cell-conversion path that parses phrasing content (e.g. the existing `remark-parse` + `remark-gfm` pipeline, taking the paragraph's children) in place of the single `text` node.
-- The block-syntax rule (5) means the parser must never yield a block node for a cell. One way is to parse the cell as a paragraph's contents, with a literal-text fallback for any leading block marker. The implementation has to verify this with tests for each block construct listed.
-- Pipe escaping inside code spans depends on remark-stringify's GFM table handling. Tests must cover `` `a|b` `` explicitly.
-- Enabling `#markdown` on a CSV with incidental `*`/`_` (e.g. `file_name`, `2*3`) changes its rendering. That is the opt-in's cost and belongs in the README.
-- HTML pass-through means a `#markdown` table built from an untrusted CSV can carry arbitrary HTML into the output. This is the same exposure as injecting an untrusted `.md` file, and should be noted alongside the security docs.
+- `InjectInfo` gains `markdown?: boolean`. Table building gets a second output path that emits mdast `html` nodes for the tags, interleaved with each wrapped cell's parsed block children. remark-stringify's blank line between sibling blocks then produces the wrapping. The existing pipe-form path is untouched.
+- Rendering depends on the target renderer following CommonMark's HTML-block rule. GitHub, GitLab, and markdown-it/micromark-based renderers do. The README should say `#markdown` output is meant for GFM-style renderers.
+- Each wrapped cell renders its content inside `<p>` (or other block) elements, so spacing differs slightly from a pipe table. Compact plain cells don't have this.
+- A cell's raw HTML can close the surrounding structure (e.g. a stray `</td>` or `</table>`) and corrupt the table. With HTML pass-through this is the author's responsibility, as it is with any raw HTML in Markdown. Similarly, a `#markdown` table built from an untrusted CSV can carry arbitrary HTML into the output: the same exposure as injecting an untrusted `.md` file, and it should be noted alongside the security docs.
+- Enabling `#markdown` on a CSV with incidental `*`/`_` (e.g. `file_name`, `2*3`) changes its rendering, and so does a cell starting with `-`, `#`, `>` or `1.`, which now becomes a list, heading or quote. That is the opt-in's cost and belongs in the README.
+- The output is idempotent across runs because the whole section between the directive markers is regenerated. Tests should still cover a re-run over already-injected output.
