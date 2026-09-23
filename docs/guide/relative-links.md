@@ -20,7 +20,7 @@ Injected into `README.md`, this becomes:
 - Only path-relative URLs: `x.md`, `./x.md`, `../x.md`.
 - Links in Markdown table cells (`#markdown`, `#html-table`), relative to the table's source file.
 
-The new path is the shortest relative path from the host file, without a leading `./`. A query string and `#fragment` are kept. When the two files are in the same directory, links are left exactly as written.
+The new path is the shortest relative path from the host file, without a leading `./`. The one exception is a link to the host file's own directory, which becomes `./`. A query string and `#fragment` are kept. When the two files are in the same directory, links are left exactly as written.
 
 ## What is left alone
 
