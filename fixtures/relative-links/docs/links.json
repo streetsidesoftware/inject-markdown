@@ -1,0 +1,4 @@
+[
+    { "Name": "Guide", "Link": "[guide](guide.md)" },
+    { "Name": "Data", "Link": "[data](../data/x.csv)", "Meta": { "see": "[raw](raw.md)" } }
+]

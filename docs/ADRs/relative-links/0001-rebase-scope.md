@@ -30,5 +30,5 @@ This ADR decides which URLs are rebased. How the new URL is computed is decided 
 
 ## Consequences
 
-- An injected file that uses `<img src="relative.png">` still breaks after injection. Documentation should say so until raw HTML is covered Covering it is listed under Future work in the [group index](README.md#future-work).
+- An injected file that uses `<img src="relative.png">` still breaks after injection. Documentation should say so until raw HTML is covered. Covering it is listed under Future work in the [group index](README.md#future-work).
 - A fragment-only link `#section` still depends on the target heading being present in the host document, for example when `heading=` selects only part of the source file. This ADR doesn't change that.

@@ -69,6 +69,9 @@ describe('FileInjector', () => {
         ${'fixtures/tables/README.md'}         | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/tables/README.md'}
         ${'fixtures/style-preserve/README.md'} | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/style-preserve/README.md'}
         ${'fixtures/inject-only/README.md'}    | ${{ injectOnly: true }}                                  | ${oc({ hasChanged: true })}  | ${'fixtures/inject-only/README.md'}
+        ${'fixtures/relative-links/README.md'} | ${{}}                                                    | ${oc({ hasChanged: true })}  | ${'fixtures/relative-links/README.md'}
+        ${'fixtures/relative-links/README.md'} | ${{ rebaseLinks: false }}                                | ${oc({ hasChanged: true })}  | ${'fixtures/relative-links/README.md'}
+        ${'fixtures/relative-links/README.md'} | ${{ outputDir: '_out_' }}                                | ${oc({ hasChanged: true })}  | ${'_out_/fixtures/relative-links/README.md'}
     `('processFile $file $options', async ({ file, options, expectedResult, expectedFile }) => {
         const logger = createLogger();
         options.cwd = options.cwd || __root__;

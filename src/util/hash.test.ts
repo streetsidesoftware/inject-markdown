@@ -67,6 +67,13 @@ describe('hash', () => {
         expect(parseHashString('#html-table=false').htmlTable).toBe(false);
     });
 
+    test('#rebase-links', () => {
+        expect(parseHashString('#rebase-links').rebaseLinks).toBe(true);
+        expect(parseHashString('#rebase-links=false').rebaseLinks).toBe(false);
+        expect(parseHashString('#rebase-links=no').rebaseLinks).toBe(false);
+        expect(parseHashString('#heading=x').rebaseLinks).toBeUndefined();
+    });
+
     test('row window options are captured as raw strings, not headings', () => {
         expect(parseHashString('#start-row=2&end-row=5&num-rows=3')).toEqual({
             startRow: '2',
