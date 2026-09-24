@@ -1,5 +1,4 @@
 import * as fs from 'fs/promises';
-import fetch from 'node-fetch';
 import { pathToFileURL } from 'url';
 
 import { isURL } from '../util/url_helper.js';
