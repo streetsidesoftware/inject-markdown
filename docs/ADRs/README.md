@@ -28,6 +28,24 @@ This directory records architecturally significant decisions for `inject-markdow
 ## Consequences
 ```
 
+## Glossaries
+
+- A term introduced by one feature's ADRs goes in the [ADR glossary](glossary.md).
+- A concept used across the repo goes in the main [glossary](../glossary.md).
+- A term that becomes repo-wide moves from the ADR glossary to the main one, and links to it are updated.
+
+Both glossaries use the same entry format:
+
+```markdown
+### <Term>
+
+<Definition.> From [<feature>](<feature>/README.md).
+```
+
+- Link to the feature's `README.md`, never to a single ADR. From the main glossary the link is `ADRs/<feature>/README.md`.
+- Keep entries sorted alphabetically, ignoring case, backticks and leading `--` (`--allow-env` sorts under A).
+- When a term is renamed or moved, update every link to its old anchor.
+
 ## Groups
 
 | Group                                          | Description                                                                                                                               |
@@ -42,4 +60,4 @@ This directory records architecturally significant decisions for `inject-markdow
 
 _None yet — all current ADRs belong to a group above._
 
-See also: [glossary.md](../glossary.md).
+See also: [glossary](../glossary.md), [ADR glossary](glossary.md).

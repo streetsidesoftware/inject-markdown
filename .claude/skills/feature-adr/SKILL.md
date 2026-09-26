@@ -1,6 +1,6 @@
 ---
 name: feature-adr
-description: 'Design a new inject-markdown feature (a directive, an option, a CLI flag, a behavior change) through a structured interview, recording each decision as an ADR under docs/ADRs/<feature-slug>/ and keeping docs/glossary.md in sync. Use this whenever the user wants to design, spec out, or plan a feature before writing code — proposes a new @@inject option, wants to add a CLI flag, is unsure how an edge case should behave, or explicitly asks for an ADR, a design doc, or to "figure out the details" of something. Trigger even if the user doesn''t say "ADR" or "skill" by name — any request to add new behavior to this tool that has more than one reasonable interpretation is a candidate. Do not use this for pure bug fixes, refactors, or requests where the behavior is already fully specified.'
+description: 'Design a new inject-markdown feature (a directive, an option, a CLI flag, a behavior change) through a structured interview, recording each decision as an ADR under docs/ADRs/<feature-slug>/ and keeping docs/glossary.md and docs/ADRs/glossary.md in sync. Use this whenever the user wants to design, spec out, or plan a feature before writing code — proposes a new @@inject option, wants to add a CLI flag, is unsure how an edge case should behave, or explicitly asks for an ADR, a design doc, or to "figure out the details" of something. Trigger even if the user doesn''t say "ADR" or "skill" by name — any request to add new behavior to this tool that has more than one reasonable interpretation is a candidate. Do not use this for pure bug fixes, refactors, or requests where the behavior is already fully specified.'
 ---
 
 # Feature ADR interview
@@ -37,7 +37,7 @@ Use `AskUserQuestion` for anything with more than one defensible answer. A few t
 - **Batch up to 4 related questions per call**, but don't force unrelated decisions into the same round just to fill the batch. A natural grouping (e.g. "everything about how row numbering works") reads better than four disconnected questions.
 - **Anchor questions in concrete examples.** "What should `start-row=100` do on a 20-row file?" beats "how should out-of-range values be handled?" — a worked example is what actually surfaces the edge case in the user's head.
 - **Don't stop at the first round.** Real specs need several passes: syntax and encoding, then selection/matching semantics, then error handling, then interaction with existing options, then formatting/display details. Each answer usually opens a new question ("okay, but what if...") — that's the interview working, not a sign to wrap up early.
-- **When an answer reveals an earlier decision was wrong, revise it — don't work around it.** If a later example contradicts an already-written ADR (this has happened: a "match row 1 only" rule got reversed once a multi-row group-header example came up), go back and edit that ADR's `Decision` in place, move the old choice into `Options Considered` as a rejected/reversed alternative with the reasoning, and update anything downstream that referenced it (other ADRs, `docs/glossary.md`). ADRs in this repo stay editable while `Status: Proposed`; see `docs/ADRs/README.md`.
+- **When an answer reveals an earlier decision was wrong, revise it — don't work around it.** If a later example contradicts an already-written ADR (this has happened: a "match row 1 only" rule got reversed once a multi-row group-header example came up), go back and edit that ADR's `Decision` in place, move the old choice into `Options Considered` as a rejected/reversed alternative with the reasoning, and update anything downstream that referenced it (other ADRs, the glossaries). ADRs in this repo stay editable while `Status: Proposed`; see `docs/ADRs/README.md`.
 
 If `AskUserQuestion` rejects a call for having a question with only one real option, don't force a second option to satisfy the shape — just state the one path directly and move on.
 
@@ -51,9 +51,9 @@ Read `docs/ADRs/README.md` first — it defines the grouping convention. In shor
 
 Use the template in `docs/ADRs/README.md` (Status/Date/Deciders/Context/Decision/Options Considered/Consequences). Every ADR needs a real `Context` (why this decision needs making, referencing the actual code) and `Options Considered` should record what was rejected and why — that's what makes the ADR useful to someone who wasn't in the interview.
 
-### 5. Keep the glossary in sync
+### 5. Keep the glossaries in sync
 
-`docs/glossary.md` holds shared vocabulary across all ADRs. Whenever a decision introduces a new term that a later ADR or a future reader would need defined (a new option name, a new concept like "row window" or "header match string"), add or update its glossary entry in the same pass — and when you revise an ADR's decision (step 3's last bullet), check whether any glossary entry now describes the old, wrong behavior.
+Whenever a decision introduces a new term that a later ADR or a future reader would need defined (a new option name, a new concept like "row window" or "header match string"), add or update its entry in the same pass, following [Glossaries](../../../docs/ADRs/README.md#glossaries) in `docs/ADRs/README.md`: new feature terms go in `docs/ADRs/glossary.md`, repo-wide concepts in `docs/glossary.md`. When you revise an ADR's decision (step 3's last bullet), check whether any glossary entry now describes the old, wrong behavior.
 
 ### 6. Commit after every file you create or edit
 
