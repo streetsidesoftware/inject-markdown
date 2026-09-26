@@ -53,7 +53,7 @@ A bare table hash flag (`data.csv#markdown`) that parses every cell of a GFM pip
 **`html-table` option**
 A bare table hash flag (`data.csv#html-table`) that emits the table as an HTML `<table>` and parses every cell as full Markdown, blocks included. Cells with markup are wrapped in blank lines so the renderer parses them; plain cells stay on one line. Newlines follow Markdown, alignment is an `align` attribute, and multiple header rows are real `<thead>` rows. Implies Markdown cells, and wins over `#markdown` when both are given. See [ADR-0010](ADRs/table-improvements/0010-table-html-table.md).
 
-**Cell plain text**
+<a id="cell-plain-text"></a>**Cell plain text**
 The visible text of a `#markdown` or `#html-table` table cell: text, code, and image alt text in order, with raw HTML dropped, and `<br />`, hard breaks and block boundaries each counted as a space. `columns` name matching and auto-alignment use it in place of the Markdown source. See [ADR-0009](ADRs/table-improvements/0009-table-markdown-interactions.md).
 
 **Injection root**
@@ -80,7 +80,7 @@ A repeatable CLI option naming hosts exempt from the destination policy, for an 
 **Placeholder**
 A `{@ name @}` marker inside injected content, replaced with a value resolved against sources the _directive_ (not the injected file) supplies. Whitespace inside the delimiters is optional and trimmed; a leading backslash (`\{@ ... @}`) escapes it to literal text. Not a full template engine — no conditionals or loops. See [ADR-0001](ADRs/template-variables/0001-placeholder-syntax.md).
 
-**Placeholder name**
+<a id="placeholder-name"></a>**Placeholder name**
 The dotted path inside a placeholder (e.g. `package.version`), each segment `[A-Za-z0-9_][A-Za-z0-9_-]*` — a hyphen is allowed inside a segment but never at its start. A dotted name traverses into nested objects from a JSON value source. See [ADR-0001](ADRs/template-variables/0001-placeholder-syntax.md).
 
 **`values=` option**
@@ -107,19 +107,19 @@ A repeatable CLI option naming environment variable names a directive may refere
 **`env.` namespace**
 A reserved placeholder-name prefix (`{@ env.VERSION @}`) resolving to `process.env.VERSION` when allow-listed via `--allow-env`; always reserved, even if another value source defines a top-level `env` key. See [ADR-0003](ADRs/template-variables/0003-cli-and-env-value-sources.md).
 
-**Value declaration**
+<a id="value-declaration"></a>**Value declaration**
 One entry in the [declaration order](#declaration-order): a `values=` pair, a `value=`, a `values-file=` entry, a `value-alias=` pair, or the CLI equivalents. A declaration that supplies values is a [value layer](#value-layer). An alias (`value-alias=`/`--value-alias`) takes part in the same order but supplies no value, so it is not a layer. See [ADR-0012](ADRs/template-variables/0012-declaration-order-precedence.md).
 
-**Declaration order**
+<a id="declaration-order"></a>**Declaration order**
 The order value declarations are written in, oldest to newest: every CLI flag in argv order, then the directive's hash options left to right. The newest declaration wins, whichever option it came from. The `env.` namespace is outside the order. See [ADR-0012](ADRs/template-variables/0012-declaration-order-precedence.md).
 
 **Value source precedence**
 Which declaration wins when several define a placeholder name. Since [ADR-0012](ADRs/template-variables/0012-declaration-order-precedence.md) this is [declaration order](#declaration-order), newest first, applied by [per-leaf resolution](#per-leaf-resolution); the earlier fixed ranking by source type ([ADR-0004](ADRs/template-variables/0004-value-source-precedence.md)) is superseded. See [ADR-0008](ADRs/template-variables/0008-value-layering-and-resolution.md).
 
-**Value layer**
+<a id="value-layer"></a>**Value layer**
 The smallest unit supplying placeholder values: one `name:value` pair from a directive's `values=`, one `value=`, one `--value` flag, or one `values-file=`/`--values-file` entry. Layers are ordered by [declaration order](#declaration-order), newest on top. Layers are never combined into a shared value tree. See [ADR-0008](ADRs/template-variables/0008-value-layering-and-resolution.md).
 
-**Per-leaf resolution**
+<a id="per-leaf-resolution"></a>**Per-leaf resolution**
 Resolving a placeholder name by walking [value layers](#value-layer) in order and taking the first that holds that exact name as a scalar. A layer lacking the name, or holding an object, array or `null` at it, is skipped rather than ending the search — so `--value package.engines.node=26.0` overrides one leaf of a values file without hiding its siblings. Nothing is deep-merged; "merge" describes only the observable result. See [ADR-0008](ADRs/template-variables/0008-value-layering-and-resolution.md).
 
 **Unresolved placeholder**
@@ -137,10 +137,10 @@ The default values-file prefix, computed by stripping a leading Windows drive (`
 **Explicit prefix**
 The namespace written before the colon in a `values-file=`/`--values-file` entry (`pkg:package.json`). Two characters or more, so a Windows drive letter is never parsed as one; dot-separated segments, none empty and none starting with `-` or `.`. A dotted prefix nests (`pkg.build:data.json` → `{@ pkg.build.* @}`). See [ADR-0009](ADRs/template-variables/0009-prefix-grammar-and-drive-letters.md).
 
-**Root merge (`:path`)**
+<a id="root-merge-path"></a>**Root merge (`:path`)**
 A `values-file=`/`--values-file` entry written with an empty prefix (a leading colon, no name before it), contributing that file's keys directly to the root namespace instead of under an auto-derived or explicit prefix — the opt-out for a directive that wants bare placeholder names from a single file. It is an ordinary [value layer](#value-layer) with no prefix, so two root-merged entries resolve per leaf rather than the later one replacing the earlier. See [ADR-0007](ADRs/template-variables/0007-values-file-prefixing.md), [ADR-0008](ADRs/template-variables/0008-value-layering-and-resolution.md).
 
-**Value alias**
+<a id="value-alias"></a>**Value alias**
 A mapping from one [placeholder name](#placeholder-name) to another, declared with the `value-alias=` directive option or the `--value-alias` CLI option. It holds no value of its own: resolving the aliased name resolves the target through the normal layer walk, so it always reflects what the sources currently say. Takes part in [declaration order](#declaration-order) like a value: for a given name, the newest of an alias and a value decides it. See [ADR-0010](ADRs/template-variables/0010-value-alias.md), [ADR-0012](ADRs/template-variables/0012-declaration-order-precedence.md).
 
 **`value-alias=` option**
