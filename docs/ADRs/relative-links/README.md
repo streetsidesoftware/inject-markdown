@@ -23,4 +23,4 @@ Not decided yet. Each needs its own ADR in this group. ADR-0007 to ADR-0010 are 
 - **A directory base for `--rebase-output-links`**, meaning "the source tree is published at `<dir>`". Deferred by [ADR-0007](0007-rebase-output-links.md) until there's a concrete use case.
 - **A separate image base** (e.g. `raw.githubusercontent.com`) for `--rebase-output-links`. Deferred by [ADR-0010](0010-output-rebase-surface.md) point 6 until it's known whether GitHub displays `blob/` URLs as images.
 
-See also: [../../glossary.md](../../glossary.md).
+See also: [glossary](../../glossary.md), [ADR glossary](../glossary.md).

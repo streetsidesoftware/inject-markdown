@@ -18,4 +18,4 @@ ADRs for template variable substitution: `{@ name @}` placeholders inside inject
 | [0012](0012-declaration-order-precedence.md)            | Declaration-order value precedence                   | Accepted                                                   |
 | [0013](0013-singular-value-option.md)                   | Singular `value=` directive option                   | Accepted                                                   |
 
-See also: [../../glossary.md](../../glossary.md).
+See also: [glossary](../../glossary.md), [ADR glossary](../glossary.md).

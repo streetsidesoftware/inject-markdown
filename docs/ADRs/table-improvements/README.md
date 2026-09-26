@@ -16,4 +16,4 @@ ADRs for table-injection options (`header-rows`, `columns`, row windowing, auto-
 | [0010](0010-table-html-table.md)                  | `html-table` option — Markdown cells in an HTML table   | Accepted |
 | [0011](0011-table-json-source.md)                 | JSON files as a table source                            | Accepted |
 
-See also: [../../glossary.md](../../glossary.md).
+See also: [glossary](../../glossary.md), [ADR glossary](../glossary.md).

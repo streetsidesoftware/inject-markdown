@@ -10,4 +10,4 @@ ADRs for exposures found reviewing the injection-root boundary ([file-access-sec
 | [0004](0004-deny-access-globs.md)                    | `--deny-access <glob>` for paths inside the injection root         | Proposed |
 | [0005](0005-threat-model-and-safe-usage.md)          | Documented threat model and safe-usage guidance                    | Proposed |
 
-See also: [../../glossary.md](../../glossary.md).
+See also: [glossary](../../glossary.md), [ADR glossary](../glossary.md).
