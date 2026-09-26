@@ -55,6 +55,8 @@ Use the template in `docs/ADRs/README.md` (Status/Date/Deciders/Context/Decision
 
 `docs/glossary.md` holds shared vocabulary across all ADRs. Whenever a decision introduces a new term that a later ADR or a future reader would need defined (a new option name, a new concept like "row window" or "header match string"), add or update its glossary entry in the same pass — and when you revise an ADR's decision (step 3's last bullet), check whether any glossary entry now describes the old, wrong behavior.
 
+Write each term as a `###` heading followed by its definition paragraph, so it gets an anchor other docs can link to (`glossary.md#value-layer`). Insert new entries in alphabetical order, ignoring case, backticks and leading `--` (`--allow-env` sorts under A, `` `values=` option `` under V). If you rename a term, update every link to its old anchor.
+
 ### 6. Commit after every file you create or edit
 
 One commit per ADR/glossary file touched, not a batch at the end — this is the entire point of doing this incrementally: the user can watch the design solidify via `git log` while it's still in progress. Use Conventional Commits (`docs: add ADR-000N <short title>`, `docs: revise ADR-000N <what changed and why>`). Don't ask permission for each commit — creating/editing files under `docs/` and committing them is the expected shape of this workflow — but do check `git status`/`git diff` before staging in case something unexpected is present.
