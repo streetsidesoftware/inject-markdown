@@ -55,7 +55,7 @@
     "@types/mdast": "^4.0.4",
     "@types/node": "^22.20.4",
     "@vitest/coverage-istanbul": "^4.1.11",
-    "cspell": "^10.3.3",
+    "cspell": "^10.3.4",
     "eslint": "^10.11.0",
     "eslint-plugin-simple-import-sort": "^14.0.0",
     "globals": "^17.12.0",
