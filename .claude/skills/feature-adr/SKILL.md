@@ -5,9 +5,11 @@ description: 'Design a new inject-markdown feature (a directive, an option, a CL
 
 # Feature ADR interview
 
+The goal is a well-designed feature. ADRs are a tool for getting there, not a deliverable.
+
 Design inject-markdown features by interviewing the user to a fully-specified decision, recording each decision as an ADR as it firms up, and committing as you go — so the decision trail is reviewable in `git log` and `git blame` well before any code exists.
 
-This is a **design-only** workflow. Do not write or modify implementation code, tests, or `README.md` under this skill unless the user explicitly asks you to move on to implementation — a half-interviewed feature produces worse code than no code.
+This is a **design-only** workflow. Do not write or modify implementation code, tests, or `README.md` under this skill unless the user explicitly asks you to move on to implementation — a half-interviewed feature produces worse code than no code. If a question is easier to answer by trying it, a quick prototype is fine.
 
 ## Why interview before writing an ADR
 
@@ -37,7 +39,7 @@ Use `AskUserQuestion` for anything with more than one defensible answer. A few t
 - **Batch up to 4 related questions per call**, but don't force unrelated decisions into the same round just to fill the batch. A natural grouping (e.g. "everything about how row numbering works") reads better than four disconnected questions.
 - **Anchor questions in concrete examples.** "What should `start-row=100` do on a 20-row file?" beats "how should out-of-range values be handled?" — a worked example is what actually surfaces the edge case in the user's head.
 - **Don't stop at the first round.** Real specs need several passes: syntax and encoding, then selection/matching semantics, then error handling, then interaction with existing options, then formatting/display details. Each answer usually opens a new question ("okay, but what if...") — that's the interview working, not a sign to wrap up early.
-- **When an answer reveals an earlier decision was wrong, revise it — don't work around it.** If a later example contradicts an already-written ADR (this has happened: a "match row 1 only" rule got reversed once a multi-row group-header example came up), go back and edit that ADR's `Decision` in place, move the old choice into `Options Considered` as a rejected/reversed alternative with the reasoning, and update anything downstream that referenced it (other ADRs, the glossaries). ADRs in this repo stay editable while `Status: Proposed`; see `docs/ADRs/README.md`.
+- **When an answer reveals an earlier decision was wrong, revise it — don't work around it.** If a later example contradicts an already-written ADR (this has happened: a "match row 1 only" rule got reversed once a multi-row group-header example came up), go back and edit that ADR's `Decision` in place, move the old choice into `Options Considered` as a rejected/reversed alternative with the reasoning, and update anything downstream that referenced it (other ADRs, the glossaries). See `docs/ADRs/README.md`.
 
 If `AskUserQuestion` rejects a call for having a question with only one real option, don't force a second option to satisfy the shape — just state the one path directly and move on.
 
