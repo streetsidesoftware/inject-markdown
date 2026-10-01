@@ -129,6 +129,9 @@ Add options after a `#` in the file reference, separated by `&`:
 | `start-row=<n>`              | Tables           | First data row to include, counting from 1 after the header rows.                                                                               |
 | `end-row=<n>`                | Tables           | Last data row to include.                                                                                                                       |
 | `num-rows=<n>`               | Tables           | Maximum number of data rows. Default `10000`.                                                                                                   |
+| `columns=<col,…>`            | Tables           | Choose and order columns by number or header name; `:col`, `col:`, `:col:` align left, right, center.                                           |
+| `header-format=<case>`       | Tables           | Change header case: `none` (default), `title`, `upper` or `lower`.                                                                              |
+| `column-names=<name,…>`      | Tables           | Replace header labels by output position; an empty entry keeps the header.                                                                      |
 | `rebase-links=false`         | Markdown, Tables | Keep relative links as written. By default they're rewritten to resolve from the host file. See [Relative links](docs/guide/relative-links.md). |
 | `values=<name:val,…>`        | All              | Values for `{@ name @}` placeholders. See [Template variables](#template-variables).                                                            |
 | `value=<name:val>`           | All              | One placeholder value; commas and colons after the first `:` are part of the value.                                                             |
@@ -317,13 +320,46 @@ Renders as:
 ```markdown
 <!--- @@inject: sample-rows.csv#start-row=2&num-rows=2 --->
 
-| n   | planet |
-| --- | ------ |
-| 2   | Venus  |
-| 3   | Earth  |
+|   n | planet |
+| --: | ------ |
+|   2 | Venus  |
+|   3 | Earth  |
 
 <!--- @@inject-end: sample-rows.csv#start-row=2&num-rows=2 --->
 ```
+
+#### Choosing columns and header text
+
+`columns` picks which columns are injected and in what order:
+
+- Refer to a column by its number (from 1) or by its header text. Names are case-sensitive. With several header rows, a column's name is its non-empty header cells joined by a space, e.g. `Name First`.
+- Wrap the whole list in double quotes to use spaces without encoding them: `columns="Unit Price,Qty"`.
+- A colon sets the alignment: `:Name` left, `Name:` right, `:Name:` center.
+- A column listed twice appears twice. An unknown name or an out-of-range number is an error.
+
+A column with no alignment marker is right-aligned when at least 90% of its non-empty cells look like numbers or amounts (`1,234.56`, `1.234,56`, `-$5`, `12%`; currency symbols `$`, `€`, `£`, `¥`).
+
+`header-format` changes the case of the header text only; `columns` still matches the original text. `column-names` replaces header labels in output order. An empty entry keeps that header, and a label is used exactly as written, without `header-format`.
+
+```markdown
+<!--- @@inject: sample-columns.csv#columns="Qty,Item,Unit price"&header-format=upper&column-names=,,Price --->
+
+| QTY | ITEM   |  Price |
+| --: | ------ | -----: |
+|   2 | Tea    |  $4.50 |
+|   1 | Coffee | $12,00 |
+|   6 | Cocoa  |  $3.25 |
+
+<!--- @@inject-end: sample-columns.csv#columns="Qty,Item,Unit price"&header-format=upper&column-names=,,Price --->
+```
+
+Renders as:
+
+| QTY | ITEM   |  Price |
+| --: | ------ | -----: |
+|   2 | Tea    |  $4.50 |
+|   1 | Coffee | $12,00 |
+|   6 | Cocoa  |  $3.25 |
 
 #### JSON as a table
 
@@ -333,7 +369,7 @@ Renders as:
 <!--- @@inject-table: sample-table.json --->
 
 | name         | born | fields                       | rank         |
-| ------------ | ---- | ---------------------------- | ------------ |
+| ------------ | ---: | ---------------------------- | ------------ |
 | Ada Lovelace | 1815 | \["mathematics","computing"] |              |
 | Grace Hopper | 1906 |                              | Rear Admiral |
 
@@ -343,7 +379,7 @@ Renders as:
 Renders as:
 
 | name         | born | fields                       | rank         |
-| ------------ | ---- | ---------------------------- | ------------ |
+| ------------ | ---: | ---------------------------- | ------------ |
 | Ada Lovelace | 1815 | \["mathematics","computing"] |              |
 | Grace Hopper | 1906 |                              | Rear Admiral |
 

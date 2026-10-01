@@ -1,6 +1,7 @@
-import type { Html, PhrasingContent, RootContent, Table, TableCell, TableRow } from 'mdast';
+import type { AlignType, Html, PhrasingContent, RootContent, Table, TableCell, TableRow } from 'mdast';
 
 import { parseCellBlocks, parseCellMarkdown } from './cellMarkdown.js';
+import { formatHeaderNodes, type HeaderFormat, type OutputColumn } from './tableColumns.js';
 
 /** A nested JSON object or array, rendered per table form (ADR-0011 point 5). */
 export interface JsonCell {
@@ -21,7 +22,14 @@ export interface HeaderRowsOption {
     columnCount?: number | undefined;
 }
 
-export interface RowsToTableOptions extends HeaderRowsOption {
+export interface ColumnOptions {
+    /** Output columns in order, with alignment and labels; every source column when absent. See ADR-0003. */
+    columns?: OutputColumn[] | undefined;
+    /** Header text casing (ADR-0006). */
+    headerFormat?: HeaderFormat | undefined;
+}
+
+export interface RowsToTableOptions extends HeaderRowsOption, ColumnOptions {
     /** Parse cell text as inline Markdown instead of literal text. See ADR-0008. */
     markdown?: boolean | undefined;
 }
@@ -31,7 +39,8 @@ export interface RowsToTableOptions extends HeaderRowsOption {
  * single GFM header row with `<br />`; with none, the header is the column numbers (ADR-0002).
  */
 export function rowsToTable(rows: CellValue[][], options: RowsToTableOptions = {}): Table {
-    const columnCount = options.columnCount ?? widestRow(rows);
+    const columns = options.columns ?? allColumns(options.columnCount ?? widestRow(rows));
+    const headerFormat = options.headerFormat ?? 'none';
 
     function toChildren(value: CellValue | undefined): PhrasingContent[] {
         if (isJsonCell(value)) {
@@ -46,37 +55,34 @@ export function rowsToTable(rows: CellValue[][], options: RowsToTableOptions = {
         return { type: 'tableCell', children: toChildren(value) };
     }
 
-    /** One header cell from a column's non-empty header-row cells, joined with `<br />`. */
+    /** One header cell from a column's non-empty header-row cells, each formatted, joined with `<br />`. */
     function toHeaderCell(column: number): TableCell {
         const parts = header.map((row) => row[column]).filter((v): v is CellValue => !!v);
-        const children = parts.flatMap((part, i): PhrasingContent[] => [
-            ...(i ? [{ type: 'html', value: '<br />' } as const] : []),
-            ...toChildren(part),
-        ]);
+        const children = parts.flatMap((part, i): PhrasingContent[] => {
+            const nodes = toChildren(part);
+            formatHeaderNodes(nodes, headerFormat);
+            return [...(i ? [{ type: 'html', value: '<br />' } as const] : []), ...nodes];
+        });
         return { type: 'tableCell', children };
     }
 
     function toHeaderRow(): TableRow {
-        const children: TableCell[] = [];
-        for (let i = 0; i < columnCount; ++i) {
-            children.push(header.length ? toHeaderCell(i) : toCell(String(i + 1)));
-        }
+        const children = columns.map(({ index, label }) =>
+            // A `column-names` label replaces the header and skips `header-format` (ADR-0007).
+            label ? toCell(label) : header.length ? toHeaderCell(index) : toCell(String(index + 1)),
+        );
         return { type: 'tableRow', children };
     }
 
     function toTableRow(cells: CellValue[]): TableRow {
-        const children: TableCell[] = [];
-        for (let i = 0; i < columnCount; ++i) {
-            children.push(toCell(cells[i]));
-        }
-        return { type: 'tableRow', children };
+        return { type: 'tableRow', children: columns.map(({ index }) => toCell(cells[index])) };
     }
 
     const { header, body } = splitHeader(rows, options.headerRows);
 
     return {
         type: 'table',
-        align: new Array(columnCount).fill(null),
+        align: columns.map(({ align }) => align),
         children: [toHeaderRow(), ...body.map(toTableRow)],
     };
 }
@@ -88,8 +94,9 @@ export function rowsToTable(rows: CellValue[][], options: RowsToTableOptions = {
  * blocks of each cell that has markup. The blank line remark-stringify puts between siblings is what
  * lets a renderer parse that Markdown.
  */
-export function rowsToHtmlTable(rows: CellValue[][], options: HeaderRowsOption = {}): RootContent[] {
-    const columnCount = options.columnCount ?? widestRow(rows);
+export function rowsToHtmlTable(rows: CellValue[][], options: HeaderRowsOption & ColumnOptions = {}): RootContent[] {
+    const columns = options.columns ?? allColumns(options.columnCount ?? widestRow(rows));
+    const headerFormat = options.headerFormat ?? 'none';
     const nodes: RootContent[] = [];
     let html = '';
 
@@ -100,38 +107,50 @@ export function rowsToHtmlTable(rows: CellValue[][], options: HeaderRowsOption =
         html = '';
     }
 
-    function addCell(tag: 'th' | 'td', value: CellValue | undefined) {
+    function addCell(tag: 'th' | 'td', value: CellValue | undefined, align: AlignType, format: HeaderFormat) {
         const blocks: RootContent[] = isJsonCell(value)
             ? [{ type: 'code', lang: 'json', value: JSON.stringify(value.json, null, 2) }]
             : value
               ? parseCellBlocks(value)
               : [];
+        formatHeaderNodes(blocks, format);
+        // Alignment is an attribute on every cell of the column (ADR-0010 point 4).
+        const open = align ? `<${tag} align="${align}">` : `<${tag}>`;
         const plain = plainParagraphText(blocks);
         if (plain !== undefined) {
-            html += `<${tag}>${escapeHtml(plain)}</${tag}>\n`;
+            html += `${open}${escapeHtml(plain)}</${tag}>\n`;
             return;
         }
-        html += `<${tag}>`;
+        html += open;
         flush();
         nodes.push(...blocks);
         html = `</${tag}>\n`;
     }
 
-    function addRow(tag: 'th' | 'td', cells: CellValue[]) {
+    /**
+     * `labels` decides what a labelled column shows: its `column-names` label (the last header
+     * row), or a blank (the header rows above it) (ADR-0007).
+     */
+    function addRow(tag: 'th' | 'td', cells: CellValue[] | undefined, labels?: 'label' | 'blank') {
         html += '<tr>\n';
-        for (let i = 0; i < columnCount; ++i) {
-            addCell(tag, cells[i]);
+        for (const { index, align, label } of columns) {
+            if (labels && label) addCell(tag, labels === 'label' ? label : '', align, 'none');
+            else addCell(tag, cells?.[index], align, tag === 'th' ? headerFormat : 'none');
         }
         html += '</tr>\n';
     }
 
     const { header, body } = splitHeader(rows, options.headerRows);
+    const hasLabels = columns.some(({ label }) => label);
 
     html += '<table>\n';
-    // Each header row is a real row; with none there is no `<thead>` (ADR-0010 point 4).
-    if (header.length) {
+    // Each header row is a real row; with none there is no `<thead>` (ADR-0010 point 4) unless
+    // `column-names` supplies one.
+    if (header.length || hasLabels) {
         html += '<thead>\n';
-        header.forEach((row) => addRow('th', row));
+        header.slice(0, -1).forEach((row) => addRow('th', row, 'blank'));
+        // With no header rows, `column-names` supplies the only one.
+        addRow('th', header.at(-1), 'label');
         html += '</thead>\n';
     }
     html += '<tbody>\n';
@@ -139,6 +158,10 @@ export function rowsToHtmlTable(rows: CellValue[][], options: HeaderRowsOption =
     html += '</tbody>\n</table>\n';
     flush();
     return nodes;
+}
+
+function allColumns(columnCount: number): OutputColumn[] {
+    return Array.from({ length: columnCount }, (_, index) => ({ index, align: null }));
 }
 
 export function widestRow(rows: unknown[][]): number {

@@ -656,8 +656,9 @@ describe('row window (ADR-0004)', () => {
                 written.indexOf(`<!--- @@inject: rows.csv#${hash} --->`),
                 written.indexOf(`<!--- @@inject-end: rows.csv#${hash} --->`),
             );
-        expect(section('start-row=2&num-rows=2')).toMatch(/\| 2 +\| two +\|\n\| 3 +\| three +\|\n\n$/);
-        expect(section('end-row=2')).toMatch(/\| 1 +\| one +\|\n\| 2 +\| two +\|\n\n$/);
+        // `n` is numeric, so it is right-aligned (ADR-0005).
+        expect(section('start-row=2&num-rows=2')).toMatch(/\| +2 \| two +\|\n\| +3 \| three +\|\n\n$/);
+        expect(section('end-row=2')).toMatch(/\| +1 \| one +\|\n\| +2 \| two +\|\n\n$/);
         const empty = section('start-row=100');
         expect(empty).toContain('| n | name |');
         expect(empty).not.toContain('one');
@@ -706,6 +707,21 @@ describe('row window (ADR-0004)', () => {
     });
 });
 
+describe('table columns (ADR-0003, ADR-0006)', () => {
+    test('a bad column reference or option value is a directive error', async () => {
+        // The root is `fixtures/`, so the directives' `../tables/` sources are inside it.
+        const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures'), silent: true });
+        const r = await fi.processFile('with-errors/table-columns.md');
+        expect(r.hasErrors).toBe(true);
+        const messages = r.file.messages.map(String).join('\n');
+        expect(messages).toContain('Column "zip" not found in the table header.');
+        expect(messages).toContain('Column 9 is out of range; the table has 3 column(s).');
+        expect(messages).toContain('Column "name" must be referenced by number when header-rows=0.');
+        expect(messages).toContain('Invalid columns "": expected a list of column numbers or names.');
+        expect(messages).toContain('Invalid header-format "camel": expected none, title, upper or lower.');
+    });
+});
+
 describe('JSON table source (ADR-0011)', () => {
     test('renders each table form, windowed columns, and substituted nested strings', async () => {
         const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
@@ -716,7 +732,7 @@ describe('JSON table source (ADR-0011)', () => {
         expect(written).toContain('| name  | role            | active | note |');
         expect(written).toContain('| name | born | tags | meta | role | active | note |');
         // header-rows=0 drops the key header, so the pipe form numbers the columns (ADR-0011 point 9).
-        expect(written).toContain('| 1     | 2    | 3                  | 4                     |');
+        expect(written).toContain('| 1     |    2 | 3                  | 4                     |');
     });
 
     test('bad JSON sources are directive errors', async () => {

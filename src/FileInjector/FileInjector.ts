@@ -35,6 +35,7 @@ import {
 import { rebaseLinks } from './rebaseLinks.js';
 import { applyRowWindow, resolveHeaderRows, resolveRowWindow, type RowWindow } from './rowWindow.js';
 import { type CellValue, type HeaderRowsOption, isJsonCell, rowsToHtmlTable, rowsToTable, widestRow } from './Table.js';
+import { layoutColumns, resolveHeaderFormat } from './tableColumns.js';
 import { toError, toString } from './utils.js';
 import { type FileData, isVFileEx, VFileEx } from './VFileEx.js';
 
@@ -508,6 +509,7 @@ async function processFileInjections(
         try {
             const window = resolveRowWindow(info);
             const headerRows = resolveHeaderRows(info.headerRows);
+            const headerFormat = resolveHeaderFormat(info.headerFormat);
             const isJson = path.extname(fileName.pathname).toLowerCase() === '.json';
             if (isJson && lines) {
                 throw new Error('A line range can not be used on a JSON table; use start-row, end-row or num-rows.');
@@ -534,10 +536,20 @@ async function processFileInjections(
                 }
             });
             // `#html-table` wins over `#markdown` when both are given (ADR-0010 point 2).
+            const form = info.htmlTable ? 'html' : info.markdown ? 'markdown' : 'text';
+            // Columns resolve after substitution, against the header text as rendered.
+            const columns = layoutColumns(rows, {
+                columns: info.columns,
+                columnNames: info.columnNames,
+                headerRows: tableOptions.headerRows ?? 1,
+                columnCount: tableOptions.columnCount ?? widestRow(rows),
+                form,
+            });
+            const options = { ...tableOptions, columns, headerFormat };
             const table = toRoot(
                 info.htmlTable
-                    ? rowsToHtmlTable(rows, tableOptions)
-                    : rowsToTable(rows, { ...tableOptions, markdown: info.markdown }),
+                    ? rowsToHtmlTable(rows, options)
+                    : rowsToTable(rows, { ...options, markdown: info.markdown }),
             );
             // Only Markdown cells hold link nodes (ADR-0005 point 3).
             const root = info.htmlTable || info.markdown ? maybeRebaseLinks(table, fileName, info) : table;
@@ -919,8 +931,9 @@ function hasEofNewLine(content: string): boolean {
     return content[content.length - 1] === '\n';
 }
 
+/** Undo URL encoding of spaces and quotes so a directive keeps its authored `columns="A B"` form. */
 function normalizeHref(href: string): string {
-    return href.replace(/%20/g, ' ');
+    return href.replace(/%20/g, ' ').replace(/%22/g, '"');
 }
 
 function extractLines(content: string, lines: [number, number] | undefined): string {

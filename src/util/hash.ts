@@ -27,6 +27,12 @@ export interface InjectInfo {
     startRow?: string | undefined;
     endRow?: string | undefined;
     numRows?: string | undefined;
+    /** Raw `columns` value, validated when the table is built. See ADR-0003. */
+    columns?: string | undefined;
+    /** Raw `header-format` value, validated when the table is built. See ADR-0006. */
+    headerFormat?: string | undefined;
+    /** Raw `column-names` value, validated when the table is built. See ADR-0007. */
+    columnNames?: string | undefined;
     /**
      * `values=`, `value=`, `values-file=` and `value-alias=` entries in written order; the newest
      * wins (ADR-0012). See ADR-0002, ADR-0007, ADR-0010, ADR-0013.
@@ -121,6 +127,15 @@ export function parseHashString(hash: string): InjectInfo {
                 continue;
             case 'num-rows':
                 info.numRows = value;
+                continue;
+            case 'columns':
+                info.columns = value;
+                continue;
+            case 'header-format':
+                info.headerFormat = value;
+                continue;
+            case 'column-names':
+                info.columnNames = value;
                 continue;
             case 'rebase-links':
                 info.rebaseLinks = parseFlagValue(value, true);

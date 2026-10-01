@@ -1,6 +1,6 @@
 # ADR-0006: `header-format` option
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 
@@ -18,6 +18,7 @@ Builds on [ADR-0002](0002-table-header-rows-option.md) (header rows, the `<br />
 - **Display only — never affects matching.** `header-format` transforms what's rendered in the output header row/cell. It has no effect on the text `columns=Name` references are matched against: that match always uses the original, unformatted source header text (per [ADR-0002](0002-table-header-rows-option.md)'s whitespace-joined match rule). This keeps the two concerns independent — an author can reformat display casing at any time without needing to update existing `columns=` references elsewhere.
 - Applies to the same display text `header-rows` already produces (the `<br />`-joined multi-row header cell, if `header-rows > 1`) — each row's own text is formatted before joining, so a two-row header like "Unit" / "Price" with `header-format=upper` renders as `UNIT<br />PRICE`.
 - **No special interaction with `header-rows=0`.** The synthesized numeric headers (`1`, `2`, `3`, ...) have no case to transform, so `header-format` simply has no visible effect when combined with `header-rows=0` — not treated as an error or a disallowed combination.
+- A bare `#header-format` or any value other than `none`, `title`, `upper` or `lower` is an error ([ADR-0001](0001-table-option-encoding-conventions.md) point 6).
 
 ## Options Considered
 

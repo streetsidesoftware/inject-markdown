@@ -3,7 +3,7 @@ import remarkStringify from 'remark-stringify';
 import { unified } from 'unified';
 import { describe, expect, test } from 'vitest';
 
-import { type CellValue, rowsToHtmlTable } from './Table.js';
+import { type CellValue, type ColumnOptions, type HeaderRowsOption, rowsToHtmlTable } from './Table.js';
 
 function render(rows: CellValue[][]): string {
     return unified()
@@ -17,6 +17,13 @@ function render2(rows: CellValue[][], headerRows: number): string {
         .use(remarkGfm)
         .use(remarkStringify)
         .stringify({ type: 'root', children: rowsToHtmlTable(rows, { headerRows }) });
+}
+
+function renderWith(rows: CellValue[][], options: HeaderRowsOption & ColumnOptions): string {
+    return unified()
+        .use(remarkGfm)
+        .use(remarkStringify)
+        .stringify({ type: 'root', children: rowsToHtmlTable(rows, options) });
 }
 
 describe('rowsToHtmlTable (ADR-0010)', () => {
@@ -100,5 +107,70 @@ describe('rowsToHtmlTable (ADR-0010)', () => {
         const out = render2([['a'], ['b']], 0);
         expect(out).not.toContain('<thead>');
         expect(out).toContain('<tbody>\n<tr>\n<td>a</td>');
+    });
+
+    test('columns select and order cells, with alignment as an attribute on every cell', () => {
+        const out = renderWith(
+            [
+                ['a', 'b'],
+                ['1', '2'],
+            ],
+            {
+                columns: [
+                    { index: 1, align: 'right' },
+                    { index: 0, align: null },
+                ],
+            },
+        );
+        expect(out).toContain('<tr>\n<th align="right">b</th>\n<th>a</th>\n</tr>');
+        expect(out).toContain('<tr>\n<td align="right">2</td>\n<td>1</td>\n</tr>');
+    });
+
+    test('header-format applies to header cells only; a column-names label is verbatim', () => {
+        const out = renderWith(
+            [
+                ['a b', '*c*'],
+                ['x y', 'z'],
+            ],
+            {
+                headerFormat: 'upper',
+                columns: [
+                    { index: 0, align: null },
+                    { index: 1, align: null, label: 'iPhone' },
+                ],
+            },
+        );
+        expect(out).toContain('<th>A B</th>\n<th>iPhone</th>');
+        expect(out).toContain('<td>x y</td>');
+    });
+
+    test('a label goes in the last header row; rows above leave that column blank', () => {
+        const out = renderWith(
+            [
+                ['g', 'g'],
+                ['a', 'b'],
+                ['1', '2'],
+            ],
+            {
+                headerRows: 2,
+                columns: [
+                    { index: 0, align: null, label: 'X' },
+                    { index: 1, align: null },
+                ],
+            },
+        );
+        expect(out).toContain('<thead>\n<tr>\n<th></th>\n<th>g</th>\n</tr>\n<tr>\n<th>X</th>\n<th>b</th>\n</tr>');
+    });
+
+    test('with header-rows=0, column-names adds a header row', () => {
+        const out = renderWith([['1', '2']], {
+            headerRows: 0,
+            columns: [
+                { index: 0, align: null, label: 'A' },
+                { index: 1, align: null },
+            ],
+        });
+        expect(out).toContain('<thead>\n<tr>\n<th>A</th>\n<th></th>\n</tr>\n</thead>');
+        expect(render2([['1', '2']], 0)).not.toContain('<thead>');
     });
 });

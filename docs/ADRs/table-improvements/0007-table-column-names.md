@@ -1,6 +1,6 @@
 # ADR-0007: `column-names` option
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 
@@ -17,6 +17,7 @@
 - **Bypasses `header-format`.** A `column-names` label is rendered verbatim, exactly as written in the directive — it does not get upper/lower/title-cased by `header-format`. This mirrors the existing precedent of explicit overrides winning outright (e.g. `columns` alignment markers over auto-alignment, [ADR-0005](0005-table-auto-alignment.md)): an author who explicitly types a label wants exactly that text.
 - **Length mismatches are tolerated, not errors.** Fewer entries than output columns: missing trailing entries behave like empty ones (original header kept). More entries than output columns: the extras are ignored. This is more forgiving than the "bad reference" error posture in [ADR-0001](0001-table-option-encoding-conventions.md), because an uneven list here is a harmless no-op rather than a reference to something that doesn't exist.
 - **Works regardless of `header-rows`.** It overrides whatever the header cell would otherwise display — the source header's own text (any `header-rows` value ≥ 1) or the synthesized column-number labels when `header-rows=0`. There's no special-case interaction: a `column-names` entry simply replaces the final display text for that position.
+- **In an `#html-table` table** ([ADR-0010](0010-table-html-table.md)), where each header row is a real `<tr>`, a label goes in the last header row (the one nearest the data) and the rows above leave that column's cell blank. With `header-rows=0` there are no header rows, so a `column-names` list with at least one non-empty entry adds a single `<thead>` row: the labels, with blank cells for the unlabelled columns. Without `column-names`, ADR-0010 point 4 is unchanged: no `<thead>`.
 
 ## Options Considered
 

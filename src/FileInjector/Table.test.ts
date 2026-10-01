@@ -104,4 +104,57 @@ describe('rowsToTable', () => {
     test('isJsonCell({ json }) is true', () => {
         expect(isJsonCell({ json: { x: 1 } })).toBe(true);
     });
+
+    describe('columns (ADR-0003, ADR-0006, ADR-0007)', () => {
+        const rows = [
+            ['unit price', 'qty'],
+            ['$1', '2'],
+        ];
+
+        function header(table: ReturnType<typeof rowsToTable>): string[] {
+            return table.children[0].children.map((c) => c.children.map((n) => ('value' in n ? n.value : '')).join(''));
+        }
+
+        test('selects, reorders and aligns', () => {
+            const table = rowsToTable(rows, {
+                columns: [
+                    { index: 1, align: 'right' },
+                    { index: 0, align: 'center' },
+                ],
+            });
+            expect(table.align).toEqual(['right', 'center']);
+            expect(header(table)).toEqual(['qty', 'unit price']);
+            expect(table.children[1].children[0].children).toEqual([{ type: 'text', value: '2' }]);
+        });
+
+        test('header-format formats each header part; a label is verbatim', () => {
+            const table = rowsToTable(
+                [
+                    ['unit price', 'qty'],
+                    ['each', ''],
+                    ['1', '2'],
+                ],
+                {
+                    headerRows: 2,
+                    headerFormat: 'title',
+                    columns: [
+                        { index: 0, align: null },
+                        { index: 1, align: null, label: 'iPhone sales' },
+                    ],
+                },
+            );
+            expect(header(table)).toEqual(['Unit Price<br />Each', 'iPhone sales']);
+        });
+
+        test('header-rows=0 numbers by source column; a label replaces the number', () => {
+            const table = rowsToTable([['a', 'b', 'c']], {
+                headerRows: 0,
+                columns: [
+                    { index: 2, align: null },
+                    { index: 0, align: null, label: 'First' },
+                ],
+            });
+            expect(header(table)).toEqual(['3', 'First']);
+        });
+    });
 });

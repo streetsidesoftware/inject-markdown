@@ -1,6 +1,6 @@
 # ADR-0003: `columns` option
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 
@@ -35,6 +35,13 @@ Today every column in a CSV/TSV source is injected, in source order, unaligned. 
 - A number outside `1..sourceColumnCount` is an error.
 - A name with no matching header (typo) is an error.
 - Under `header-rows=0`, any non-numeric reference is an error — there is no header text to match, so a name-shaped entry can only be a mistake.
+- A bare `#columns`, or an empty entry (`columns=Name,,Age`, or a lone `:`), is an error.
+
+**A reference made only of digits is a column number.** `columns=2026` means column 2026, never a header that reads `2026`. A digits-only header can still be selected by its number.
+
+**Names match the rendered header.** `{@ name @}` placeholders in the source are substituted before `columns` is resolved, so a name reference matches the header text as it will be displayed (before `header-format`).
+
+**Quoting survives a rewrite.** When `inject-markdown` rewrites the directive comment, a quoted value keeps its literal `"` rather than being re-emitted as `%22`, so `columns="First Name,Age"` stays as the author typed it.
 
 **Duplicates and ambiguity** (per ADR-0001): repeating a reference duplicates that column in the output; if a name matches multiple columns (duplicate header text in the source), the first match wins.
 

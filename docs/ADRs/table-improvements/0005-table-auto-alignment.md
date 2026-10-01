@@ -1,6 +1,6 @@
 # ADR-0005: Auto-alignment by content type
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-21
 **Deciders:** Jason Dent
 
