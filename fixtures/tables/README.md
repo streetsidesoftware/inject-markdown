@@ -103,3 +103,35 @@
 ## JSON with no key header and a window past the end: numbered columns, no data
 
 <!--- @@inject-table: people.json#header-rows=0&start-row=100 --->
+
+## `columns` selects, reorders, and aligns
+
+<!--- @@inject: sample.csv#columns=city,:name:,age --->
+
+## `columns` by number with `header-rows=0`
+
+<!--- @@inject: rows.csv#header-rows=0&columns=2,1 --->
+
+## `columns` names span every header row
+
+<!--- @@inject: grouped.csv#header-rows=2&columns="Name Last,Name First,:Value" --->
+
+## `columns` matches the plain text of Markdown cells
+
+<!--- @@inject: markdown.csv#markdown&columns=Default,Option&end-row=2 --->
+
+## `columns` on a JSON source
+
+<!--- @@inject-table: people.json#columns=born,name --->
+
+## `columns` and alignment in an HTML table
+
+<!--- @@inject: grouped.csv#header-rows=2&html-table&columns=Value,Name First --->
+
+## `header-format` and `column-names`
+
+<!--- @@inject: sample.csv#header-format=upper&column-names=,Years --->
+
+## `column-names` in an HTML table with two header rows
+
+<!--- @@inject: grouped.csv#header-rows=2&html-table&header-format=title&column-names=",First Name" --->
