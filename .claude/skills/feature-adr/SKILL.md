@@ -71,4 +71,4 @@ If the user asks what's been decided so far, give a compact list grouped by opti
 
 ### 9. Opening a PR
 
-Only push/open a PR when the user asks, and confirm first via `AskUserQuestion` if it hasn't been explicit in the request — pushing and opening a PR are visible actions per this repo's usual guardrails. Note in the PR description that it's design/documentation only when no implementation is included yet. If step 1 put this session in a worktree, push and create the PR from there — no need to leave the worktree first.
+Only push/open a PR when the user asks, and confirm first via `AskUserQuestion` if it hasn't been explicit in the request — pushing and opening a PR are visible actions per this repo's usual guardrails. A small feature can ship its ADRs and implementation in one PR; ask whether the design gets its own `docs:` PR or goes in the feature's PR (see `docs/ADRs/README.md`). Note in the PR description that it's design/documentation only when no implementation is included yet. If step 1 put this session in a worktree, push and create the PR from there — no need to leave the worktree first.
