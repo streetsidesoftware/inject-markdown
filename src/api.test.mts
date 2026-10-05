@@ -162,7 +162,8 @@ describe('api', () => {
 
         describe('values', () => {
             const md = '<!--- @@inject: show.md#vars --->\n';
-            const inject = (values: ValueDeclaration[]) => injectMarkdown(md, { cwd: dir, file: 'README.md', values });
+            const inject = (values: ValueDeclaration[]) =>
+                injectMarkdown(md, { cwd: dir, file: 'README.md', valueDeclarations: values });
 
             beforeEach(async () => {
                 await writeFile(path.join(dir, 'show.md'), 'Value: {@ shown @}\n');
@@ -170,22 +171,22 @@ describe('api', () => {
             });
 
             test.each`
-                values                                                                                                         | expected
-                ${[{ name: 'shown', value: 'v' }]}                                                                             | ${'Value: v'}
-                ${[{ name: 'shown', value: 'v' }, { file: 'data.json' }, { alias: 'shown', target: 'data.town' }]}             | ${'Value: Springfield'}
-                ${[{ alias: 'shown', target: 'data.town' }, { file: 'data.json' }, { name: 'shown', value: 'v' }]}             | ${'Value: v'}
-                ${[{ name: 'shown', value: 'old' }, { alias: 'shown', target: 'data.town' }, { name: 'shown', value: 'new' }]} | ${'Value: new'}
-                ${[{ file: 'data.json', prefix: '' }]}                                                                         | ${'Value: root'}
-                ${[{ name: 'shown', value: 'v' }, { file: 'data.json', prefix: '' }]}                                          | ${'Value: root'}
-                ${[{ file: 'data.json', prefix: '' }, { name: 'shown', value: 'v' }]}                                          | ${'Value: v'}
-                ${[{ file: 'data.json', prefix: 'my.data' }, { alias: 'shown', target: 'my.data.town' }]}                      | ${'Value: Springfield'}
+                values                                                                                                                                                     | expected
+                ${[{ kind: 'value', name: 'shown', value: 'v' }]}                                                                                                          | ${'Value: v'}
+                ${[{ kind: 'value', name: 'shown', value: 'v' }, { kind: 'values-file', path: 'data.json' }, { kind: 'alias', name: 'shown', target: 'data.town' }]}       | ${'Value: Springfield'}
+                ${[{ kind: 'alias', name: 'shown', target: 'data.town' }, { kind: 'values-file', path: 'data.json' }, { kind: 'value', name: 'shown', value: 'v' }]}       | ${'Value: v'}
+                ${[{ kind: 'value', name: 'shown', value: 'old' }, { kind: 'alias', name: 'shown', target: 'data.town' }, { kind: 'value', name: 'shown', value: 'new' }]} | ${'Value: new'}
+                ${[{ kind: 'values-file', path: 'data.json', prefix: '' }]}                                                                                                | ${'Value: root'}
+                ${[{ kind: 'value', name: 'shown', value: 'v' }, { kind: 'values-file', path: 'data.json', prefix: '' }]}                                                  | ${'Value: root'}
+                ${[{ kind: 'values-file', path: 'data.json', prefix: '' }, { kind: 'value', name: 'shown', value: 'v' }]}                                                  | ${'Value: v'}
+                ${[{ kind: 'values-file', path: 'data.json', prefix: 'my.data' }, { kind: 'alias', name: 'shown', target: 'my.data.town' }]}                               | ${'Value: Springfield'}
             `('newest declaration wins: $values', async ({ values, expected }) => {
                 expect(await inject(values)).toContain(expected);
             });
 
             test('rejects an invalid prefix', async () => {
-                await expect(inject([{ file: 'data.json', prefix: 'x' }])).rejects.toThrow(
-                    'Invalid values file prefix',
+                await expect(inject([{ kind: 'values-file', path: 'data.json', prefix: 'x' }])).rejects.toThrow(
+                    'Invalid values-file prefix "x"',
                 );
             });
         });

@@ -1,36 +1,24 @@
 import { FileInjector, type FileInjectorOptions, type ProcessFileResult } from './FileInjector/FileInjector.js';
 import { nodeFsa } from './FileSystemAdapter/fsa.js';
 import { processGlobs } from './processor/process.mjs';
-import { OptionError } from './util/errors.js';
-import { isValidValuesFilePrefix, type ValueDeclaration as InternalValueDeclaration } from './util/values.js';
+
+export type { ValueDeclaration } from './util/values.js';
 
 /**
  * Options shared by {@link injectFiles} and {@link injectMarkdown}. Fields picked from
  * `FileInjectorOptions` are documented there.
  */
-export interface InjectOptions extends Pick<
+export type InjectOptions = Pick<
     FileInjectorOptions,
-    'cwd' | 'allowOutsideRoot' | 'allowEnv' | 'strictVars' | 'rebaseLinks' | 'clean' | 'injectOnly'
-> {
-    /**
-     * Run-wide `{@ name @}` placeholder value declarations, oldest to newest; a newer one wins,
-     * whatever its kind. Like `--value`, `--values-file` and `--value-alias` in command-line order.
-     */
-    values?: ValueDeclaration[] | undefined;
-}
-
-/** A run-wide placeholder value declaration. */
-export type ValueDeclaration =
-    /** `{@ name @}` is `value`. Like `--value name=value`. */
-    | { name: string; value: string }
-    /**
-     * A JSON file of values, relative to `cwd`. Like `--values-file`. Its values go under
-     * `prefix`; with no `prefix`, under the file's base name (`package.json` → `package`); with
-     * `prefix: ''`, at the root.
-     */
-    | { file: string; prefix?: string | undefined }
-    /** Resolve `{@ alias @}` as if it were `{@ target @}`. Like `--value-alias alias=target`. */
-    | { alias: string; target: string };
+    | 'cwd'
+    | 'allowOutsideRoot'
+    | 'valueDeclarations'
+    | 'allowEnv'
+    | 'strictVars'
+    | 'rebaseLinks'
+    | 'clean'
+    | 'injectOnly'
+>;
 
 export interface InjectFilesOptions
     extends
@@ -95,7 +83,7 @@ export async function injectFiles(files: string[], options: InjectFilesOptions =
     const warnings: InjectMessage[] = [];
     const collect = (relFile: string, r: ProcessFileResult) => collectMessages(relFile, r, errors, warnings);
     const { mustFindFiles = true, stopOnErrors = true, silent = true, ...opts } = options;
-    const r = await processGlobs(files, { ...toInjectorOptions(opts), mustFindFiles, stopOnErrors, silent }, collect);
+    const r = await processGlobs(files, { ...opts, mustFindFiles, stopOnErrors, silent }, collect);
     if (!r.numberOfFiles && mustFindFiles) throw new InjectMarkdownError('No Markdown files found.');
     return {
         filesFound: r.numberOfFiles,
@@ -115,7 +103,7 @@ export async function injectFiles(files: string[], options: InjectFilesOptions =
  */
 export async function injectMarkdown(markdown: string, options: InjectMarkdownOptions): Promise<string> {
     const { file, ...opts } = options;
-    const injector = new FileInjector(nodeFsa(), { ...toInjectorOptions(opts), silent: true, dryRun: true });
+    const injector = new FileInjector(nodeFsa(), { ...opts, silent: true, dryRun: true });
     const r = await injector.processContent(markdown, file);
     const errors: InjectMessage[] = [];
     collectMessages(file, r, errors, []);
@@ -124,21 +112,6 @@ export async function injectMarkdown(markdown: string, options: InjectMarkdownOp
         throw new InjectMarkdownError(`Failed to inject into ${file}:${details}`, errors);
     }
     return String(r.file.value);
-}
-
-function toInjectorOptions(options: InjectFilesOptions): FileInjectorOptions {
-    const { values, ...rest } = options;
-    return { ...rest, valueDeclarations: values?.map(toInternalDeclaration) };
-}
-
-function toInternalDeclaration(decl: ValueDeclaration): InternalValueDeclaration {
-    if ('alias' in decl) return { kind: 'alias', name: decl.alias, target: decl.target };
-    if ('name' in decl) return { kind: 'value', name: decl.name, value: decl.value };
-    const { file: path, prefix } = decl;
-    if (prefix === undefined) return { kind: 'values-file', entry: { prefixKind: 'auto', path } };
-    if (prefix === '') return { kind: 'values-file', entry: { prefixKind: 'root', path } };
-    if (!isValidValuesFilePrefix(prefix)) throw new OptionError(`Invalid values file prefix: "${prefix}"`);
-    return { kind: 'values-file', entry: { prefixKind: 'explicit', prefixName: prefix, path } };
 }
 
 function collectMessages(file: string, r: ProcessFileResult, errors: InjectMessage[], warnings: InjectMessage[]) {

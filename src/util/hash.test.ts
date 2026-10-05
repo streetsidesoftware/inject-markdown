@@ -37,9 +37,7 @@ describe('hash', () => {
 
     test('#values-file=pkg:package.json', () => {
         expect(parseHashString('#values-file=pkg:package.json')).toEqual({
-            valueDecls: [
-                { kind: 'values-file', entry: { prefixKind: 'explicit', prefixName: 'pkg', path: 'package.json' } },
-            ],
+            valueDecls: [{ kind: 'values-file', prefix: 'pkg', path: 'package.json' }],
             params: m('values-file=pkg:package.json'),
         });
     });
@@ -120,10 +118,10 @@ describe('declaration order (ADR-0012)', () => {
     test('value options interleave in written order', () => {
         const info = parseHashString('#values-file=:a.json&values=v:1&value-alias=w:v&values-file=:b.json&value=v:2');
         expect(info.valueDecls).toEqual([
-            { kind: 'values-file', entry: { prefixKind: 'root', path: 'a.json' } },
+            { kind: 'values-file', prefix: '', path: 'a.json' },
             { kind: 'value', name: 'v', value: '1' },
             { kind: 'alias', name: 'w', target: 'v' },
-            { kind: 'values-file', entry: { prefixKind: 'root', path: 'b.json' } },
+            { kind: 'values-file', prefix: '', path: 'b.json' },
             { kind: 'value', name: 'v', value: '2' },
         ]);
     });

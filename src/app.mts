@@ -83,7 +83,7 @@ export async function app(program = defaultCommand): Promise<Command> {
             '--values-file <[prefix:]path>',
             'Add a run-wide JSON file of {@ name @} placeholder values, resolved relative to --cwd. Repeatable.',
             (path: string, acc?: SequencedDeclaration[]) =>
-                declare(acc, { kind: 'values-file', entry: parseValuesFileEntry(path) }),
+                declare(acc, { kind: 'values-file', ...parseValuesFileEntry(path) }),
         )
         .option(
             '--allow-env <name>',

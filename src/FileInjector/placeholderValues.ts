@@ -70,7 +70,7 @@ export async function buildResolutionEntries(
                 entries.push({ alias: decl.name, target: decl.target });
                 break;
             case 'values-file': {
-                const layer = await readFile(decl.entry);
+                const layer = await readFile(decl);
                 if (layer) entries.push({ layer });
                 break;
             }

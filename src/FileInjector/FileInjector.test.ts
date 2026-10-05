@@ -342,10 +342,7 @@ describe('template variables', () => {
 
     const value = (name: string, v: string): ValueDeclaration => ({ kind: 'value', name, value: v });
     const alias = (name: string, target: string): ValueDeclaration => ({ kind: 'alias', name, target });
-    const valuesFile = (path: string): ValueDeclaration => ({
-        kind: 'values-file',
-        entry: { prefixKind: 'auto', path },
-    });
+    const valuesFile = (path: string): ValueDeclaration => ({ kind: 'values-file', path });
 
     function count(text: string, needle: string): number {
         return text.split(needle).length - 1;

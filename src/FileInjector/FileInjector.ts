@@ -131,9 +131,10 @@ export interface FileInjectorOptions {
     allowOutsideRoot?: string[] | undefined;
 
     /**
-     * Run-wide `--value`/`--values-file`/`--value-alias` declarations in command-line order; a
-     * later one wins, and every directive declaration is newer (ADR-0012). `--values-file`
-     * paths resolve relative to `cwd`, not subject to the injection-root boundary.
+     * Run-wide placeholder value declarations, oldest to newest: like `--value`, `--values-file`
+     * and `--value-alias` in command-line order. A newer one wins, whatever its kind, and every
+     * directive declaration is newer (ADR-0012). Values-file paths resolve relative to `cwd`, not
+     * subject to the injection-root boundary.
      * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md, 0012-declaration-order-precedence.md.
      */
     valueDeclarations?: ValueDeclaration[] | undefined;

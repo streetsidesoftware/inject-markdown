@@ -99,7 +99,7 @@ export function parseHashString(hash: string): InjectInfo {
                 continue;
             }
             case 'values-file':
-                for (const entry of parseValuesFileList(value)) valueDecls.push({ kind: 'values-file', entry });
+                for (const entry of parseValuesFileList(value)) valueDecls.push({ kind: 'values-file', ...entry });
                 continue;
             case 'vars':
                 info.vars = parseFlagValue(value, true);

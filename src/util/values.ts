@@ -6,24 +6,27 @@ export interface JsonObject {
     [key: string]: JsonValue | undefined;
 }
 
-/** A `values-file=`/`--values-file` entry's namespace: an explicit prefix, an auto-derived one, or a root merge. */
-export type ValuesFilePrefixKind = 'explicit' | 'auto' | 'root';
-
-export interface ValuesFileEntry {
-    prefixKind: ValuesFilePrefixKind;
-    /** Only set when `prefixKind` is `'explicit'`. */
-    prefixName?: string | undefined;
-    path: string;
-}
-
 /**
  * One entry in the ordered value sequence, per ADR-0012: a pair (`values=`/`value=`/`--value`),
- * a values-file entry, or an alias. Resolution walks the sequence newest first.
+ * a values file (`values-file=`/`--values-file`), or an alias (`value-alias=`/`--value-alias`).
+ * The newest declaration wins; resolution walks the sequence newest first.
  */
 export type ValueDeclaration =
     | { kind: 'value'; name: string; value: string }
-    | { kind: 'values-file'; entry: ValuesFileEntry }
+    | {
+          kind: 'values-file';
+          /** A JSON file of values. */
+          path: string;
+          /**
+           * Where the file's values go (ADR-0007): under this prefix; at the root if `''`; under
+           * the file's base name if unset (`package.json` → `package`).
+           */
+          prefix?: string | undefined;
+      }
     | { kind: 'alias'; name: string; target: string };
+
+/** A values-file declaration without its `kind`, as parsed from `[prefix:]path`. */
+export type ValuesFileEntry = Omit<Extract<ValueDeclaration, { kind: 'values-file' }>, 'kind'>;
 
 const validPlaceholderSegment = /^[A-Za-z0-9_][A-Za-z0-9_-]*$/;
 
@@ -111,21 +114,21 @@ function splitPair(entry: string): [string, string] | undefined {
 export function parseValuesFileEntry(raw: string): ValuesFileEntry {
     const entry = raw.trim();
     if (entry.startsWith(':')) {
-        return { prefixKind: 'root', path: unquote(entry.slice(1).trim()) };
+        return { prefix: '', path: unquote(entry.slice(1).trim()) };
     }
     if (isQuoted(entry)) {
-        return { prefixKind: 'auto', path: unquote(entry) };
+        return { path: unquote(entry) };
     }
     // The colon separates only when what precedes it is a prefix (ADR-0009 point 1). Anything
     // else -- a drive letter, `..`, a path-shaped head -- leaves the whole entry a path.
     const idx = entry.indexOf(':');
     if (idx > 0) {
-        const prefixName = entry.slice(0, idx).trim();
-        if (isValidValuesFilePrefix(prefixName)) {
-            return { prefixKind: 'explicit', prefixName, path: unquote(entry.slice(idx + 1).trim()) };
+        const prefix = entry.slice(0, idx).trim();
+        if (isValidValuesFilePrefix(prefix)) {
+            return { prefix, path: unquote(entry.slice(idx + 1).trim()) };
         }
     }
-    return { prefixKind: 'auto', path: unquote(entry) };
+    return { path: unquote(entry) };
 }
 
 /**
@@ -282,7 +285,7 @@ export async function readValuesFileLayer(
         onError(`Failed to read values file "${entry.path}": ${err}`);
         return undefined;
     }
-    if (entry.prefixKind === 'root') {
+    if (entry.prefix === '') {
         // A root entry contributes its own keys, so it is only usable as a layer if it is an
         // object; an array or scalar at the top level has no names to offer.
         if (typeof data !== 'object' || data === null || Array.isArray(data)) return undefined;
@@ -290,10 +293,14 @@ export async function readValuesFileLayer(
         for (const [k, v] of Object.entries(data)) layer[k] = v;
         return layer;
     }
-    const explicit = entry.prefixKind === 'explicit';
-    const prefix = explicit ? (entry.prefixName ?? '') : deriveAutoPrefixFromPath(entry.path);
-    // An explicit prefix was already checked by `parseValuesFileEntry` -- the colon would not
-    // have separated otherwise. An auto-derived one stays a single segment (ADR-0009 point 4).
+    const explicit = entry.prefix !== undefined;
+    const prefix = entry.prefix ?? deriveAutoPrefixFromPath(entry.path);
+    // A parsed explicit prefix is always valid (the colon would not have separated otherwise), but
+    // an API caller sets it directly. An auto-derived one stays a single segment (ADR-0009 point 4).
+    if (explicit && !isValidValuesFilePrefix(prefix)) {
+        onError(`Invalid values-file prefix "${prefix}" for "${entry.path}".`);
+        return undefined;
+    }
     if (!explicit && !isValidPlaceholderSegment(prefix)) {
         onError(
             `Invalid values-file prefix "${prefix}" derived from "${entry.path}". Use an explicit prefix or ":${entry.path}" to merge at the root.`,

@@ -483,15 +483,16 @@ if (result.errors.length) throw new Error(result.errors.map((e) => `${e.file}:${
 ```
 
 - **Options mirror the CLI flags,** in camelCase: `cwd`, `outputDir`, `dryRun`, `clean`, `injectOnly`, `mustFindFiles`, `stopOnErrors`, `writeOnError`, `rebaseLinks`, `allowOutsideRoot`, `allowEnv` and `strictVars`. Defaults match the CLI.
-- **`values` takes the place of `--value`, `--values-file` and `--value-alias`:** one list, oldest to newest, where a newer entry wins whatever its kind, as on the command line:
+
+- **`valueDeclarations` takes the place of `--value`, `--values-file` and `--value-alias`:** one list, oldest to newest, where a newer entry wins whatever its kind, as on the command line:
 
   ```ts
   await injectFiles(['README.md'], {
-    values: [
-      { file: 'package.json' }, // {@ package.version @}
-      { file: 'release.json', prefix: '' }, // top-level keys, like `:release.json`
-      { name: 'channel', value: 'beta' },
-      { alias: 'version', target: 'package.version' }
+    valueDeclarations: [
+      { kind: 'values-file', path: 'package.json' }, // {@ package.version @}
+      { kind: 'values-file', path: 'release.json', prefix: '' }, // top-level keys, like `:release.json`
+      { kind: 'value', name: 'channel', value: 'beta' },
+      { kind: 'alias', name: 'version', target: 'package.version' }
     ]
   });
   ```
@@ -499,6 +500,7 @@ if (result.errors.length) throw new Error(result.errors.map((e) => `${e.file}:${
   A values file's `prefix` defaults to its base name; `''` puts its keys at the root.
 
 - **Nothing is printed.** Errors and warnings in the Markdown files are returned in `errors` and `warnings`, each with the `file`, `message`, and the directive's `line` and `column`. Set `silent: false` to print progress to stderr.
+
 - **Invalid options throw,** and so does finding no Markdown files, unless `mustFindFiles` is `false`.
 
 To inject into a string instead, for a caller that writes the file itself, use `injectMarkdown`. `file` is the path the Markdown belongs to; relative `@@inject` paths resolve from it.
