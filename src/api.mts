@@ -3,65 +3,31 @@ import { nodeFsa } from './FileSystemAdapter/fsa.js';
 import { processGlobs } from './processor/process.mjs';
 import { parseValuesFileEntry, type ValueDeclaration } from './util/values.js';
 
-/** Options shared by {@link injectFiles} and {@link injectMarkdown}. */
-export interface InjectOptions {
-    /**
-     * The injection root: relative paths resolve against it, and local `@@inject` references must
-     * stay inside it. Like `--cwd`.
-     * @default process.cwd()
-     */
-    cwd?: string | undefined;
-    /** Directories outside `cwd` that local references may resolve into. Like `--allow-outside-root`. */
-    allowOutsideRoot?: string[] | undefined;
+/**
+ * Options shared by {@link injectFiles} and {@link injectMarkdown}. Fields picked from
+ * `FileInjectorOptions` are documented there.
+ */
+export interface InjectOptions extends Pick<
+    FileInjectorOptions,
+    'cwd' | 'allowOutsideRoot' | 'allowEnv' | 'strictVars' | 'rebaseLinks' | 'clean' | 'injectOnly'
+> {
     /** Run-wide `{@ name @}` placeholder values. Like `--value name=val`. */
     values?: Record<string, string> | undefined;
     /** JSON files of placeholder values, as `[prefix:]path` relative to `cwd`. Like `--values-file`. */
     valuesFiles?: string[] | undefined;
     /** Resolve `{@ new @}` as if it were `{@ target @}`, as `{ new: target }`. Like `--value-alias`. */
     valueAliases?: Record<string, string> | undefined;
-    /** Environment variables a directive may reference via `{@ env.NAME @}`. Like `--allow-env`. */
-    allowEnv?: string[] | undefined;
-    /** Treat an unresolved placeholder as an error. Like `--strict-vars`. */
-    strictVars?: boolean | undefined;
-    /**
-     * Rebase relative links in injected Markdown onto the host file. `false` is like `--no-rebase-links`.
-     * @default true
-     */
-    rebaseLinks?: boolean | undefined;
-    /** Remove injected content, keeping the directives. Like `--clean`. */
-    clean?: boolean | undefined;
-    /**
-     * Only rewrite the injected sections, leaving the rest of the file byte-for-byte as is.
-     * `false` is like `--no-inject-only`.
-     * @default true
-     */
-    injectOnly?: boolean | undefined;
 }
 
-export interface InjectFilesOptions extends InjectOptions {
-    /** Write the results to this directory instead of in place. Like `--output-dir`. */
-    outputDir?: string | undefined;
+export interface InjectFilesOptions
+    extends
+        InjectOptions,
+        Pick<FileInjectorOptions, 'outputDir' | 'stopOnErrors' | 'writeOnError' | 'dryRun' | 'silent' | 'verbose'> {
     /**
      * Throw if the patterns match no Markdown files. `false` is like `--no-must-find-files`.
      * @default true
      */
     mustFindFiles?: boolean | undefined;
-    /**
-     * Stop at the first file with an error. `false` is like `--no-stop-on-errors`.
-     * @default true
-     */
-    stopOnErrors?: boolean | undefined;
-    /** Write a file even if an injection in it failed. Like `--write-on-error`. */
-    writeOnError?: boolean | undefined;
-    /** Process the files, but don't write anything. Like `--dry-run`. */
-    dryRun?: boolean | undefined;
-    /**
-     * Don't print progress to stderr. Errors are never printed; they are returned.
-     * @default true
-     */
-    silent?: boolean | undefined;
-    /** With `silent: false`, also print each injected reference. Like `--verbose`. */
-    verbose?: boolean | undefined;
 }
 
 export interface InjectMarkdownOptions extends InjectOptions {
@@ -108,6 +74,7 @@ export class InjectMarkdownError extends Error {
 /**
  * Inject content into Markdown files, like the CLI, without printing or exiting.
  * Errors in the files are returned in `errors`; invalid options throw.
+ * Defaults match the CLI (so `injectOnly` is `true`), except `silent`, which defaults to `true`.
  * @param files - files or glob patterns, relative to `cwd`; only `.md` files are processed.
  */
 export async function injectFiles(files: string[], options: InjectFilesOptions = {}): Promise<InjectFilesResult> {
@@ -115,11 +82,7 @@ export async function injectFiles(files: string[], options: InjectFilesOptions =
     const warnings: InjectMessage[] = [];
     const collect = (relFile: string, r: ProcessFileResult) => collectMessages(relFile, r, errors, warnings);
     const { mustFindFiles = true, stopOnErrors = true, silent = true, ...opts } = options;
-    const r = await processGlobs(
-        files,
-        { ...toInjectorOptions(opts), mustFindFiles, stopOnErrors, silent, cwd: opts.cwd, dryRun: opts.dryRun },
-        collect,
-    );
+    const r = await processGlobs(files, { ...toInjectorOptions(opts), mustFindFiles, stopOnErrors, silent }, collect);
     if (!r.numberOfFiles && mustFindFiles) throw new InjectMarkdownError('No Markdown files found.');
     return {
         filesFound: r.numberOfFiles,
@@ -135,6 +98,7 @@ export async function injectFiles(files: string[], options: InjectFilesOptions =
 
 /**
  * Inject content into a Markdown string and return the result. Nothing is written.
+ * `injectOnly` defaults to `true`, as in the CLI.
  * @throws {InjectMarkdownError} if an injection fails.
  */
 export async function injectMarkdown(markdown: string, options: InjectMarkdownOptions): Promise<string> {

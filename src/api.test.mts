@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 
 import * as path from 'path';
+import { pathToFileURL } from 'url';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { injectFiles, injectMarkdown, InjectMarkdownError } from './api.mjs';
@@ -69,6 +70,11 @@ describe('api', () => {
             expect(stdout).not.toHaveBeenCalled();
             expect(error).not.toHaveBeenCalled();
             expect(process.cwd()).toBe(cwd);
+        });
+
+        test('accepts a URL cwd', async () => {
+            const result = await injectFiles(['README.md'], { cwd: pathToFileURL(dir + '/'), dryRun: true });
+            expect(result).toEqual(expect.objectContaining({ filesFound: 1, filesUpdated: 1 }));
         });
 
         test('dryRun reports the update without writing', async () => {

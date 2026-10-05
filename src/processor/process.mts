@@ -1,7 +1,10 @@
+import { fileURLToPath } from 'node:url';
+
 import { globby, type Options as GlobbyOptions } from 'globby';
 import * as path from 'path';
 
 import { FileInjector, type FileInjectorOptions, type ProcessFileResult } from '../FileInjector/FileInjector.js';
+import type { PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { nodeFsa } from '../FileSystemAdapter/fsa.js';
 import { reportFileErrors } from './reportFileErrors.mjs';
 
@@ -61,12 +64,10 @@ function printFileErrors(_relFile: string, r: ProcessFileResult): void {
 
 export interface Options extends FileInjectorOptions {
     mustFindFiles: boolean;
-    cwd?: string | undefined;
-    dryRun?: boolean | undefined;
 }
 
-async function findFiles(globs: string[], cwd: string | undefined) {
-    const cwdToUse = path.resolve(cwd || '.');
+async function findFiles(globs: string[], cwd: PathLike | undefined) {
+    const cwdToUse = path.resolve(cwd instanceof URL ? fileURLToPath(cwd) : cwd || '.');
     const options: Mutable<GlobbyOptions> = {
         ignore: excludes,
         onlyFiles: true,
