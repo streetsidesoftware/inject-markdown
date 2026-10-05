@@ -1,6 +1,8 @@
 import { FileInjector, type FileInjectorOptions, type ProcessFileResult } from './FileInjector/FileInjector.js';
 import { nodeFsa } from './FileSystemAdapter/fsa.js';
 import { processGlobs } from './processor/process.mjs';
+import { OptionError } from './util/errors.js';
+import { isValidPlaceholderName, type ValueDeclaration } from './util/values.js';
 
 export type {
     ValueAliasDeclaration,
@@ -86,6 +88,7 @@ export async function injectFiles(files: string[], options: InjectFilesOptions =
     const errors: InjectMessage[] = [];
     const warnings: InjectMessage[] = [];
     const collect = (relFile: string, r: ProcessFileResult) => collectMessages(relFile, r, errors, warnings);
+    checkValueDeclarations(options.valueDeclarations);
     const { mustFindFiles = true, silent = true, ...opts } = options;
     const r = await processGlobs(files, { ...opts, mustFindFiles, silent }, collect);
     if (!r.numberOfFiles && mustFindFiles) throw new InjectMarkdownError('No Markdown files found.');
@@ -106,6 +109,7 @@ export async function injectFiles(files: string[], options: InjectFilesOptions =
  * @throws {InjectMarkdownError} if an injection fails.
  */
 export async function injectMarkdown(markdown: string, options: InjectMarkdownOptions): Promise<string> {
+    checkValueDeclarations(options.valueDeclarations);
     const { file, ...opts } = options;
     const injector = new FileInjector(nodeFsa(), { ...opts, silent: true, dryRun: true });
     const r = await injector.processContent(markdown, file);
@@ -116,6 +120,14 @@ export async function injectMarkdown(markdown: string, options: InjectMarkdownOp
         throw new InjectMarkdownError(`Failed to inject into ${file}:${details}`, errors);
     }
     return String(r.file.value);
+}
+
+/** A values file's prefix is empty (the root) or a dotted placeholder name. */
+function checkValueDeclarations(decls: ValueDeclaration[] | undefined): void {
+    for (const decl of decls ?? []) {
+        if (decl.kind !== 'values-file' || decl.prefix === '' || isValidPlaceholderName(decl.prefix)) continue;
+        throw new OptionError(`Invalid prefix "${decl.prefix}" for values file "${decl.path}".`);
+    }
 }
 
 function collectMessages(file: string, r: ProcessFileResult, errors: InjectMessage[], warnings: InjectMessage[]) {

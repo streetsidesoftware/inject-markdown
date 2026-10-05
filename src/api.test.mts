@@ -171,23 +171,31 @@ describe('api', () => {
             });
 
             test.each`
-                values                                                                                                                                                     | expected
-                ${[{ kind: 'value', name: 'shown', value: 'v' }]}                                                                                                          | ${'Value: v'}
-                ${[{ kind: 'value', name: 'shown', value: 'v' }, { kind: 'values-file', path: 'data.json' }, { kind: 'alias', name: 'shown', target: 'data.town' }]}       | ${'Value: Springfield'}
-                ${[{ kind: 'alias', name: 'shown', target: 'data.town' }, { kind: 'values-file', path: 'data.json' }, { kind: 'value', name: 'shown', value: 'v' }]}       | ${'Value: v'}
-                ${[{ kind: 'value', name: 'shown', value: 'old' }, { kind: 'alias', name: 'shown', target: 'data.town' }, { kind: 'value', name: 'shown', value: 'new' }]} | ${'Value: new'}
-                ${[{ kind: 'values-file', path: 'data.json', prefix: '' }]}                                                                                                | ${'Value: root'}
-                ${[{ kind: 'value', name: 'shown', value: 'v' }, { kind: 'values-file', path: 'data.json', prefix: '' }]}                                                  | ${'Value: root'}
-                ${[{ kind: 'values-file', path: 'data.json', prefix: '' }, { kind: 'value', name: 'shown', value: 'v' }]}                                                  | ${'Value: v'}
-                ${[{ kind: 'values-file', path: 'data.json', prefix: 'my.data' }, { kind: 'alias', name: 'shown', target: 'my.data.town' }]}                               | ${'Value: Springfield'}
+                values                                                                                                                                                               | expected
+                ${[{ kind: 'value', name: 'shown', value: 'v' }]}                                                                                                                    | ${'Value: v'}
+                ${[{ kind: 'value', name: 'shown', value: 'v' }, { kind: 'values-file', path: 'data.json', prefix: 'data' }, { kind: 'alias', name: 'shown', target: 'data.town' }]} | ${'Value: Springfield'}
+                ${[{ kind: 'alias', name: 'shown', target: 'data.town' }, { kind: 'values-file', path: 'data.json', prefix: 'data' }, { kind: 'value', name: 'shown', value: 'v' }]} | ${'Value: v'}
+                ${[{ kind: 'value', name: 'shown', value: 'old' }, { kind: 'alias', name: 'shown', target: 'data.town' }, { kind: 'value', name: 'shown', value: 'new' }]}           | ${'Value: new'}
+                ${[{ kind: 'values-file', path: 'data.json', prefix: '' }]}                                                                                                          | ${'Value: root'}
+                ${[{ kind: 'value', name: 'shown', value: 'v' }, { kind: 'values-file', path: 'data.json', prefix: '' }]}                                                            | ${'Value: root'}
+                ${[{ kind: 'values-file', path: 'data.json', prefix: '' }, { kind: 'value', name: 'shown', value: 'v' }]}                                                            | ${'Value: v'}
+                ${[{ kind: 'values-file', path: 'data.json', prefix: 'my.data' }, { kind: 'alias', name: 'shown', target: 'my.data.town' }]}                                         | ${'Value: Springfield'}
             `('newest declaration wins: $values', async ({ values, expected }) => {
                 expect(await inject(values)).toContain(expected);
             });
 
-            test('rejects an invalid prefix', async () => {
-                await expect(inject([{ kind: 'values-file', path: 'data.json', prefix: 'x' }])).rejects.toThrow(
-                    'Invalid values-file prefix "x"',
+            test('rejects an invalid prefix before reading anything', async () => {
+                await expect(inject([{ kind: 'values-file', path: 'missing.json', prefix: 'a b' }])).rejects.toThrow(
+                    'Invalid prefix "a b" for values file "missing.json".',
                 );
+            });
+
+            test('accepts a one-character prefix', async () => {
+                const values: ValueDeclaration[] = [
+                    { kind: 'values-file', path: 'data.json', prefix: 'x' },
+                    { kind: 'alias', name: 'shown', target: 'x.town' },
+                ];
+                expect(await inject(values)).toContain('Value: Springfield');
             });
         });
 

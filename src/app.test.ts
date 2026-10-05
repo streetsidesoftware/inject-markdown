@@ -71,6 +71,14 @@ describe('app', () => {
             await rm(outDir, { recursive: true, force: true });
         }
     });
+
+    test('a --values-file with no valid derived prefix is a usage error', async () => {
+        const command = new Command();
+        const argv = createArgv('README.md', '--values-file=build info.json', '--dry-run');
+        command.exitOverride(errorHandler);
+        command.configureOutput({ writeErr: () => undefined });
+        await expect(app.run(command, argv)).rejects.toThrow('Invalid --values-file "build info.json"');
+    });
 });
 
 function createArgv(...args: (string | string[])[]): string[] {

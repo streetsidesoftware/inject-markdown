@@ -1,5 +1,11 @@
 import type { RelURL } from './url_helper.js';
-import { parseSingleValue, parseValuesFileList, parseValuesPairs, type ValueDeclaration } from './values.js';
+import {
+    parseSingleValue,
+    parseValuesFileEntry,
+    parseValuesPairs,
+    splitValuesFileList,
+    type ValueDeclaration,
+} from './values.js';
 
 export type Range = [number, number];
 
@@ -99,7 +105,16 @@ export function parseHashString(hash: string): InjectInfo {
                 continue;
             }
             case 'values-file':
-                for (const entry of parseValuesFileList(value)) valueDecls.push({ kind: 'values-file', ...entry });
+                for (const raw of splitValuesFileList(value)) {
+                    const entry = parseValuesFileEntry(raw);
+                    if (entry) {
+                        valueDecls.push({ kind: 'values-file', ...entry });
+                    } else {
+                        valueErrors.push(
+                            `Invalid values-file="${raw}": no valid prefix can be derived from the file name; write prefix:${raw}, or :${raw} to merge at the root.`,
+                        );
+                    }
+                }
                 continue;
             case 'vars':
                 info.vars = parseFlagValue(value, true);

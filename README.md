@@ -489,15 +489,15 @@ if (result.errors.length) throw new Error(result.errors.map((e) => `${e.file}:${
   ```ts
   await injectFiles(['README.md'], {
     valueDeclarations: [
-      { kind: 'values-file', path: 'package.json' }, // {@ package.version @}
-      { kind: 'values-file', path: 'release.json', prefix: '' }, // top-level keys, like `:release.json`
+      { kind: 'values-file', path: 'package.json', prefix: 'package' }, // {@ package.version @}
+      { kind: 'values-file', path: 'release.json', prefix: '' }, // top-level keys
       { kind: 'value', name: 'channel', value: 'beta' },
       { kind: 'alias', name: 'version', target: 'package.version' }
     ]
   });
   ```
 
-  A values file's `prefix` defaults to its base name; `''` puts its keys at the root.
+  A values file's `prefix` is a dotted name for its values, or `''` to put its keys at the root.
 
 - **Nothing is printed.** Errors and warnings in the Markdown files are returned in `errors` and `warnings`, each with the `file`, `message`, and the directive's `line` and `column`. Set `silent: false` to print progress to stderr.
 

@@ -10,7 +10,7 @@ import { nodeFsa } from '../FileSystemAdapter/fsa.js';
 import { createStore, normalizePath, type Store } from '../FileSystemAdapter/fsStore.mjs';
 import { OptionError } from '../util/errors.js';
 import { isURL, relativePath } from '../util/url_helper.js';
-import type { ValueDeclaration } from '../util/values.js';
+import { deriveAutoPrefixFromPath, type ValueDeclaration } from '../util/values.js';
 import { FileInjector, type Logger } from './FileInjector.js';
 
 const __file__ = fileURLToPath(import.meta.url);
@@ -342,7 +342,11 @@ describe('template variables', () => {
 
     const value = (name: string, v: string): ValueDeclaration => ({ kind: 'value', name, value: v });
     const alias = (name: string, target: string): ValueDeclaration => ({ kind: 'alias', name, target });
-    const valuesFile = (path: string): ValueDeclaration => ({ kind: 'values-file', path });
+    const valuesFile = (path: string): ValueDeclaration => ({
+        kind: 'values-file',
+        path,
+        prefix: deriveAutoPrefixFromPath(path),
+    });
 
     function count(text: string, needle: string): number {
         return text.split(needle).length - 1;

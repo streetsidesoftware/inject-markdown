@@ -82,8 +82,17 @@ export async function app(program = defaultCommand): Promise<Command> {
         .option(
             '--values-file <[prefix:]path>',
             'Add a run-wide JSON file of {@ name @} placeholder values, resolved relative to --cwd. Repeatable.',
-            (path: string, acc?: SequencedDeclaration[]) =>
-                declare(acc, { kind: 'values-file', ...parseValuesFileEntry(path) }),
+            (path: string, acc?: SequencedDeclaration[]) => {
+                const entry = parseValuesFileEntry(path);
+                if (!entry) {
+                    return program.error(
+                        chalk.red(
+                            `Invalid --values-file "${path}": no valid prefix can be derived from the file name; use prefix:${path}, or :${path} to merge at the root.`,
+                        ),
+                    );
+                }
+                return declare(acc, { kind: 'values-file', ...entry });
+            },
         )
         .option(
             '--allow-env <name>',

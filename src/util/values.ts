@@ -9,11 +9,8 @@ export interface JsonObject {
 /** A values file, and where its values go. */
 export interface ValuesFileEntry {
     path: string;
-    /**
-     * Where the file's values go: under this prefix; at the root if `''`; under the file's base
-     * name if unset (`package.json` → `package`).
-     */
-    prefix?: string | undefined;
+    /** Where the file's values go: under this dotted prefix, or at the root if `''`. */
+    prefix: string;
 }
 
 /** `{@ name @}` is `value`. */
@@ -64,6 +61,11 @@ const unsafeSegments = new Set(['__proto__', 'constructor', 'prototype']);
  */
 export function isValidPlaceholderSegment(name: string): boolean {
     return validPlaceholderSegment.test(name) && !unsafeSegments.has(name);
+}
+
+/** A dotted placeholder name: one or more valid segments separated by `.`. */
+export function isValidPlaceholderName(name: string): boolean {
+    return name.split('.').every(isValidPlaceholderSegment);
 }
 
 /**
@@ -122,14 +124,18 @@ function splitPair(entry: string): [string, string] | undefined {
     return [name, entry.slice(idx + 1).trim()];
 }
 
-/** Parse one `[prefix:]path` entry: `path`, `prefix:path`, or `:path` for an empty (root) prefix. */
-export function parseValuesFileEntry(raw: string): ValuesFileEntry {
+/**
+ * Parse one `[prefix:]path` entry: `prefix:path`, `:path` for an empty (root) prefix, or `path`,
+ * whose prefix is derived from the file's base name (`package.json` → `package`). `undefined`
+ * when a derived prefix isn't a valid name segment.
+ */
+export function parseValuesFileEntry(raw: string): ValuesFileEntry | undefined {
     const entry = raw.trim();
     if (entry.startsWith(':')) {
         return { prefix: '', path: unquote(entry.slice(1).trim()) };
     }
     if (isQuoted(entry)) {
-        return { path: unquote(entry) };
+        return withDerivedPrefix(unquote(entry));
     }
     // The colon separates only when what precedes it is a prefix (ADR-0009 point 1). Anything
     // else -- a drive letter, `..`, a path-shaped head -- leaves the whole entry a path.
@@ -140,15 +146,21 @@ export function parseValuesFileEntry(raw: string): ValuesFileEntry {
             return { prefix, path: unquote(entry.slice(idx + 1).trim()) };
         }
     }
-    return { path: unquote(entry) };
+    return withDerivedPrefix(unquote(entry));
+}
+
+/** A derived prefix is a single segment; only an explicit one may be dotted. */
+function withDerivedPrefix(path: string): ValuesFileEntry | undefined {
+    const prefix = deriveAutoPrefixFromPath(path);
+    return isValidPlaceholderSegment(prefix) ? { prefix, path } : undefined;
 }
 
 /**
- * Parse a comma-separated list of `[prefix:]path` entries. A comma inside a double-quoted entry
+ * Split a comma-separated list of `[prefix:]path` entries. A comma inside a double-quoted entry
  * is not treated as a separator.
  */
-export function parseValuesFileList(raw: string): ValuesFileEntry[] {
-    return splitTopLevel(raw.trim(), ',').map(parseValuesFileEntry);
+export function splitValuesFileList(raw: string): string[] {
+    return splitTopLevel(raw.trim(), ',');
 }
 
 function splitTopLevel(s: string, sep: string): string[] {
@@ -286,9 +298,8 @@ export function resolveInLayers(layers: readonly ValueLayer[], name: string): Re
 }
 
 /**
- * Read one values file into its layer. A read/parse failure or invalid
- * auto-derived prefix is reported via `onError` and yields `undefined`, so one bad entry doesn't
- * fail the rest of the sequence.
+ * Read one values file into its layer. A read/parse failure is reported via `onError` and yields
+ * `undefined`, so one bad entry doesn't fail the rest of the sequence.
  */
 export async function readValuesFileLayer(
     fs: FileSystemAdapter,
@@ -315,21 +326,8 @@ export async function readValuesFileLayer(
         for (const [k, v] of Object.entries(data)) layer[k] = v;
         return layer;
     }
-    const explicit = entry.prefix !== undefined;
-    const prefix = entry.prefix ?? deriveAutoPrefixFromPath(entry.path);
-    // An auto-derived prefix must be a single name segment; only an explicit one may be dotted.
-    if (explicit && !isValidValuesFilePrefix(prefix)) {
-        onError(`Invalid values-file prefix "${prefix}" for "${entry.path}".`);
-        return undefined;
-    }
-    if (!explicit && !isValidPlaceholderSegment(prefix)) {
-        onError(
-            `Invalid values-file prefix "${prefix}" derived from "${entry.path}". Use an explicit prefix or ":${entry.path}" to merge at the root.`,
-        );
-        return undefined;
-    }
     const layer = emptyTree();
     // `setPath` so a dotted explicit prefix nests, per ADR-0009 point 3.
-    setPath(layer, prefix, data);
+    setPath(layer, entry.prefix, data);
     return layer;
 }

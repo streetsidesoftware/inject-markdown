@@ -42,6 +42,17 @@ describe('hash', () => {
         });
     });
 
+    test('#values-file with no valid derived prefix is a directive error', () => {
+        expect(parseHashString('#values-file=build info.json')).toEqual(
+            expect.objectContaining({
+                valueDecls: [],
+                valueErrors: [
+                    'Invalid values-file="build info.json": no valid prefix can be derived from the file name; write prefix:build info.json, or :build info.json to merge at the root.',
+                ],
+            }),
+        );
+    });
+
     test('#vars (bare flag)', () => {
         expect(parseHashString('#vars')).toEqual({
             vars: true,
