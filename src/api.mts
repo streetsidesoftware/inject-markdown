@@ -30,7 +30,7 @@ export interface InjectFilesOptions
         InjectOptions,
         Pick<FileInjectorOptions, 'outputDir' | 'stopOnErrors' | 'writeOnError' | 'dryRun' | 'silent' | 'verbose'> {
     /**
-     * Throw if the patterns match no Markdown files. `false` is like `--no-must-find-files`.
+     * Throw if the patterns match no Markdown files.
      * @default true
      */
     mustFindFiles?: boolean | undefined;
@@ -78,17 +78,16 @@ export class InjectMarkdownError extends Error {
 }
 
 /**
- * Inject content into Markdown files, like the CLI, without printing or exiting.
- * Errors in the files are returned in `errors`; invalid options throw.
- * Defaults match the CLI, except `silent`, which defaults to `true`.
+ * Inject content into Markdown files and return what happened, without printing or exiting.
+ * Errors in the files are returned in `errors`; invalid options throw. `silent` defaults to `true`.
  * @param files - files or glob patterns, relative to `cwd`; only `.md` files are processed.
  */
 export async function injectFiles(files: string[], options: InjectFilesOptions = {}): Promise<InjectFilesResult> {
     const errors: InjectMessage[] = [];
     const warnings: InjectMessage[] = [];
     const collect = (relFile: string, r: ProcessFileResult) => collectMessages(relFile, r, errors, warnings);
-    const { mustFindFiles = true, stopOnErrors = true, silent = true, ...opts } = options;
-    const r = await processGlobs(files, { ...opts, mustFindFiles, stopOnErrors, silent }, collect);
+    const { mustFindFiles = true, silent = true, ...opts } = options;
+    const r = await processGlobs(files, { ...opts, mustFindFiles, silent }, collect);
     if (!r.numberOfFiles && mustFindFiles) throw new InjectMarkdownError('No Markdown files found.');
     return {
         filesFound: r.numberOfFiles,
