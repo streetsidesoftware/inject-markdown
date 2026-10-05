@@ -14,8 +14,8 @@ const allowedFileExtensions: Record<string, boolean | undefined> = {
 };
 
 /**
- * @param onFileResult - called with each processed file's result; by default, prints its errors
- *   and warnings to stderr.
+ * @param onFileResult - called with each processed file's result.
+ *   By default, it prints the file's errors and warnings to stderr.
  */
 export async function processGlobs(
     globs: string[],

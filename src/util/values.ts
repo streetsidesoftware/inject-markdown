@@ -33,8 +33,9 @@ export interface ValueAliasDeclaration {
 }
 
 /**
- * One entry in the ordered value sequence. The newest declaration wins, whatever its kind;
- * resolution walks the sequence newest first.
+ * One entry in the ordered value sequence.
+ * The newest declaration wins, whatever its kind.
+ * Resolution walks the sequence newest first.
  */
 export type ValueDeclaration = ValuePairDeclaration | ValuesFileDeclaration | ValueAliasDeclaration;
 
@@ -69,9 +70,11 @@ export function isValidPlaceholderName(name: string): boolean {
 }
 
 /**
- * A values file's explicit prefix: two characters or more,
- * dot-separated segments with none empty and none starting with `-` or `.`, and no path
- * separators — so `C:`, `..`, `.env` and `-foo` are all paths rather than prefixes.
+ * A valid explicit prefix in `[prefix:]path` text:
+ * - two characters or more;
+ * - dot-separated segments, none empty, none starting with `-` or `.`;
+ * - no path separators.
+ * So `C:`, `..`, `.env` and `-foo` are read as paths, not prefixes.
  */
 export function isValidValuesFilePrefix(name: string): boolean {
     return validValuesFilePrefix.test(name) && !name.split('.').some((seg) => unsafeSegments.has(seg));
@@ -83,9 +86,9 @@ function emptyTree(): JsonObject {
 }
 
 /**
- * Parse a comma-separated `name:value` list, e.g. `a:1,b:2`. A whole value wrapped in double
- * quotes suppresses comma-splitting, producing one pair whose value may contain literal
- * commas/colons (`"name:1, 2, 3"`). Pairs keep their written order, repeats included.
+ * Parse a comma-separated `name:value` list, e.g. `a:1,b:2`.
+ * Pairs keep their written order, repeats included.
+ * A list wrapped in double quotes isn't split: it is one pair, e.g. `"name:1, 2, 3"`.
  */
 export function parseValuesPairs(raw: string): [name: string, value: string][] {
     const pairs: [string, string][] = [];
@@ -109,8 +112,9 @@ export function parseValuesPairs(raw: string): [name: string, value: string][] {
 }
 
 /**
- * Parse one `name:value`: split at the first `:`, and the rest is the value, commas and colons
- * included. `undefined` when there is no `:` or the name is empty.
+ * Parse one `name:value`.
+ * It splits at the first `:`. The rest is the value, including any commas and colons.
+ * Returns `undefined` when there is no `:` or the name is empty.
  */
 export function parseSingleValue(raw: string): [name: string, value: string] | undefined {
     return splitPair(raw);
@@ -125,9 +129,11 @@ function splitPair(entry: string): [string, string] | undefined {
 }
 
 /**
- * Parse one `[prefix:]path` entry: `prefix:path`, `:path` for an empty (root) prefix, or `path`,
- * whose prefix is derived from the file's base name (`package.json` → `package`). `undefined`
- * when a derived prefix isn't a valid name segment.
+ * Parse one `[prefix:]path` entry:
+ * - `prefix:path` uses that prefix;
+ * - `:path` uses an empty (root) prefix;
+ * - `path` derives the prefix from the file's base name (`package.json` → `package`).
+ * Returns `undefined` when a derived prefix isn't a valid name segment.
  */
 export function parseValuesFileEntry(raw: string): ValuesFileEntry | undefined {
     const entry = raw.trim();
@@ -149,15 +155,18 @@ export function parseValuesFileEntry(raw: string): ValuesFileEntry | undefined {
     return withDerivedPrefix(unquote(entry));
 }
 
-/** A derived prefix is a single segment; only an explicit one may be dotted. */
+/**
+ * A derived prefix must be a single name segment.
+ * Only an explicit prefix may be dotted.
+ */
 function withDerivedPrefix(path: string): ValuesFileEntry | undefined {
     const prefix = deriveAutoPrefixFromPath(path);
     return isValidPlaceholderSegment(prefix) ? { prefix, path } : undefined;
 }
 
 /**
- * Split a comma-separated list of `[prefix:]path` entries. A comma inside a double-quoted entry
- * is not treated as a separator.
+ * Split a comma-separated list of `[prefix:]path` entries.
+ * A comma inside a double-quoted entry is not a separator.
  */
 export function splitValuesFileList(raw: string): string[] {
     return splitTopLevel(raw.trim(), ',');
@@ -206,9 +215,10 @@ export function deriveAutoPrefixFromPath(p: string): string {
 }
 
 /**
- * Walk a dotted placeholder name into a value tree. `undefined` means the name is not defined.
- * Only own properties count: a values-file tree comes from `JSON.parse` and still inherits from
- * `Object.prototype`, so `{@ toString @}` must not resolve to an inherited member.
+ * Walk a dotted placeholder name into a value tree.
+ * `undefined` means the name is not defined.
+ * Only own properties count. A values-file tree comes from `JSON.parse`, so it inherits from
+ * `Object.prototype`, and `{@ toString @}` must not resolve to an inherited member.
  */
 export function getPath(tree: JsonObject | undefined, name: string): JsonValue | undefined {
     if (!tree) return undefined;
@@ -223,8 +233,8 @@ export function getPath(tree: JsonObject | undefined, name: string): JsonValue |
 
 /**
  * Set a dotted placeholder name into a value tree, creating intermediate objects as needed.
- * A name containing a prototype-reaching segment is dropped: directive text is untrusted input,
- * so a name like `__proto__.x` must not be able to write to `Object.prototype`.
+ * A name with a prototype-reaching segment is dropped.
+ * Directive text is untrusted, and a name like `__proto__.x` must not write to `Object.prototype`.
  */
 export function setPath(tree: JsonObject, name: string, value: JsonValue): void {
     const segments = name.split('.');
@@ -274,8 +284,9 @@ export interface UnresolvedValue {
 export type ResolveResult = ResolvedValue | UnresolvedValue;
 
 /**
- * The layer for one `name -> value` pair. One layer per pair rather than one folded tree, so the
- * pairs `a -> 1` and `a.b -> 2` keep both names.
+ * The layer for one `name -> value` pair.
+ * Each pair gets its own layer rather than one folded tree.
+ * That way, the pairs `a -> 1` and `a.b -> 2` keep both names.
  */
 export function layerFromPair(name: string, value: string): ValueLayer {
     const layer = emptyTree();
@@ -298,8 +309,9 @@ export function resolveInLayers(layers: readonly ValueLayer[], name: string): Re
 }
 
 /**
- * Read one values file into its layer. A read/parse failure is reported via `onError` and yields
- * `undefined`, so one bad entry doesn't fail the rest of the sequence.
+ * Read one values file into its layer.
+ * A read or parse failure is reported via `onError` and yields `undefined`.
+ * One bad entry doesn't fail the rest of the sequence.
  */
 export async function readValuesFileLayer(
     fs: FileSystemAdapter,

@@ -69,8 +69,9 @@ export interface FileInjectorOptions {
     /** Write the results to this directory instead of in place. */
     outputDir?: string | undefined;
     /**
-     * The injection root: relative paths resolve against it, and local references must stay inside
-     * it.
+     * The injection root.
+     * Relative paths resolve against it.
+     * Local references must stay inside it.
      * @default process.cwd()
      */
     cwd?: PathLike | undefined;
@@ -78,9 +79,11 @@ export interface FileInjectorOptions {
     clean?: boolean | undefined;
 
     /**
-     * Only rewrite the text spans covered by `@@inject` directives (start marker through end
-     * marker, inclusive), leaving the rest of the file byte-for-byte as is, instead of
-     * re-stringifying the whole document.
+     * How much of the file to rewrite:
+     * - `true`: only the injected sections. The rest of the file stays byte-for-byte as it was.
+     * - `false`: the whole document, re-stringified.
+     *
+     * A section runs from a directive through its end marker, inclusive.
      * @default true
      */
     injectOnly?: boolean | undefined;
@@ -89,10 +92,10 @@ export interface FileInjectorOptions {
     silent?: boolean | undefined;
 
     /**
-     * Use color
-     * `true` - force color
-     * `false` - no color
-     * `undefined` - let chalk decide.
+     * Whether to use color:
+     * - `true`: force color.
+     * - `false`: no color.
+     * - `undefined`: let chalk decide.
      */
     color?: boolean | undefined;
 
@@ -104,13 +107,17 @@ export interface FileInjectorOptions {
     verbose?: number | boolean | undefined;
 
     /**
-     * Write a file even if an injection in it failed; by default it is skipped.
+     * What to do with a file when an injection in it fails:
+     * - `false`: skip it. The file isn't written.
+     * - `true`: write it anyway.
      * @default false
      */
     writeOnError?: boolean | undefined;
 
     /**
-     * Stop at the first file with an error.
+     * What to do after a file has an error:
+     * - `true`: stop. The remaining files aren't processed.
+     * - `false`: keep going with the remaining files.
      * @default true
      */
     stopOnErrors?: boolean | undefined;
@@ -126,9 +133,11 @@ export interface FileInjectorOptions {
     allowOutsideRoot?: string[] | undefined;
 
     /**
-     * Run-wide placeholder value declarations, oldest to newest. A newer one wins, whatever its
-     * kind, and every directive declaration is newer than these. Values-file paths resolve
-     * relative to `cwd` and aren't limited to the injection root.
+     * Run-wide placeholder value declarations, oldest to newest.
+     * - A newer declaration wins, whatever its kind.
+     * - Every directive declaration is newer than these.
+     * - Values-file paths resolve relative to `cwd`.
+     * - Values-file paths aren't limited to the injection root.
      */
     valueDeclarations?: ValueDeclaration[] | undefined;
 
@@ -139,8 +148,8 @@ export interface FileInjectorOptions {
     strictVars?: boolean | undefined;
 
     /**
-     * Rebase relative links in injected Markdown onto the host file; a directive's `rebase-links=`
-     * wins.
+     * Rebase relative links in injected Markdown onto the host file.
+     * A directive's own `rebase-links=` wins.
      * @default true
      */
     rebaseLinks?: boolean | undefined;
@@ -168,8 +177,9 @@ export class FileInjector {
     }
 
     /**
-     * Process all injections in `content` as if it were the content of `filePath`, which is only
-     * used to resolve relative references; nothing is read from it.
+     * Process all injections in `content` as if it were the content of `filePath`.
+     * `filePath` is only used to resolve relative references.
+     * Nothing is read from it.
      */
     async processContent(content: string, filePath: PathLike): Promise<ProcessFileResult> {
         const fileUrl = pathToUrl(filePath, this.cwd);
@@ -624,8 +634,8 @@ async function processFileInjections(
             return { root, info };
         } catch (e) {
             const err = toError(e);
-            // A merely missing markdown file stays a warning, but a boundary rejection is fatal so
-            // `stopOnErrors` applies and a failed run is visible in CI.
+            // A missing Markdown file stays a warning.
+            // A boundary rejection is fatal, so `stopOnErrors` applies and CI sees the failure.
             if (err instanceof OutsideInjectionRootError) {
                 file.error(err.message, directive.node.position);
             } else {
@@ -775,7 +785,7 @@ interface DirectiveNode extends DirectiveNodeBase {
     directive: Directive;
 }
 
-/** `injectOnly` mode: threaded through the inject calls to collect patches. */
+/** State for `injectOnly` mode, passed through the inject calls to collect patches. */
 interface InjectOnlyCtx {
     outputOptions: StringifyOptions;
     /** original end-marker offset for each surviving start node, from a matched pair. */

@@ -32,7 +32,10 @@ export interface LayerResolutionEntry {
 /** One declaration ready to resolve against (ADR-0012): an alias, or the value layer it supplies. */
 export type ResolutionEntry = AliasResolutionEntry | LayerResolutionEntry;
 
-/** An unresolved name; `via` names the alias target that failed, so the message can name both sides. */
+/**
+ * An unresolved name.
+ * `via` names the alias target that failed, so the message can name both sides.
+ */
 export interface UnresolvedName extends UnresolvedValue {
     via?: string | undefined;
 }
@@ -59,18 +62,25 @@ export function explainUnresolved(r: NameResolution): string {
     return via === undefined ? why : `aliased to "${via}": ${why}`;
 }
 
-/** Run-wide placeholder sources shared by every directive in a run, from `valueDeclarations` and `allowEnv`. */
+/**
+ * Run-wide placeholder sources, shared by every directive in a run.
+ * They come from `valueDeclarations` and `allowEnv`.
+ */
 export interface RunWideValueSources {
-    /** Run-wide declarations, newest first; values files are read once per run. */
+    /**
+     * Run-wide declarations, newest first.
+     * Values files are read once per run.
+     */
     entries: ResolutionEntry[];
     /** Environment variable names allow-listed by `allowEnv`. */
     allowEnvSet: ReadonlySet<string>;
 }
 
 /**
- * Turn declarations (written oldest first) into resolution entries, newest first, per ADR-0012
- * point 1. `readFile` decides a failed read: returning `undefined` skips that file, throwing
- * aborts.
+ * Turn declarations, written oldest first, into resolution entries, newest first.
+ * `readFile` decides what a failed read does:
+ * - returning `undefined` skips that file;
+ * - throwing aborts.
  */
 export async function buildResolutionEntries(
     decls: readonly ValueDeclaration[],
@@ -97,10 +107,10 @@ export async function buildResolutionEntries(
 }
 
 /**
- * Resolve the run-wide placeholder sources from the run's options, reading any values files
- * relative to `cwd`; a failed read throws an `OptionError`. `options` is constant for a run, so
- * a caller processing many files should compute this once and reuse it rather than calling it
- * per file.
+ * Resolve the run-wide placeholder sources from the run's options.
+ * Values files are read relative to `cwd`.
+ * A failed read throws an `OptionError`.
+ * The result is the same for every file in a run, so compute it once and reuse it.
  */
 export async function resolveRunWideValueSources(
     fs: FileSystemAdapter,
@@ -161,8 +171,9 @@ export function resolveValueName(
 }
 
 /**
- * A directive's resolution entries, directive declarations first: they are newer than every
- * run-wide one. A directive's values-file paths resolve relative to the containing document.
+ * A directive's resolution entries.
+ * Directive declarations come first, because they are newer than every run-wide one.
+ * A directive's values-file paths resolve relative to the containing document.
  */
 export async function buildDirectiveEntries(
     fs: FileSystemAdapter,
@@ -196,10 +207,12 @@ export interface ApplySubstitutionDeps {
 }
 
 /**
- * Resolve a directive's placeholder value sources ({@link InjectInfo.valueDecls}) and
- * substitute placeholders in its content via `apply`, reporting unresolved names once per
- * unique name (warning, or a directive error under `strictVars`). A directive with no value
- * declarations and no `vars` does no scanning at all.
+ * Resolve a directive's placeholder value sources ({@link InjectInfo.valueDecls}).
+ * Then substitute placeholders in its content via `apply`.
+ * Each unresolved name is reported once:
+ * - as a warning;
+ * - as a directive error under `strictVars`.
+ * A directive with no value declarations and no `vars` isn't scanned at all.
  */
 export async function applySubstitution(
     info: InjectInfo,

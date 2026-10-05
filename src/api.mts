@@ -68,7 +68,11 @@ export interface InjectFilesResult {
     warnings: InjectMessage[];
 }
 
-/** Thrown by {@link injectFiles} when no files match, and by {@link injectMarkdown} on injection errors. */
+/**
+ * Thrown by:
+ * - {@link injectFiles} when no files match;
+ * - {@link injectMarkdown} when an injection fails.
+ */
 export class InjectMarkdownError extends Error {
     constructor(
         message: string,
@@ -81,8 +85,10 @@ export class InjectMarkdownError extends Error {
 
 /**
  * Inject content into Markdown files and return what happened, without printing or exiting.
- * Errors in the files are returned in `errors`; invalid options throw. `silent` defaults to `true`.
- * @param files - files or glob patterns, relative to `cwd`; only `.md` files are processed.
+ * - Errors in the files are returned in `errors`.
+ * - Invalid options throw.
+ * - `silent` defaults to `true`.
+ * @param files - files or glob patterns, relative to `cwd`. Only `.md` files are processed.
  */
 export async function injectFiles(files: string[], options: InjectFilesOptions = {}): Promise<InjectFilesResult> {
     const errors: InjectMessage[] = [];
@@ -122,7 +128,7 @@ export async function injectMarkdown(markdown: string, options: InjectMarkdownOp
     return String(r.file.value);
 }
 
-/** A values file's prefix is empty (the root) or a dotted placeholder name. */
+/** Check that each values file's prefix is empty (the root) or a dotted placeholder name. */
 function checkValueDeclarations(decls: ValueDeclaration[] | undefined): void {
     for (const decl of decls ?? []) {
         if (decl.kind !== 'values-file' || decl.prefix === '' || isValidPlaceholderName(decl.prefix)) continue;
