@@ -1,4 +1,4 @@
-/** Default `num-rows` (ADR-0004). */
+/** Default `numRows`. */
 export const defaultNumRows = 10_000;
 
 export interface RowWindowOptions {
@@ -14,8 +14,8 @@ export interface RowWindow {
 }
 
 /**
- * Resolve `start-row`/`end-row`/`num-rows` into a window (ADR-0004).
- * Throws on a value that isn't a whole number, or on `start-row=0`.
+ * Resolve `startRow`/`endRow`/`numRows` into a window. Throws on a value that isn't a whole
+ * number, or on a `startRow` of 0.
  */
 export function resolveRowWindow(options: RowWindowOptions): RowWindow {
     const first = parseCount('start-row', options.startRow) ?? 1;
@@ -32,10 +32,7 @@ export function applyRowWindow<T>(rows: T[], window: RowWindow): T[] {
     return rows.slice(window.first - 1, window.last);
 }
 
-/**
- * Resolve `header-rows` (ADR-0002): bare or empty means 1. Throws on a value that isn't a whole
- * number.
- */
+/** Resolve a header-row count: unset or empty means 1. Throws on a value that isn't a whole number. */
 export function resolveHeaderRows(value: string | undefined): number {
     if (value === undefined || value === '') return 1;
     return parseCount('header-rows', value) ?? 1;
