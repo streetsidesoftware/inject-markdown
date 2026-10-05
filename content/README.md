@@ -546,7 +546,22 @@ const result = await injectFiles(['README.md'], { cwd: 'samples' });
 if (result.errors.length) throw new Error(result.errors.map((e) => `${e.file}:${e.line}: ${e.message}`).join('\n'));
 ```
 
-- **Options mirror the CLI flags,** in camelCase: `cwd`, `outputDir`, `dryRun`, `clean`, `mustFindFiles`, `stopOnErrors`, `writeOnError`, `rebaseLinks`, `allowOutsideRoot`, `allowEnv`, `strictVars`, and `values`, `valuesFiles` and `valueAliases` for `--value`, `--values-file` and `--value-alias`. Defaults match the CLI.
+- **Options mirror the CLI flags,** in camelCase: `cwd`, `outputDir`, `dryRun`, `clean`, `injectOnly`, `mustFindFiles`, `stopOnErrors`, `writeOnError`, `rebaseLinks`, `allowOutsideRoot`, `allowEnv` and `strictVars`. Defaults match the CLI.
+- **`values` takes the place of `--value`, `--values-file` and `--value-alias`:** one list, oldest to newest, where a newer entry wins whatever its kind, as on the command line:
+
+  ```ts
+  await injectFiles(['README.md'], {
+    values: [
+      { file: 'package.json' }, // {@ package.version @}
+      { file: 'release.json', prefix: '' }, // top-level keys, like `:release.json`
+      { name: 'channel', value: 'beta' },
+      { alias: 'version', target: 'package.version' }
+    ]
+  });
+  ```
+
+  A values file's `prefix` defaults to its base name; `''` puts its keys at the root.
+
 - **Nothing is printed.** Errors and warnings in the Markdown files are returned in `errors` and `warnings`, each with the `file`, `message`, and the directive's `line` and `column`. Set `silent: false` to print progress to stderr.
 - **Invalid options throw,** and so does finding no Markdown files, unless `mustFindFiles` is `false`.
 

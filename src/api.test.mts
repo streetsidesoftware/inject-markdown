@@ -5,7 +5,7 @@ import * as path from 'path';
 import { pathToFileURL } from 'url';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { injectFiles, injectMarkdown, InjectMarkdownError } from './api.mjs';
+import { injectFiles, injectMarkdown, InjectMarkdownError, type ValueDeclaration } from './api.mjs';
 import * as index from './index.mjs';
 
 const csv = 'name,value\na,1\n';
@@ -160,11 +160,34 @@ describe('api', () => {
             expect(result).toContain(expected);
         });
 
-        test('values', async () => {
-            await writeFile(path.join(dir, 'install.md'), 'Version: {@ version @}\n');
-            const md = '<!--- @@inject: install.md#vars --->\n';
-            const result = await injectMarkdown(md, { cwd: dir, file: 'README.md', values: { version: '1.2.3' } });
-            expect(result).toContain('Version: 1.2.3');
+        describe('values', () => {
+            const md = '<!--- @@inject: show.md#vars --->\n';
+            const inject = (values: ValueDeclaration[]) => injectMarkdown(md, { cwd: dir, file: 'README.md', values });
+
+            beforeEach(async () => {
+                await writeFile(path.join(dir, 'show.md'), 'Value: {@ shown @}\n');
+                await writeFile(path.join(dir, 'data.json'), JSON.stringify({ town: 'Springfield', shown: 'root' }));
+            });
+
+            test.each`
+                values                                                                                                         | expected
+                ${[{ name: 'shown', value: 'v' }]}                                                                             | ${'Value: v'}
+                ${[{ name: 'shown', value: 'v' }, { file: 'data.json' }, { alias: 'shown', target: 'data.town' }]}             | ${'Value: Springfield'}
+                ${[{ alias: 'shown', target: 'data.town' }, { file: 'data.json' }, { name: 'shown', value: 'v' }]}             | ${'Value: v'}
+                ${[{ name: 'shown', value: 'old' }, { alias: 'shown', target: 'data.town' }, { name: 'shown', value: 'new' }]} | ${'Value: new'}
+                ${[{ file: 'data.json', prefix: '' }]}                                                                         | ${'Value: root'}
+                ${[{ name: 'shown', value: 'v' }, { file: 'data.json', prefix: '' }]}                                          | ${'Value: root'}
+                ${[{ file: 'data.json', prefix: '' }, { name: 'shown', value: 'v' }]}                                          | ${'Value: v'}
+                ${[{ file: 'data.json', prefix: 'my.data' }, { alias: 'shown', target: 'my.data.town' }]}                      | ${'Value: Springfield'}
+            `('newest declaration wins: $values', async ({ values, expected }) => {
+                expect(await inject(values)).toContain(expected);
+            });
+
+            test('rejects an invalid prefix', async () => {
+                await expect(inject([{ file: 'data.json', prefix: 'x' }])).rejects.toThrow(
+                    'Invalid values file prefix',
+                );
+            });
         });
 
         test('throws on injection errors', async () => {
