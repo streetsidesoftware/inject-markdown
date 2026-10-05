@@ -2,7 +2,12 @@ import { FileInjector, type FileInjectorOptions, type ProcessFileResult } from '
 import { nodeFsa } from './FileSystemAdapter/fsa.js';
 import { processGlobs } from './processor/process.mjs';
 
-export type { ValueDeclaration } from './util/values.js';
+export type {
+    ValueAliasDeclaration,
+    ValueDeclaration,
+    ValuePairDeclaration,
+    ValuesFileDeclaration,
+} from './util/values.js';
 
 /**
  * Options shared by {@link injectFiles} and {@link injectMarkdown}. Fields picked from

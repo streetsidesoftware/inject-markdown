@@ -6,27 +6,45 @@ export interface JsonObject {
     [key: string]: JsonValue | undefined;
 }
 
+export interface ValueDeclarationValue {
+    kind: 'value';
+    name: string;
+    value: string;
+}
+
+/** `{@ name @}` is `value`: `values=`/`value=`/`--value`. */
+export interface ValuePairDeclaration {
+    kind: 'value';
+    name: string;
+    value: string;
+}
+
+/** A JSON file of values: `values-file=`/`--values-file`. */
+export interface ValuesFileDeclaration {
+    kind: 'values-file';
+    path: string;
+    /**
+     * Where the file's values go (ADR-0007): under this prefix; at the root if `''`; under the
+     * file's base name if unset (`package.json` → `package`).
+     */
+    prefix?: string | undefined;
+}
+
+/** Resolve `{@ name @}` as if it were `{@ target @}`: `value-alias=`/`--value-alias`. */
+export interface ValueAliasDeclaration {
+    kind: 'alias';
+    name: string;
+    target: string;
+}
+
 /**
- * One entry in the ordered value sequence, per ADR-0012: a pair (`values=`/`value=`/`--value`),
- * a values file (`values-file=`/`--values-file`), or an alias (`value-alias=`/`--value-alias`).
- * The newest declaration wins; resolution walks the sequence newest first.
+ * One entry in the ordered value sequence, per ADR-0012. The newest declaration wins; resolution
+ * walks the sequence newest first.
  */
-export type ValueDeclaration =
-    | { kind: 'value'; name: string; value: string }
-    | {
-          kind: 'values-file';
-          /** A JSON file of values. */
-          path: string;
-          /**
-           * Where the file's values go (ADR-0007): under this prefix; at the root if `''`; under
-           * the file's base name if unset (`package.json` → `package`).
-           */
-          prefix?: string | undefined;
-      }
-    | { kind: 'alias'; name: string; target: string };
+export type ValueDeclaration = ValuePairDeclaration | ValuesFileDeclaration | ValueAliasDeclaration;
 
 /** A values-file declaration without its `kind`, as parsed from `[prefix:]path`. */
-export type ValuesFileEntry = Omit<Extract<ValueDeclaration, { kind: 'values-file' }>, 'kind'>;
+export type ValuesFileEntry = Omit<ValuesFileDeclaration, 'kind'>;
 
 const validPlaceholderSegment = /^[A-Za-z0-9_][A-Za-z0-9_-]*$/;
 
