@@ -81,10 +81,9 @@ function emptyTree(): JsonObject {
 }
 
 /**
- * Parse `values=name:val,name2:val2`, per ADR-0002 point 1.
- * A whole value wrapped in double quotes suppresses comma-splitting, producing one pair whose
- * value may contain literal commas/colons (`values="name:1, 2, 3"`). Pairs keep their written
- * order, repeats included, so each stays positioned in the declaration sequence (ADR-0012).
+ * Parse a comma-separated `name:value` list, e.g. `a:1,b:2`. A whole value wrapped in double
+ * quotes suppresses comma-splitting, producing one pair whose value may contain literal
+ * commas/colons (`"name:1, 2, 3"`). Pairs keep their written order, repeats included.
  */
 export function parseValuesPairs(raw: string): [name: string, value: string][] {
     const pairs: [string, string][] = [];
@@ -108,8 +107,8 @@ export function parseValuesPairs(raw: string): [name: string, value: string][] {
 }
 
 /**
- * Parse one `value=name:val`, per ADR-0013: split at the first `:`, and the rest is the value,
- * commas and colons included. `undefined` when there is no `:` or the name is empty.
+ * Parse one `name:value`: split at the first `:`, and the rest is the value, commas and colons
+ * included. `undefined` when there is no `:` or the name is empty.
  */
 export function parseSingleValue(raw: string): [name: string, value: string] | undefined {
     return splitPair(raw);
@@ -123,7 +122,7 @@ function splitPair(entry: string): [string, string] | undefined {
     return [name, entry.slice(idx + 1).trim()];
 }
 
-/** Parse one `values-file=`/`--values-file` entry: `[prefix:]path`, per ADR-0007. */
+/** Parse one `[prefix:]path` entry: `path`, `prefix:path`, or `:path` for an empty (root) prefix. */
 export function parseValuesFileEntry(raw: string): ValuesFileEntry {
     const entry = raw.trim();
     if (entry.startsWith(':')) {
@@ -145,8 +144,8 @@ export function parseValuesFileEntry(raw: string): ValuesFileEntry {
 }
 
 /**
- * Parse a directive-level `values-file=[prefix:]path[,[prefix:]path...]` list, per ADR-0007.
- * A comma inside a double-quoted entry is not treated as a separator.
+ * Parse a comma-separated list of `[prefix:]path` entries. A comma inside a double-quoted entry
+ * is not treated as a separator.
  */
 export function parseValuesFileList(raw: string): ValuesFileEntry[] {
     return splitTopLevel(raw.trim(), ',').map(parseValuesFileEntry);
