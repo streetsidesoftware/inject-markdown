@@ -96,7 +96,11 @@ export interface FileInjectorOptions {
      */
     color?: boolean | undefined;
 
-    /** Also print each injected reference, unless `silent`. */
+    /**
+     * How much detail to print about each file:
+     * - `0` or `false`: none.
+     * - `1` or `true`: also list each file it injects.
+     */
     verbose?: number | boolean | undefined;
 
     /**
