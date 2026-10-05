@@ -8,34 +8,55 @@ export interface JsonObject {
 
 /** A values file, and where its values go. */
 export interface ValuesFileEntry {
+    /** The JSON file to read. */
     path: string;
-    /** Where the file's values go: under this dotted prefix, or at the root if `''`. */
+    /**
+     * Where the file's values go:
+     * - a name, such as `package`: under that name, as `{@ package.version @}`.
+     * - `''`: at the top level, as `{@ version @}`.
+     */
     prefix: string;
 }
 
-/** `{@ name @}` is `value`. */
+/**
+ * Sets one placeholder to a fixed value.
+ * @example { kind: 'value', name: 'version', value: '1.2.3' }
+ */
 export interface ValuePairDeclaration {
     kind: 'value';
+    /** The placeholder name, such as `version` or `package.version`. */
     name: string;
+    /** The text the placeholder is replaced with. */
     value: string;
 }
 
-/** A JSON file of values. */
+/**
+ * Reads placeholder values from a JSON file.
+ * @example { kind: 'values-file', path: 'package.json', prefix: 'package' }
+ */
 export interface ValuesFileDeclaration extends ValuesFileEntry {
     kind: 'values-file';
 }
 
-/** Resolve `{@ name @}` as if it were `{@ target @}`. */
+/**
+ * Makes one placeholder name stand for another.
+ * @example { kind: 'alias', name: 'version', target: 'package.version' }
+ */
 export interface ValueAliasDeclaration {
     kind: 'alias';
+    /** The new placeholder name. */
     name: string;
+    /** The placeholder name it stands for. */
     target: string;
 }
 
 /**
- * One entry in the ordered value sequence.
- * The newest declaration wins, whatever its kind.
- * Resolution walks the sequence newest first.
+ * A placeholder value declaration, one of:
+ * - {@link ValuePairDeclaration}: a fixed value.
+ * - {@link ValuesFileDeclaration}: values from a JSON file.
+ * - {@link ValueAliasDeclaration}: one name standing for another.
+ *
+ * When declarations disagree, the later one in the list wins.
  */
 export type ValueDeclaration = ValuePairDeclaration | ValuesFileDeclaration | ValueAliasDeclaration;
 
