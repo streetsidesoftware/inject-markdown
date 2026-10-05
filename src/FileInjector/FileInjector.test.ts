@@ -77,6 +77,8 @@ describe('FileInjector', () => {
         options.cwd = options.cwd || __root__;
         options.color = options.color ?? false;
         options.logger = logger;
+        // These snapshots record whole-file output.
+        options.injectOnly ??= false;
         expectedFile = path.resolve(__root__, expectedFile);
         const fsa = createFSA();
         const fi = new FileInjector(fsa, options);
@@ -96,6 +98,8 @@ describe('FileInjector', () => {
         options.cwd = options.cwd || __root__;
         options.color = options.color ?? false;
         options.logger = logger;
+        // These snapshots record whole-file output.
+        options.injectOnly ??= false;
         const fsa = createFSA();
         const fi = new FileInjector(fsa, options);
         const r = await fi.processFile(file);

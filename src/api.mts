@@ -74,7 +74,7 @@ export class InjectMarkdownError extends Error {
 /**
  * Inject content into Markdown files, like the CLI, without printing or exiting.
  * Errors in the files are returned in `errors`; invalid options throw.
- * Defaults match the CLI (so `injectOnly` is `true`), except `silent`, which defaults to `true`.
+ * Defaults match the CLI, except `silent`, which defaults to `true`.
  * @param files - files or glob patterns, relative to `cwd`; only `.md` files are processed.
  */
 export async function injectFiles(files: string[], options: InjectFilesOptions = {}): Promise<InjectFilesResult> {
@@ -98,7 +98,6 @@ export async function injectFiles(files: string[], options: InjectFilesOptions =
 
 /**
  * Inject content into a Markdown string and return the result. Nothing is written.
- * `injectOnly` defaults to `true`, as in the CLI.
  * @throws {InjectMarkdownError} if an injection fails.
  */
 export async function injectMarkdown(markdown: string, options: InjectMarkdownOptions): Promise<string> {
@@ -115,7 +114,7 @@ export async function injectMarkdown(markdown: string, options: InjectMarkdownOp
 }
 
 function toInjectorOptions(options: InjectFilesOptions): FileInjectorOptions {
-    const { values, valuesFiles, valueAliases, injectOnly = true, ...rest } = options;
+    const { values, valuesFiles, valueAliases, ...rest } = options;
     // Later declarations win: values files, then values, then aliases.
     const valueDeclarations: ValueDeclaration[] = [
         ...(valuesFiles ?? []).map((p): ValueDeclaration => ({ kind: 'values-file', entry: parseValuesFileEntry(p) })),
@@ -126,7 +125,7 @@ function toInjectorOptions(options: InjectFilesOptions): FileInjectorOptions {
             target,
         })),
     ];
-    return { ...rest, injectOnly, valueDeclarations };
+    return { ...rest, valueDeclarations };
 }
 
 function collectMessages(file: string, r: ProcessFileResult, errors: InjectMessage[], warnings: InjectMessage[]) {

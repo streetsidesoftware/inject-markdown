@@ -84,8 +84,7 @@ export interface FileInjectorOptions {
      * Only rewrite the text spans covered by `@@inject` directives (start marker through end
      * marker, inclusive), leaving the rest of the file byte-for-byte as is, instead of
      * re-stringifying the whole document. `false` is like `--no-inject-only`.
-     *
-     * The CLI and the API default this to `true`; `FileInjector` treats unset as `false`.
+     * @default true
      */
     injectOnly?: boolean | undefined;
 
@@ -202,6 +201,7 @@ export class FileInjector {
         file.data.cwdUrl = this.cwd;
         return await processFileInjections(file, this.fs, {
             ...this.options,
+            injectOnly: this.options.injectOnly ?? true,
             cwd: this.cwd,
             fileUrl,
             logger: this.options.logger || logger,
@@ -220,8 +220,9 @@ export class FileInjector {
     }
 }
 
-interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outputDir'> {
+interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outputDir' | 'injectOnly'> {
     cwd: URL;
+    injectOnly: boolean;
     fileUrl: URL;
     logger: Logger;
     outputDir: URL | undefined;

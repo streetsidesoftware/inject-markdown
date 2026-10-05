@@ -106,7 +106,7 @@ export async function app(program = defaultCommand): Promise<Command> {
         .option('--strict-vars', 'Treat an unresolved {@ name @} placeholder as a directive error.')
         .option('--no-rebase-links', 'Keep relative links in injected Markdown as written instead of rebasing them.')
         .option('--clean', 'Remove the injected content.')
-        .addOption(new CommanderOption('--inject-only', 'Only update the injected content.').default(true).hideHelp())
+        .addOption(new CommanderOption('--inject-only', 'Only update the injected content.').hideHelp())
         .option('--no-inject-only', 'Update the whole file.')
         .option('--verbose', 'Verbose output.')
         .option('--silent', 'Only output errors.')
