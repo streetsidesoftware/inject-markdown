@@ -133,11 +133,14 @@ export interface FileInjectorOptions {
     allowOutsideRoot?: string[] | undefined;
 
     /**
-     * Run-wide placeholder value declarations, oldest to newest.
-     * - A newer declaration wins, whatever its kind.
-     * - Every directive declaration is newer than these.
-     * - Values-file paths resolve relative to `cwd`.
-     * - Values-file paths aren't limited to the injection root.
+     * Placeholder values for every file in the run.
+     *
+     * Which value wins:
+     * - A later declaration in this list wins over an earlier one.
+     * - A directive's own declarations win over all of these.
+     *
+     * Values-file paths are relative to `cwd`.
+     * They may point outside the injection root.
      */
     valueDeclarations?: ValueDeclaration[] | undefined;
 
