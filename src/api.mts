@@ -86,7 +86,7 @@ export class InjectMarkdownError extends Error {
 /**
  * Inject content into Markdown files and return what happened, without printing or exiting.
  * - Errors in the files are returned in `errors`.
- * - Invalid options throw.
+ * - Invalid options throw an `OptionError`.
  * - `silent` defaults to `true`.
  * @param files - files or glob patterns, relative to `cwd`. Only `.md` files are processed.
  */

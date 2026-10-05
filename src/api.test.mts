@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { injectFiles, injectMarkdown, InjectMarkdownError, type ValueDeclaration } from './api.mjs';
 import * as index from './index.mjs';
+import { OptionError } from './util/errors.js';
 
 const csv = 'name,value\na,1\n';
 const readme = '# Samples\n\n<!--- @@inject: sample-sources.csv --->\n';
@@ -30,6 +31,7 @@ describe('api', () => {
     test('index exports', () => {
         expect(Object.keys(index).sort()).toEqual([
             'InjectMarkdownError',
+            'OptionError',
             'app',
             'injectFiles',
             'injectMarkdown',
@@ -182,6 +184,12 @@ describe('api', () => {
                 ${[{ kind: 'values-file', path: 'data.json', prefix: 'my.data' }, { kind: 'alias', name: 'shown', target: 'my.data.town' }]}                                         | ${'Value: Springfield'}
             `('newest declaration wins: $values', async ({ values, expected }) => {
                 expect(await inject(values)).toContain(expected);
+            });
+
+            test('throws an exported OptionError for invalid options', async () => {
+                const p = inject([{ kind: 'values-file', path: 'data.json', prefix: 'a b' }]);
+                await expect(p).rejects.toBeInstanceOf(index.OptionError);
+                await expect(p).rejects.toBeInstanceOf(OptionError);
             });
 
             test('rejects an invalid prefix before reading anything', async () => {

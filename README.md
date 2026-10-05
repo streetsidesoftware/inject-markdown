@@ -501,7 +501,9 @@ if (result.errors.length) throw new Error(result.errors.map((e) => `${e.file}:${
 
 - **Nothing is printed.** Errors and warnings in the Markdown files are returned in `errors` and `warnings`, each with the `file`, `message`, and the directive's `line` and `column`. Set `silent: false` to print progress to stderr.
 
-- **Invalid options throw,** and so does finding no Markdown files, unless `mustFindFiles` is `false`.
+- **Errors you can catch:**
+  - Invalid options throw an `OptionError`. This includes a values file that can't be read.
+  - Finding no Markdown files throws an `InjectMarkdownError`, unless `mustFindFiles` is `false`.
 
 To inject into a string instead, for a caller that writes the file itself, use `injectMarkdown`. `file` is the path the Markdown belongs to; relative `@@inject` paths resolve from it.
 

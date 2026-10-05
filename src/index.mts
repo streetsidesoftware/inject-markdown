@@ -11,3 +11,4 @@ export type {
 } from './api.mjs';
 export { injectFiles, injectMarkdown, InjectMarkdownError } from './api.mjs';
 export { app, run } from './app.mjs';
+export { OptionError } from './util/errors.js';
