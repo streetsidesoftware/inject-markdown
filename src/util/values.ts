@@ -12,8 +12,8 @@ export interface ValuesFileEntry {
     path: string;
     /**
      * Where the file's values go:
-     * - a name, such as `package`: under that name, as `{@ package.version @}`.
-     * - `''`: at the top level, as `{@ version @}`.
+     * - a name, such as `package`: under that name. The file's `version` is the placeholder `package.version`.
+     * - `''`: at the top level. The file's `version` is the placeholder `version`.
      */
     prefix: string;
 }
@@ -239,7 +239,7 @@ export function deriveAutoPrefixFromPath(p: string): string {
  * Walk a dotted placeholder name into a value tree.
  * `undefined` means the name is not defined.
  * Only own properties count. A values-file tree comes from `JSON.parse`, so it inherits from
- * `Object.prototype`, and `{@ toString @}` must not resolve to an inherited member.
+ * `Object.prototype`, and the placeholder `toString` must not resolve to an inherited member.
  */
 export function getPath(tree: JsonObject | undefined, name: string): JsonValue | undefined {
     if (!tree) return undefined;

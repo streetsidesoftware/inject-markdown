@@ -141,7 +141,10 @@ export interface FileInjectorOptions {
      */
     valueDeclarations?: ValueDeclaration[] | undefined;
 
-    /** Environment variables a directive may reference via `{@ env.NAME @}`. */
+    /**
+     * Environment variables a directive may use.
+     * Each one is available as the placeholder `env.NAME`.
+     */
     allowEnv?: string[] | undefined;
 
     /** Treat an unresolved placeholder as a directive error instead of a warning. */
