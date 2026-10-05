@@ -250,7 +250,17 @@ export type ValueLayer = JsonObject;
  */
 export type UnresolvedReason = 'undefined' | 'object' | 'array' | 'null' | 'cycle';
 
-export type ResolveResult = { value: string } | { unresolved: UnresolvedReason };
+/** A placeholder name that resolved to a value. */
+export interface ResolvedValue {
+    value: string;
+}
+
+/** A placeholder name that did not resolve, and why. */
+export interface UnresolvedValue {
+    unresolved: UnresolvedReason;
+}
+
+export type ResolveResult = ResolvedValue | UnresolvedValue;
 
 /**
  * The layer for one `name -> value` pair (`values=`/`value=`/`--value`). One layer per pair rather

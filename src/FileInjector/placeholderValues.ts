@@ -8,19 +8,36 @@ import { parseRelativeUrl } from '../util/url_helper.js';
 import {
     layerFromPair,
     readValuesFileLayer,
+    type ResolvedValue,
     resolveInLayers,
     type UnresolvedReason,
+    type UnresolvedValue,
     type ValueDeclaration,
     type ValueLayer,
     type ValuesFileEntry,
 } from '../util/values.js';
 import type { FileInjectorOptions } from './FileInjector.js';
 
-/** One declaration ready to resolve against (ADR-0012): an alias, or the value layer it supplies. */
-export type ResolutionEntry = { alias: string; target: string } | { layer: ValueLayer };
+/** An alias declaration, ready to resolve against. */
+export interface AliasResolutionEntry {
+    alias: string;
+    target: string;
+}
 
-/** `via` names the alias target that failed, so the message can name both sides (ADR-0010 point 9). */
-export type NameResolution = { value: string } | { unresolved: UnresolvedReason; via?: string | undefined };
+/** The value layer a value or values-file declaration supplies. */
+export interface LayerResolutionEntry {
+    layer: ValueLayer;
+}
+
+/** One declaration ready to resolve against (ADR-0012): an alias, or the value layer it supplies. */
+export type ResolutionEntry = AliasResolutionEntry | LayerResolutionEntry;
+
+/** An unresolved name; `via` names the alias target that failed, so the message can name both sides (ADR-0010 point 9). */
+export interface UnresolvedName extends UnresolvedValue {
+    via?: string | undefined;
+}
+
+export type NameResolution = ResolvedValue | UnresolvedName;
 
 /**
  * ADR-0005 point 4's unresolved cases: nothing defines the name, versus every layer that has it
