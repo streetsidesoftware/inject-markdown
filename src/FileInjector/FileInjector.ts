@@ -70,7 +70,7 @@ export interface FileInjectorOptions {
     /** Current working directory */
     cwd?: PathLike | undefined;
     /** Only clean the file, do not inject */
-    clean?: boolean;
+    clean?: boolean | undefined;
 
     /**
      * Only rewrite the text spans covered by `@@inject` directives (start
@@ -81,12 +81,12 @@ export interface FileInjectorOptions {
      * The CLI defaults this to `true` (`--no-inject-only` to opt out); left
      * unset here, this library defaults to `false`.
      */
-    injectOnly?: boolean;
+    injectOnly?: boolean | undefined;
 
     /**
      * Only show errors.
      */
-    silent?: boolean;
+    silent?: boolean | undefined;
 
     /**
      * Use color
@@ -101,7 +101,7 @@ export interface FileInjectorOptions {
      * `0` || `false` = none
      * `1` || `true` = light
      */
-    verbose?: number | boolean;
+    verbose?: number | boolean | undefined;
 
     /**
      * If an error occurs, the file is skipped and not written.
@@ -110,7 +110,7 @@ export interface FileInjectorOptions {
      * `true` - the file will be written
      * @default false
      */
-    writeOnError?: boolean;
+    writeOnError?: boolean | undefined;
 
     /**
      * Stop processing if there is an error in any file.
@@ -118,14 +118,14 @@ export interface FileInjectorOptions {
      * `false` - keep going even if errors occur.
      * @default true
      */
-    stopOnErrors?: boolean;
+    stopOnErrors?: boolean | undefined;
 
     logger?: Logger;
 
     /**
      * Dry Run mode, do not write files.
      */
-    dryRun?: boolean;
+    dryRun?: boolean | undefined;
 
     /**
      * Additional directories, outside the injection root (`cwd`), that a local
@@ -178,7 +178,20 @@ export class FileInjector {
      */
     async processFile(filePath: PathLike, encoding: BufferEncoding = 'utf8'): Promise<ProcessFileResult> {
         const fileUrl = pathToUrl(filePath, this.cwd);
-        const file = await readFile(this.fs, fileUrl, encoding);
+        return this.process(await readFile(this.fs, fileUrl, encoding));
+    }
+
+    /**
+     * Process all injections in `content` as if it were the content of `filePath`, which is only
+     * used to resolve relative references; nothing is read from it.
+     */
+    async processContent(content: string, filePath: PathLike): Promise<ProcessFileResult> {
+        const fileUrl = pathToUrl(filePath, this.cwd);
+        return this.process(new VFileEx(content, { encoding: 'utf8', fileUrl }));
+    }
+
+    private async process(file: VFileEx): Promise<ProcessFileResult> {
+        const fileUrl = file.data.fileUrl;
         const logger: Logger = {
             log: console.log.bind(console),
             error: console.error.bind(console),

@@ -470,6 +470,32 @@ npm install my-package@1.2.3
 
 Placeholders are only replaced when the directive has `values=`, `value=`, `values-file=`, `value-alias=` or `vars`. Values can also come from JSON files and the command line (`--value`, `--values-file`, `--allow-env`). See [Template variables](docs/guide/template-variables.md) for the full rules.
 
+## API
+
+`inject-markdown` can also be called from code. It takes the CLI's options as an object, and it returns what happened instead of printing it or exiting. Types are included.
+
+```ts
+import { injectFiles } from 'inject-markdown';
+
+const result = await injectFiles(['README.md'], { cwd: 'samples' });
+// { filesFound: 1, filesWritten: 1, errors: [], warnings: [], ... }
+if (result.errors.length) throw new Error(result.errors.map((e) => `${e.file}:${e.line}: ${e.message}`).join('\n'));
+```
+
+- **Options mirror the CLI flags,** in camelCase: `cwd`, `outputDir`, `dryRun`, `clean`, `mustFindFiles`, `stopOnErrors`, `writeOnError`, `rebaseLinks`, `allowOutsideRoot`, `allowEnv`, `strictVars`, and `values`, `valuesFiles` and `valueAliases` for `--value`, `--values-file` and `--value-alias`. Defaults match the CLI.
+- **Nothing is printed.** Errors and warnings in the Markdown files are returned in `errors` and `warnings`, each with the `file`, `message`, and the directive's `line` and `column`. Set `silent: false` to print progress to stderr.
+- **Invalid options throw,** and so does finding no Markdown files, unless `mustFindFiles` is `false`.
+
+To inject into a string instead, for a caller that writes the file itself, use `injectMarkdown`. `file` is the path the Markdown belongs to; relative `@@inject` paths resolve from it.
+
+```ts
+import { injectMarkdown } from 'inject-markdown';
+
+const updated = await injectMarkdown(markdown, { file: 'samples/README.md' });
+```
+
+It writes nothing, and throws an `InjectMarkdownError` (with an `errors` array) if an injection fails.
+
 <!--- @@inject-end: content/README.md --->
 
 ## Reference

@@ -1,7 +1,7 @@
 {
   "name": "inject-markdown",
   "version": "6.1.0",
-  "description": "Command line tool to inject files into markdown files.",
+  "description": "Command line tool and library to inject files into markdown files.",
   "publishConfig": {
     "access": "public",
     "provenance": true
@@ -81,11 +81,14 @@
     "vfile": "^6.0.3",
     "vfile-reporter": "^8.1.1"
   },
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "import": "./dist/app.mjs"
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
     },
     "./app": {
+      "types": "./dist/app.d.mts",
       "import": "./dist/app.mjs"
     },
     "./bin": {
@@ -99,6 +102,8 @@
     "bin.mjs",
     "dist/**/*.mjs",
     "dist/**/*.js",
+    "dist/**/*.d.mts",
+    "dist/**/*.d.ts",
     "!**/*.test.*",
     "!**/*.map"
   ],
