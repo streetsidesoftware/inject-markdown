@@ -34,7 +34,7 @@ export interface InjectInfo {
     valueDecls?: ValueDeclaration[] | undefined;
     /** Malformed `value=` occurrences, reported as directive errors (ADR-0013 point 3). */
     valueErrors?: string[] | undefined;
-    /** Bare `#vars` opt-in: scan for placeholders using CLI/environment sources alone. See ADR-0002. */
+    /** Bare `#vars` opt-in: scan for placeholders using run-wide and environment sources alone. */
     vars?: boolean | undefined;
 }
 

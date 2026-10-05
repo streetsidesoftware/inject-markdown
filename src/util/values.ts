@@ -6,29 +6,29 @@ export interface JsonObject {
     [key: string]: JsonValue | undefined;
 }
 
-/** A values-file declaration without its `kind`, as parsed from `[prefix:]path`. */
+/** A values file, and where its values go. */
 export interface ValuesFileEntry {
     path: string;
     /**
-     * Where the file's values go (ADR-0007): under this prefix; at the root if `''`; under the
-     * file's base name if unset (`package.json` → `package`).
+     * Where the file's values go: under this prefix; at the root if `''`; under the file's base
+     * name if unset (`package.json` → `package`).
      */
     prefix?: string | undefined;
 }
 
-/** `{@ name @}` is `value`: `values=`/`value=`/`--value`. */
+/** `{@ name @}` is `value`. */
 export interface ValuePairDeclaration {
     kind: 'value';
     name: string;
     value: string;
 }
 
-/** A JSON file of values: `values-file=`/`--values-file`. */
+/** A JSON file of values. */
 export interface ValuesFileDeclaration extends ValuesFileEntry {
     kind: 'values-file';
 }
 
-/** Resolve `{@ name @}` as if it were `{@ target @}`: `value-alias=`/`--value-alias`. */
+/** Resolve `{@ name @}` as if it were `{@ target @}`. */
 export interface ValueAliasDeclaration {
     kind: 'alias';
     name: string;
@@ -36,8 +36,8 @@ export interface ValueAliasDeclaration {
 }
 
 /**
- * One entry in the ordered value sequence, per ADR-0012. The newest declaration wins; resolution
- * walks the sequence newest first.
+ * One entry in the ordered value sequence. The newest declaration wins, whatever its kind;
+ * resolution walks the sequence newest first.
  */
 export type ValueDeclaration = ValuePairDeclaration | ValuesFileDeclaration | ValueAliasDeclaration;
 
@@ -67,7 +67,7 @@ export function isValidPlaceholderSegment(name: string): boolean {
 }
 
 /**
- * A `values-file=`/`--values-file` explicit prefix, per ADR-0009 point 1. Two characters or more,
+ * A values file's explicit prefix: two characters or more,
  * dot-separated segments with none empty and none starting with `-` or `.`, and no path
  * separators — so `C:`, `..`, `.env` and `-foo` are all paths rather than prefixes.
  */
@@ -196,7 +196,7 @@ export function deriveAutoPrefixFromPath(p: string): string {
 
 /**
  * Walk a dotted placeholder name into a value tree. `undefined` means the name is not defined.
- * Only own properties count: a `values-file=` tree comes from `JSON.parse` and still inherits from
+ * Only own properties count: a values-file tree comes from `JSON.parse` and still inherits from
  * `Object.prototype`, so `{@ toString @}` must not resolve to an inherited member.
  */
 export function getPath(tree: JsonObject | undefined, name: string): JsonValue | undefined {
@@ -212,8 +212,8 @@ export function getPath(tree: JsonObject | undefined, name: string): JsonValue |
 
 /**
  * Set a dotted placeholder name into a value tree, creating intermediate objects as needed.
- * A name containing a prototype-reaching segment is dropped: directive text is untrusted input
- * (ADR-0003), and `values=__proto__.x:y` must not be able to write to `Object.prototype`.
+ * A name containing a prototype-reaching segment is dropped: directive text is untrusted input,
+ * so a name like `__proto__.x` must not be able to write to `Object.prototype`.
  */
 export function setPath(tree: JsonObject, name: string, value: JsonValue): void {
     const segments = name.split('.');
@@ -263,8 +263,8 @@ export interface UnresolvedValue {
 export type ResolveResult = ResolvedValue | UnresolvedValue;
 
 /**
- * The layer for one `name -> value` pair (`values=`/`value=`/`--value`). One layer per pair rather
- * than one folded tree, so `--value a=1 --value a.b=2` keeps both names (ADR-0008 point 1).
+ * The layer for one `name -> value` pair. One layer per pair rather than one folded tree, so the
+ * pairs `a -> 1` and `a.b -> 2` keep both names.
  */
 export function layerFromPair(name: string, value: string): ValueLayer {
     const layer = emptyTree();
@@ -287,7 +287,7 @@ export function resolveInLayers(layers: readonly ValueLayer[], name: string): Re
 }
 
 /**
- * Read one `values-file=`/`--values-file` entry into its layer. A read/parse failure or invalid
+ * Read one values file into its layer. A read/parse failure or invalid
  * auto-derived prefix is reported via `onError` and yields `undefined`, so one bad entry doesn't
  * fail the rest of the sequence.
  */
@@ -318,8 +318,7 @@ export async function readValuesFileLayer(
     }
     const explicit = entry.prefix !== undefined;
     const prefix = entry.prefix ?? deriveAutoPrefixFromPath(entry.path);
-    // A parsed explicit prefix is always valid (the colon would not have separated otherwise), but
-    // an API caller sets it directly. An auto-derived one stays a single segment (ADR-0009 point 4).
+    // An auto-derived prefix must be a single name segment; only an explicit one may be dotted.
     if (explicit && !isValidValuesFilePrefix(prefix)) {
         onError(`Invalid values-file prefix "${prefix}" for "${entry.path}".`);
         return undefined;

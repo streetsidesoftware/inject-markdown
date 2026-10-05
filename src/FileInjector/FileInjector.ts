@@ -64,35 +64,28 @@ export interface Logger {
     writeStderr(text: string): void;
 }
 
-/**
- * Options for a run. The public API exposes a subset (`InjectOptions` and `InjectFilesOptions` in
- * `api.mts`), so these comments are also its documentation.
- */
+/** Options for a run. */
 export interface FileInjectorOptions {
-    /** Write the results to this directory instead of in place. Like `--output-dir`. */
+    /** Write the results to this directory instead of in place. */
     outputDir?: string | undefined;
     /**
      * The injection root: relative paths resolve against it, and local references must stay inside
-     * it. Like `--cwd`.
+     * it.
      * @default process.cwd()
      */
     cwd?: PathLike | undefined;
-    /** Remove injected content, keeping the directives. Like `--clean`. */
+    /** Remove injected content, keeping the directives. */
     clean?: boolean | undefined;
 
     /**
      * Only rewrite the text spans covered by `@@inject` directives (start marker through end
      * marker, inclusive), leaving the rest of the file byte-for-byte as is, instead of
-     * re-stringifying the whole document. `false` is like `--no-inject-only`.
+     * re-stringifying the whole document.
      * @default true
      */
     injectOnly?: boolean | undefined;
 
-    /**
-     * Don't print progress to stderr. Like `--silent`.
-     *
-     * The API defaults this to `true`, and never prints errors; it returns them.
-     */
+    /** Don't print progress to stderr. */
     silent?: boolean | undefined;
 
     /**
@@ -103,58 +96,47 @@ export interface FileInjectorOptions {
      */
     color?: boolean | undefined;
 
-    /** Also print each injected reference, unless `silent`. Like `--verbose`. */
+    /** Also print each injected reference, unless `silent`. */
     verbose?: number | boolean | undefined;
 
     /**
-     * Write a file even if an injection in it failed; by default it is skipped. Like
-     * `--write-on-error`.
+     * Write a file even if an injection in it failed; by default it is skipped.
      * @default false
      */
     writeOnError?: boolean | undefined;
 
     /**
-     * Stop at the first file with an error. `false` is like `--no-stop-on-errors`.
+     * Stop at the first file with an error.
      * @default true
      */
     stopOnErrors?: boolean | undefined;
 
     logger?: Logger;
 
-    /** Process the files, but don't write anything. Like `--dry-run`. */
+    /** Process the files, but don't write anything. */
     dryRun?: boolean | undefined;
 
     /**
-     * Directories outside the injection root (`cwd`) that a local reference may resolve into. Like
-     * `--allow-outside-root`.
+     * Directories outside the injection root (`cwd`) that a local reference may resolve into.
      */
     allowOutsideRoot?: string[] | undefined;
 
     /**
-     * Run-wide placeholder value declarations, oldest to newest: like `--value`, `--values-file`
-     * and `--value-alias` in command-line order. A newer one wins, whatever its kind, and every
-     * directive declaration is newer (ADR-0012). Values-file paths resolve relative to `cwd`, not
-     * subject to the injection-root boundary.
-     * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md, 0012-declaration-order-precedence.md.
+     * Run-wide placeholder value declarations, oldest to newest. A newer one wins, whatever its
+     * kind, and every directive declaration is newer than these. Values-file paths resolve
+     * relative to `cwd` and aren't limited to the injection root.
      */
     valueDeclarations?: ValueDeclaration[] | undefined;
 
-    /**
-     * Environment variables a directive may reference via `{@ env.NAME @}`. Like `--allow-env`.
-     * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md.
-     */
+    /** Environment variables a directive may reference via `{@ env.NAME @}`. */
     allowEnv?: string[] | undefined;
 
-    /**
-     * Treat an unresolved placeholder as a directive error instead of a warning. Like
-     * `--strict-vars`. See docs/ADRs/template-variables/0005-unresolved-placeholders-and-strict-mode.md.
-     */
+    /** Treat an unresolved placeholder as a directive error instead of a warning. */
     strictVars?: boolean | undefined;
 
     /**
      * Rebase relative links in injected Markdown onto the host file; a directive's `rebase-links=`
-     * wins. `false` is like `--no-rebase-links`.
-     * See docs/ADRs/relative-links/0002-default-on-with-opt-out.md.
+     * wins.
      * @default true
      */
     rebaseLinks?: boolean | undefined;
@@ -229,7 +211,7 @@ interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outpu
     outputDir: URL | undefined;
     writeOnError: boolean;
     stopOnErrors: boolean;
-    /** Run-wide placeholder value sources: `--value`/`--values-file`/`--value-alias`/`--allow-env`. */
+    /** Run-wide placeholder value sources, from `valueDeclarations` and `allowEnv`. */
     runWideValues: RunWideValueSources;
 }
 
@@ -638,8 +620,8 @@ async function processFileInjections(
             return { root, info };
         } catch (e) {
             const err = toError(e);
-            // A merely missing markdown file stays a warning, but a boundary rejection is fatal
-            // (ADR-0001) so `--stop-on-errors` applies and a failed run is visible in CI.
+            // A merely missing markdown file stays a warning, but a boundary rejection is fatal so
+            // `stopOnErrors` applies and a failed run is visible in CI.
             if (err instanceof OutsideInjectionRootError) {
                 file.error(err.message, directive.node.position);
             } else {
@@ -789,7 +771,7 @@ interface DirectiveNode extends DirectiveNodeBase {
     directive: Directive;
 }
 
-/** `--inject-only` mode: threaded through the inject calls to collect patches. */
+/** `injectOnly` mode: threaded through the inject calls to collect patches. */
 interface InjectOnlyCtx {
     outputOptions: StringifyOptions;
     /** original end-marker offset for each surviving start node, from a matched pair. */
