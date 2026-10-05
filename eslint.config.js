@@ -30,6 +30,9 @@ export default defineConfig(
         rules: {
             'simple-import-sort/imports': 'error',
             'simple-import-sort/exports': 'error',
+            // Doc comments show `{@ name @}` placeholders with zero-width spaces, so TypeScript
+            // doesn't read them as inline tags.
+            'no-irregular-whitespace': ['error', { skipComments: true }],
         },
     },
     {

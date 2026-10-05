@@ -12,8 +12,8 @@ export interface ValuesFileEntry {
     path: string;
     /**
      * Where the file's values go:
-     * - a name, such as `package`: under that name. The file's `version` is the placeholder `package.version`.
-     * - `''`: at the top level. The file's `version` is the placeholder `version`.
+     * - a name, such as `package`: under that name. The file's `version` is `{​@ package.version @​}`.
+     * - `''`: at the top level. The file's `version` is `{​@ version @​}`.
      */
     prefix: string;
 }

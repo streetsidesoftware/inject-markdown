@@ -143,7 +143,7 @@ export interface FileInjectorOptions {
 
     /**
      * Environment variables a directive may use.
-     * Each one is available as the placeholder `env.NAME`.
+     * Each one is available as `{​@ env.NAME @​}`.
      */
     allowEnv?: string[] | undefined;
 
