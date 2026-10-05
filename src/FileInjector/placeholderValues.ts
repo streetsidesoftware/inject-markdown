@@ -98,8 +98,9 @@ export async function buildResolutionEntries(
 
 /**
  * Resolve the run-wide placeholder sources from the run's options, reading any values files
- * relative to `cwd`; a failed read throws an `OptionError`. `options` is constant for a run, so a caller processing many files
- * should compute this once and reuse it rather than calling it per file.
+ * relative to `cwd`; a failed read throws an `OptionError`. `options` is constant for a run, so
+ * a caller processing many files should compute this once and reuse it rather than calling it
+ * per file.
  */
 export async function resolveRunWideValueSources(
     fs: FileSystemAdapter,
