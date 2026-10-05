@@ -20,7 +20,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for environment setup (Node/corepack), bu
 
 ## Writing comments
 
-Assume an expert-programmer reader. Keep comments succinct — 1-2 lines. Cover What and, where non-obvious, Why; only explain How if it isn't already obvious from the code.
+Assume an expert-programmer reader. Write for reading, not to save space:
+
+- Keep comments short by leaving out what the reader doesn't need, not by compressing.
+- Don't chain clauses together with semicolons or commas to save lines. One idea per sentence.
+- If it is a list, make it a list: one item per line.
+- Cover What and, where non-obvious, Why; only explain How if it isn't already obvious from the code.
+- A comment describes its own level; it doesn't refer to the code that calls it (the CLI, the API, directive syntax).
+- Don't cite ADRs; state the rule itself.
 
 ## Code-specific gotchas
 
