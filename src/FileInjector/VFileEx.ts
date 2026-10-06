@@ -11,7 +11,7 @@ export interface FileData extends VFileData {
     fileUrl: URL;
     cwdUrl?: URL;
     hasInjections?: boolean;
-    /** `--inject-only` mode: the patches to splice into the original source. */
+    /** In `injectOnly` mode, the patches to splice into the original source. */
     injectOnlyPatches?: Patch[];
 }
 

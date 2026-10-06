@@ -82,6 +82,8 @@ Links in `content/README.md` are written relative to `content/` (e.g. `../docs/g
 
 ```
 src/
+  index.mts                 Package entry point: re-exports the API and the CLI
+  api.mts                   Typed API (injectFile, injectMarkdown, removeDirectives): returns results, never prints or exits
   app.mts                   CLI entry point (commander-based option parsing)
   FileInjector/              Core injection logic
     FileInjector.ts          Main class: parses Markdown (via remark), resolves & injects files
@@ -107,6 +109,8 @@ content/, static/, sample-clean/, sample-hydrated/   README source snippets and 
 ```
 
 Data flow: `app.mts` parses CLI options -> `processGlobs()` (in `process.mts`) globs for `.md` files and, for each, calls `FileInjector.processFile()` -> `FileInjector` parses the file with the `remark` pipeline (`remarkParse` + `remarkGfm` + `remarkStringify`), walks the AST for HTML comment nodes, parses each via `parseDirective`, resolves the referenced file/URL, and injects/replaces content -> results are aggregated into a summary reported via `formatSummary.mts`.
+
+The API in `api.mts` skips the search and the summary: `injectFile()` calls `FileInjector.processFile()` for one file, and `injectMarkdown()` calls `FileInjector.processContent()` for a string.
 
 Key abstractions:
 

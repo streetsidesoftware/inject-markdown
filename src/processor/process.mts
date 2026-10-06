@@ -1,9 +1,10 @@
-import { isMainThread } from 'node:worker_threads';
+import { fileURLToPath } from 'node:url';
 
 import { globby, type Options as GlobbyOptions } from 'globby';
 import * as path from 'path';
 
-import { FileInjector, type FileInjectorOptions } from '../FileInjector/FileInjector.js';
+import { FileInjector, type FileInjectorOptions, type ProcessFileResult } from '../FileInjector/FileInjector.js';
+import type { PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 import { nodeFsa } from '../FileSystemAdapter/fsa.js';
 import { reportFileErrors } from './reportFileErrors.mjs';
 
@@ -38,27 +39,28 @@ export async function processGlobs(globs: string[], options: Options): Promise<R
         result.numberOfFilesWritten += r.written ? 1 : 0;
         result.numberOfFilesUpdated += r.hasChanged ? 1 : 0;
         result.numberOfFilesSkipped += r.skipped ? 1 : 0;
-        if (r.hasErrors || r.hasMessages) {
-            result.errorCount += r.hasErrors ? 1 : 0;
-            if (r.hasErrors) result.filesWithErrors.push(file);
-            console.error(reportFileErrors(r.file));
-            if (r.hasErrors && (options.stopOnErrors ?? true)) break;
+        printFileErrors(r);
+        if (r.hasErrors) {
+            result.errorCount += 1;
+            result.filesWithErrors.push(file);
+            if (options.stopOnErrors ?? true) break;
         }
     }
 
     return result;
 }
 
-export interface Options extends FileInjectorOptions {
-    mustFindFiles: boolean;
-    cwd?: string;
-    dryRun?: boolean;
+function printFileErrors(r: ProcessFileResult): void {
+    if (!r.hasErrors && !r.hasMessages) return;
+    console.error(reportFileErrors(r.file));
 }
 
-async function findFiles(globs: string[], cwd: string | undefined) {
-    const _cwd = process.cwd();
-    const cwdToUse = path.resolve(cwd || '.');
-    if (cwd && isMainThread) process.chdir(cwdToUse);
+export interface Options extends FileInjectorOptions {
+    mustFindFiles: boolean;
+}
+
+async function findFiles(globs: string[], cwd: PathLike | undefined) {
+    const cwdToUse = path.resolve(cwd instanceof URL ? fileURLToPath(cwd) : cwd || '.');
     const options: Mutable<GlobbyOptions> = {
         ignore: excludes,
         onlyFiles: true,
@@ -68,7 +70,6 @@ async function findFiles(globs: string[], cwd: string | undefined) {
         globs.map((a) => a.trim()).filter((a) => !!a),
         options,
     );
-    if (isMainThread) process.chdir(_cwd);
     // console.log('%o', files);
     return files.filter((f) => path.extname(f) in allowedFileExtensions);
 }

@@ -3,11 +3,7 @@ import * as path from 'node:path';
 import assert from 'assert';
 import chalk, { supportsColor } from 'chalk';
 import type { Html, Parent, Root } from 'mdast';
-import remarkFrontmatter from 'remark-frontmatter';
-import remarkGfm from 'remark-gfm';
-import remarkParse from 'remark-parse';
 import remarkStringify, { type Options as StringifyOptions } from 'remark-stringify';
-import { unified } from 'unified';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -24,7 +20,16 @@ import type { ValueDeclaration } from '../util/values.js';
 import { detectMarkdownStyle } from './detectStyle.js';
 import { type Directive, directiveRegExp, type DirectiveType, parseDirective } from './Directive.js';
 import { jsonToRows, mapJsonStrings } from './jsonTable.js';
-import { applyQuote, errorToComment, extractHeader, isHtmlNode, sanitizeImport, toCode, toRoot } from './Markdown.js';
+import {
+    applyQuote,
+    errorToComment,
+    extractHeader,
+    isHtmlNode,
+    markdownParser,
+    sanitizeImport,
+    toCode,
+    toRoot,
+} from './Markdown.js';
 import { applyPatches, indentContinuationLines, lineIndent, type Patch, stringifyFragment } from './patchContent.js';
 import {
     applySubstitution,
@@ -64,100 +69,106 @@ export interface Logger {
     writeStderr(text: string): void;
 }
 
-export interface FileInjectorOptions {
-    /** optional output directory */
-    outputDir?: string | undefined;
-    /** Current working directory */
+/** How content is injected into Markdown. */
+export interface InjectOptions {
+    /**
+     * The injection root.
+     * Relative paths resolve against it.
+     * Local references must stay inside it.
+     * @default process.cwd()
+     */
     cwd?: PathLike | undefined;
-    /** Only clean the file, do not inject */
-    clean?: boolean;
 
     /**
-     * Only rewrite the text spans covered by `@@inject` directives (start
-     * marker through end marker, inclusive); everything else in the file is
-     * left byte-for-byte identical to the source, instead of re-stringifying
-     * the whole document.
-     *
-     * The CLI defaults this to `true` (`--no-inject-only` to opt out); left
-     * unset here, this library defaults to `false`.
-     */
-    injectOnly?: boolean;
-
-    /**
-     * Only show errors.
-     */
-    silent?: boolean;
-
-    /**
-     * Use color
-     * `true` - force color
-     * `false` - no color
-     * `undefined` - let chalk decide.
-     */
-    color?: boolean | undefined;
-
-    /**
-     * Verbose Level
-     * `0` || `false` = none
-     * `1` || `true` = light
-     */
-    verbose?: number | boolean;
-
-    /**
-     * If an error occurs, the file is skipped and not written.
-     * This options will write the file.
-     * `false` - the file will skipped
-     * `true` - the file will be written
-     * @default false
-     */
-    writeOnError?: boolean;
-
-    /**
-     * Stop processing if there is an error in any file.
-     * `true` - stop processing on any error.
-     * `false` - keep going even if errors occur.
-     * @default true
-     */
-    stopOnErrors?: boolean;
-
-    logger?: Logger;
-
-    /**
-     * Dry Run mode, do not write files.
-     */
-    dryRun?: boolean;
-
-    /**
-     * Additional directories, outside the injection root (`cwd`), that a local
-     * directive-file reference is allowed to resolve into.
+     * Directories outside the injection root (`cwd`) that a local reference may resolve into.
      */
     allowOutsideRoot?: string[] | undefined;
 
     /**
-     * Run-wide `--value`/`--values-file`/`--value-alias` declarations in command-line order; a
-     * later one wins, and every directive declaration is newer (ADR-0012). `--values-file`
-     * paths resolve relative to `cwd`, not subject to the injection-root boundary.
-     * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md, 0012-declaration-order-precedence.md.
+     * Rebase relative links in injected Markdown onto the host file.
+     * A directive's own `rebase-links=` wins.
+     * @default true
+     */
+    rebaseLinks?: boolean | undefined;
+
+    /**
+     * How much of the file to rewrite:
+     * - `true`: only the injected sections. The rest of the file stays byte-for-byte as it was.
+     * - `false`: the whole document, re-stringified.
+     *
+     * A section runs from a directive through its end marker, inclusive.
+     * @default true
+     */
+    injectOnly?: boolean | undefined;
+
+    /** Remove injected content, keeping the directives. */
+    clean?: boolean | undefined;
+
+    /**
+     * Placeholder values for every file in the run.
+     *
+     * Which value wins:
+     * - A later declaration in this list wins over an earlier one.
+     * - A directive's own declarations win over all of these.
+     *
+     * Values-file paths are relative to `cwd`.
+     * They may point outside the injection root.
      */
     valueDeclarations?: ValueDeclaration[] | undefined;
 
     /**
-     * Environment variable names a directive may reference via `{@ env.NAME @}`.
-     * See docs/ADRs/template-variables/0003-cli-and-env-value-sources.md.
+     * Environment variables a directive may use.
+     * Each one is available as `{​@ env.NAME @​}`.
      */
     allowEnv?: string[] | undefined;
 
-    /**
-     * Treat an unresolved placeholder as a directive error instead of a warning.
-     * See docs/ADRs/template-variables/0005-unresolved-placeholders-and-strict-mode.md.
-     */
+    /** Treat an unresolved placeholder as a directive error instead of a warning. */
     strictVars?: boolean | undefined;
+}
+
+/** A run over files: how the results are written, reported and stopped. */
+export interface FileInjectorOptions extends InjectOptions {
+    /** Write the results to this directory instead of in place. */
+    outputDir?: string | undefined;
+
+    /** Process the files, but don't write anything. */
+    dryRun?: boolean | undefined;
 
     /**
-     * Rebase relative URLs in injected Markdown onto the host file (default `true`); a directive's
-     * `rebase-links=` wins. See docs/ADRs/relative-links/0002-default-on-with-opt-out.md.
+     * What to do with a file when an injection in it fails:
+     * - `false`: skip it. The file isn't written.
+     * - `true`: write it anyway.
+     * @default false
      */
-    rebaseLinks?: boolean | undefined;
+    writeOnError?: boolean | undefined;
+
+    /**
+     * What to do after a file has an error:
+     * - `true`: stop. The remaining files aren't processed.
+     * - `false`: keep going with the remaining files.
+     * @default true
+     */
+    stopOnErrors?: boolean | undefined;
+
+    /** Don't print progress to stderr. */
+    silent?: boolean | undefined;
+
+    /**
+     * How much detail to print about each file:
+     * - `0` or `false`: none.
+     * - `1` or `true`: also list each file it injects.
+     */
+    verbose?: number | boolean | undefined;
+
+    /**
+     * Whether to use color:
+     * - `true`: force color.
+     * - `false`: no color.
+     * - `undefined`: let chalk decide.
+     */
+    color?: boolean | undefined;
+
+    logger?: Logger;
 }
 
 export class FileInjector {
@@ -178,7 +189,21 @@ export class FileInjector {
      */
     async processFile(filePath: PathLike, encoding: BufferEncoding = 'utf8'): Promise<ProcessFileResult> {
         const fileUrl = pathToUrl(filePath, this.cwd);
-        const file = await readFile(this.fs, fileUrl, encoding);
+        return this.process(await readFile(this.fs, fileUrl, encoding));
+    }
+
+    /**
+     * Process all injections in `content` as if it were the content of `filePath`.
+     * `filePath` is only used to resolve relative references.
+     * Nothing is read from it.
+     */
+    async processContent(content: string, filePath: PathLike): Promise<ProcessFileResult> {
+        const fileUrl = pathToUrl(filePath, this.cwd);
+        return this.process(new VFileEx(content, { encoding: 'utf8', fileUrl }));
+    }
+
+    private async process(file: VFileEx): Promise<ProcessFileResult> {
+        const fileUrl = file.data.fileUrl;
         const logger: Logger = {
             log: console.log.bind(console),
             error: console.error.bind(console),
@@ -189,6 +214,7 @@ export class FileInjector {
         file.data.cwdUrl = this.cwd;
         return await processFileInjections(file, this.fs, {
             ...this.options,
+            injectOnly: this.options.injectOnly ?? true,
             cwd: this.cwd,
             fileUrl,
             logger: this.options.logger || logger,
@@ -207,14 +233,15 @@ export class FileInjector {
     }
 }
 
-interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outputDir'> {
+interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outputDir' | 'injectOnly'> {
     cwd: URL;
+    injectOnly: boolean;
     fileUrl: URL;
     logger: Logger;
     outputDir: URL | undefined;
     writeOnError: boolean;
     stopOnErrors: boolean;
-    /** Run-wide placeholder value sources: `--value`/`--values-file`/`--value-alias`/`--allow-env`. */
+    /** Run-wide placeholder value sources, from `valueDeclarations` and `allowEnv`. */
     runWideValues: RunWideValueSources;
 }
 
@@ -359,7 +386,7 @@ async function processFileInjections(
         // remarkStringify reads this object lazily at compile time, so
         // processHasInjections can still mutate it after `.use()`.
         const outputOptions: StringifyOptions = { ...defaultOutputOptions };
-        const result = await initParser(toInitOptions(file))
+        const result = await markdownParser(file.content)
             .use(processHasInjections, outputOptions)
             .use(processInjections, outputOptions)
             .use(remarkStringify, outputOptions)
@@ -623,8 +650,8 @@ async function processFileInjections(
             return { root, info };
         } catch (e) {
             const err = toError(e);
-            // A merely missing markdown file stays a warning, but a boundary rejection is fatal
-            // (ADR-0001) so `--stop-on-errors` applies and a failed run is visible in CI.
+            // A missing Markdown file stays a warning.
+            // A boundary rejection is fatal, so `stopOnErrors` applies and CI sees the failure.
             if (err instanceof OutsideInjectionRootError) {
                 file.error(err.message, directive.node.position);
             } else {
@@ -691,7 +718,7 @@ async function processFileInjections(
     }
 
     function parseMarkdownFile(file: VFileEx): Root {
-        return initParser(toInitOptions(file)).parse(file);
+        return markdownParser(file.content).parse(file);
     }
 
     function relativePathNormalized(path: URL, relDir?: URL): string {
@@ -774,7 +801,7 @@ interface DirectiveNode extends DirectiveNodeBase {
     directive: Directive;
 }
 
-/** `--inject-only` mode: threaded through the inject calls to collect patches. */
+/** State for `injectOnly` mode, passed through the inject calls to collect patches. */
 interface InjectOnlyCtx {
     outputOptions: StringifyOptions;
     /** original end-marker offset for each surviving start node, from a matched pair. */
@@ -971,26 +998,6 @@ class OutsideInjectionRootError extends Error {}
 function isWithinRoot(root: string, target: string): boolean {
     const rel = path.relative(root, target);
     return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
-}
-
-interface ParserOptions {
-    frontmatter?: boolean;
-    gfm?: boolean;
-}
-
-function initParser(options: ParserOptions) {
-    if (options.frontmatter) {
-        return unified().use(remarkParse).use(remarkFrontmatter, ['yaml', 'toml']).use(remarkGfm);
-    }
-    return unified().use(remarkParse).use(remarkGfm);
-}
-
-function toInitOptions(file: VFileEx): ParserOptions {
-    const options: ParserOptions = { gfm: true };
-    if (file.content.startsWith('---\n')) {
-        options.frontmatter = true;
-    }
-    return options;
 }
 
 interface ParseResult {

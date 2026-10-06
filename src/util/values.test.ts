@@ -5,17 +5,18 @@ import {
     deriveAutoPrefixFromPath,
     getPath,
     isScalar,
+    isValidPlaceholderName,
     isValidPlaceholderSegment,
     isValidValuesFilePrefix,
     type JsonObject,
     layerFromPair,
     parseSingleValue,
     parseValuesFileEntry,
-    parseValuesFileList,
     parseValuesPairs,
     readValuesFileLayer,
     resolveInLayers,
     setPath,
+    splitValuesFileList,
     type ValueLayer,
     type ValuesFileEntry,
 } from './values.js';
@@ -69,30 +70,46 @@ describe('parseSingleValue', () => {
     });
 });
 
-describe('parseValuesFileEntry / parseValuesFileList', () => {
+describe('parseValuesFileEntry / splitValuesFileList', () => {
     test.each`
-        raw                   | expected
-        ${'package.json'}     | ${{ prefixKind: 'auto', path: 'package.json' }}
-        ${'pkg:package.json'} | ${{ prefixKind: 'explicit', prefixName: 'pkg', path: 'package.json' }}
-        ${':package.json'}    | ${{ prefixKind: 'root', path: 'package.json' }}
-        ${'"C:\\foo.json"'}   | ${{ prefixKind: 'auto', path: 'C:\\foo.json' }}
+        raw                      | expected
+        ${'package.json'}        | ${{ prefix: 'package', path: 'package.json' }}
+        ${'pkg:package.json'}    | ${{ prefix: 'pkg', path: 'package.json' }}
+        ${':package.json'}       | ${{ prefix: '', path: 'package.json' }}
+        ${'"C:\\foo.json"'}      | ${{ prefix: 'foo', path: 'C:\\foo.json' }}
+        ${'build info.json'}     | ${undefined}
+        ${'v1.2.json'}           | ${undefined}
+        ${':build info.json'}    | ${{ prefix: '', path: 'build info.json' }}
+        ${'pkg:build info.json'} | ${{ prefix: 'pkg', path: 'build info.json' }}
     `('parseValuesFileEntry($raw)', ({ raw, expected }) => {
         expect(parseValuesFileEntry(raw)).toEqual(expected);
     });
 
-    test('parseValuesFileList splits on commas outside quotes', () => {
-        expect(parseValuesFileList('package.json,pkg:other.json,:root.json')).toEqual([
-            { prefixKind: 'auto', path: 'package.json' },
-            { prefixKind: 'explicit', prefixName: 'pkg', path: 'other.json' },
-            { prefixKind: 'root', path: 'root.json' },
+    test('splitValuesFileList splits on commas outside quotes', () => {
+        expect(splitValuesFileList('package.json,pkg:other.json,:root.json')).toEqual([
+            'package.json',
+            'pkg:other.json',
+            ':root.json',
         ]);
     });
 
-    test('parseValuesFileList keeps a quoted comma literal', () => {
-        expect(parseValuesFileList('"a,b.json",other.json')).toEqual([
-            { prefixKind: 'auto', path: 'a,b.json' },
-            { prefixKind: 'auto', path: 'other.json' },
-        ]);
+    test('splitValuesFileList keeps a quoted comma literal', () => {
+        expect(splitValuesFileList('"a,b.json",other.json')).toEqual(['"a,b.json"', 'other.json']);
+    });
+});
+
+describe('isValidPlaceholderName', () => {
+    test.each`
+        name           | expected
+        ${'x'}         | ${true}
+        ${'pkg.build'} | ${true}
+        ${'a b'}       | ${false}
+        ${'a..b'}      | ${false}
+        ${'-a'}        | ${false}
+        ${'__proto__'} | ${false}
+        ${''}          | ${false}
+    `('isValidPlaceholderName($name) -> $expected', ({ name, expected }) => {
+        expect(isValidPlaceholderName(name)).toBe(expected);
     });
 });
 
@@ -177,12 +194,12 @@ describe('readValuesFileLayer', () => {
         };
     }
 
-    test('auto-derives a prefix from the basename', async () => {
+    test('nests values under the prefix', async () => {
         const fs = fsWith({ '/root/package.json': '{"version":"1.2.3"}' });
         const onError = vi.fn();
         const layers = await buildValuesFileLayers(
             fs,
-            [{ prefixKind: 'auto', path: 'package.json' }],
+            [{ prefix: 'package', path: 'package.json' }],
             async (p: string) => `/root/${p}`,
             onError,
         );
@@ -194,7 +211,7 @@ describe('readValuesFileLayer', () => {
         const fs = fsWith({ '/root/data.json': '{"a":1,"b":2}' });
         const layers = await buildValuesFileLayers(
             fs,
-            [{ prefixKind: 'root', path: 'data.json' }],
+            [{ prefix: '', path: 'data.json' }],
             async (p: string) => `/root/${p}`,
             vi.fn(),
         );
@@ -209,8 +226,8 @@ describe('readValuesFileLayer', () => {
         const layers = await buildValuesFileLayers(
             fs,
             [
-                { prefixKind: 'explicit', prefixName: 'ns', path: 'a.json' },
-                { prefixKind: 'explicit', prefixName: 'ns', path: 'b.json' },
+                { prefix: 'ns', path: 'a.json' },
+                { prefix: 'ns', path: 'b.json' },
             ],
             async (p: string) => `/root/${p}`,
             vi.fn(),
@@ -221,25 +238,12 @@ describe('readValuesFileLayer', () => {
         expect(resolveInLayers(layers, 'ns.onlyInA')).toEqual({ value: 'A' });
     });
 
-    test('an invalid auto-derived prefix is reported and the entry skipped', async () => {
-        const fs = fsWith({ '/root/build info.json': '{"v":1}' });
-        const onError = vi.fn();
-        const layers = await buildValuesFileLayers(
-            fs,
-            [{ prefixKind: 'auto', path: 'build info.json' }],
-            async (p: string) => `/root/${p}`,
-            onError,
-        );
-        expect(layers).toEqual([]);
-        expect(onError).toHaveBeenCalledWith(expect.stringContaining('Invalid values-file prefix'));
-    });
-
     test('a read failure is reported and the entry skipped', async () => {
         const fs = fsWith({});
         const onError = vi.fn();
         const layers = await buildValuesFileLayers(
             fs,
-            [{ prefixKind: 'auto', path: 'missing.json' }],
+            [{ prefix: 'missing', path: 'missing.json' }],
             async (p: string) => `/root/${p}`,
             onError,
         );
@@ -298,7 +302,7 @@ describe('prototype safety', () => {
         };
         const layers = await buildValuesFileLayers(
             fs,
-            [{ prefixKind: 'root', path: 'data.json' }],
+            [{ prefix: '', path: 'data.json' }],
             async (p: string) => `/root/${p}`,
             vi.fn(),
         );
@@ -355,23 +359,22 @@ describe('resolveInLayers', () => {
 });
 
 describe('prefix grammar (ADR-0009)', () => {
+    // A colon only separates a valid prefix; otherwise the whole entry is a path, and its prefix
+    // is derived from the base name (`undefined` when that isn't a valid segment).
     test.each`
-        entry                     | kind          | prefix         | path
-        ${'pkg:data.json'}        | ${'explicit'} | ${'pkg'}       | ${'data.json'}
-        ${'pkg.build:data.json'}  | ${'explicit'} | ${'pkg.build'} | ${'data.json'}
-        ${'C:\\data\\v.json'}     | ${'auto'}     | ${undefined}   | ${'C:\\data\\v.json'}
-        ${'C:/data/v.json'}       | ${'auto'}     | ${undefined}   | ${'C:/data/v.json'}
-        ${'c:package.json'}       | ${'auto'}     | ${undefined}   | ${'c:package.json'}
-        ${'v:data.json'}          | ${'auto'}     | ${undefined}   | ${'v:data.json'}
-        ${'..:x.json'}            | ${'auto'}     | ${undefined}   | ${'..:x.json'}
-        ${'-foo:x.json'}          | ${'auto'}     | ${undefined}   | ${'-foo:x.json'}
-        ${'\\\\?\\C:\\d\\v.json'} | ${'auto'}     | ${undefined}   | ${'\\\\?\\C:\\d\\v.json'}
-        ${':root.json'}           | ${'root'}     | ${undefined}   | ${'root.json'}
-    `('$entry -> $kind', ({ entry, kind, prefix, path }: Record<string, string | undefined>) => {
-        const e = parseValuesFileEntry(entry as string);
-        expect(e.prefixKind).toBe(kind);
-        expect(e.prefixName).toBe(prefix);
-        expect(e.path).toBe(path);
+        entry                     | expected
+        ${'pkg:data.json'}        | ${{ prefix: 'pkg', path: 'data.json' }}
+        ${'pkg.build:data.json'}  | ${{ prefix: 'pkg.build', path: 'data.json' }}
+        ${'C:\\data\\v.json'}     | ${{ prefix: 'v', path: 'C:\\data\\v.json' }}
+        ${'C:/data/v.json'}       | ${{ prefix: 'v', path: 'C:/data/v.json' }}
+        ${'c:package.json'}       | ${{ prefix: 'package', path: 'c:package.json' }}
+        ${'v:data.json'}          | ${{ prefix: 'data', path: 'v:data.json' }}
+        ${'..:x.json'}            | ${undefined}
+        ${'-foo:x.json'}          | ${undefined}
+        ${'\\\\?\\C:\\d\\v.json'} | ${{ prefix: 'v', path: '\\\\?\\C:\\d\\v.json' }}
+        ${':root.json'}           | ${{ prefix: '', path: 'root.json' }}
+    `('$entry', ({ entry, expected }) => {
+        expect(parseValuesFileEntry(entry)).toEqual(expected);
     });
 
     test.each`

@@ -533,3 +533,101 @@ npm install my-package@1.2.3
 <!--- @@inject-end: import-sample-values.md --->
 
 Placeholders are only replaced when the directive has `values=`, `value=`, `values-file=`, `value-alias=` or `vars`. Values can also come from JSON files and the command line (`--value`, `--values-file`, `--allow-env`). See [Template variables](../docs/guide/template-variables.md) for the full rules.
+
+## API
+
+`inject-markdown` can also be called from code. Types are included.
+
+### Inject into a file
+
+```ts
+import { injectFile } from 'inject-markdown';
+
+const result = await injectFile('README.md', { cwd: 'samples' });
+
+for (const error of result.errors) {
+  console.error(`README.md:${error.line}: ${error.message}`);
+}
+```
+
+- `injectFile` writes the file back only if it changed and had no errors.
+- It never prints. It returns:
+  - `updated`: the content changed.
+  - `written`: the file was written.
+  - `errors` and `warnings`: each has a `message`, and the directive's `line` and `column`.
+- To process several files, call it once for each.
+
+### Inject into a document
+
+```ts
+import { injectMarkdown } from 'inject-markdown';
+
+const result = await injectMarkdown({
+  file: 'samples/README.md',
+  content: markdown
+});
+```
+
+- A document is the Markdown `content` and the `file` it belongs to. Relative `@@inject` paths resolve from `file`.
+- Nothing is read from `file`, and nothing is written.
+- It returns the injected `document`, plus `updated`, `errors` and `warnings`.
+
+### Remove the directives
+
+`removeDirectives` removes the `@@inject` directives and end markers from Markdown. Everything else stays exactly as written, including the injected content. This is useful for a copy that is published rather than maintained.
+
+```ts
+import { injectMarkdown, removeDirectives } from 'inject-markdown';
+
+const result = await injectMarkdown({
+  file: 'docs/guide.md',
+  content: markdown
+});
+const published = removeDirectives(result.document.content);
+```
+
+### Options
+
+`injectFile` and `injectMarkdown` take the same options:
+
+- `cwd`: the injection root. Relative paths resolve against it, and local references must stay inside it. Defaults to the current directory.
+- `allowOutsideRoot`: directories outside `cwd` that local references may resolve into.
+- `rebaseLinks`: rebase relative links in injected Markdown. Defaults to `true`.
+- `injectOnly`: only rewrite the injected sections. Defaults to `true`.
+- `clean`: remove the injected content, keeping the directives.
+- `valueDeclarations`: placeholder values, as a list. A later entry wins over an earlier one.
+- `allowEnv`: environment variables a directive may use.
+- `strictVars`: treat an unresolved placeholder as an error.
+
+For example, `valueDeclarations` takes the place of `--value`, `--values-file` and `--value-alias`:
+
+```ts
+await injectFile('README.md', {
+  valueDeclarations: [
+    {
+      // The file's values, under `package`: {@ package.version @}
+      kind: 'values-file',
+      path: 'package.json',
+      prefix: 'package'
+    },
+    {
+      kind: 'value',
+      name: 'channel',
+      value: 'beta'
+    },
+    {
+      kind: 'alias',
+      name: 'version',
+      target: 'package.version'
+    }
+  ]
+});
+```
+
+A values file's `prefix` is a dotted name for its values, or `''` to put its keys at the top level.
+
+### Errors
+
+- Errors in the Markdown are returned in `errors`, never thrown.
+- Invalid options throw an `OptionError`. This includes a values file that can't be read.
+- A file that can't be read throws the read error.

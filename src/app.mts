@@ -17,16 +17,17 @@ async function version(): Promise<string> {
     return (typeof packageJson === 'object' && packageJson?.version) || '0.0.0';
 }
 
-/** A CLI value declaration tagged with its argv position, since commander collects each option separately. */
-interface SequencedDeclaration {
-    seq: number;
-    decl: ValueDeclaration;
+/** A value flag as typed on the command line. */
+interface ValueArg {
+    flag: ValueFlag;
+    raw: string;
 }
 
 interface CliOptions extends Options {
-    value?: SequencedDeclaration[];
-    valuesFile?: SequencedDeclaration[];
-    valueAlias?: SequencedDeclaration[];
+    /** Recorded in the shared list of value flags, not here. */
+    value?: unknown;
+    valuesFile?: unknown;
+    valueAlias?: unknown;
 
     /**
      * alternate spelling of option
@@ -39,25 +40,60 @@ interface CliOptions extends Options {
     summary?: boolean;
 }
 
-function fixOptions(options: CliOptions): Options {
-    const { value, valuesFile, valueAlias, ...opts } = options;
-    // Restore command-line order across the three options (ADR-0012 point 4).
-    opts.valueDeclarations = [...(value ?? []), ...(valuesFile ?? []), ...(valueAlias ?? [])]
-        .sort((a, b) => a.seq - b.seq)
-        .map((d) => d.decl);
+/**
+ * Turn the collected command-line options into run options.
+ * Throws an `OptionError` for a value flag it can't parse.
+ */
+function fixOptions(options: CliOptions, valueArgs: readonly ValueArg[]): Options {
+    const { value: _value, valuesFile: _valuesFile, valueAlias: _valueAlias, ...opts } = options;
+    opts.valueDeclarations = valueArgs.map((arg) => parseValueFlag(arg.flag, arg.raw));
 
-    if (options.stopOnError !== undefined) opts.stopOnErrors = options.stopOnError;
-    if (options.stopOnErrors !== undefined) opts.stopOnErrors = options.stopOnErrors;
-    opts.stopOnErrors = opts.stopOnErrors ?? true;
+    opts.stopOnErrors = options.stopOnErrors ?? options.stopOnError ?? true;
     return opts;
 }
 
+type ValueFlag = 'value' | 'values-file' | 'value-alias';
+
+function parseValueFlag(flag: ValueFlag, raw: string): ValueDeclaration {
+    switch (flag) {
+        case 'value': {
+            const [name, value] = splitAssignment(flag, raw, 'name=value');
+            return { kind: 'value', name, value };
+        }
+        case 'value-alias': {
+            const [name, target] = splitAssignment(flag, raw, 'name=target');
+            return { kind: 'alias', name, target: target.trim() };
+        }
+        case 'values-file': {
+            const entry = parseValuesFileEntry(raw);
+            if (!entry) {
+                throw new OptionError(
+                    `Invalid --values-file "${raw}": no valid prefix can be derived from the file name; ` +
+                        `use prefix:${raw}, or :${raw} to merge at the root.`,
+                );
+            }
+            return { kind: 'values-file', ...entry };
+        }
+    }
+}
+
+/** Split `name=rest` at the first `=`. The name is trimmed and must not be empty. */
+function splitAssignment(flag: ValueFlag, raw: string, form: string): [name: string, rest: string] {
+    const idx = raw.indexOf('=');
+    const name = idx < 0 ? '' : raw.slice(0, idx).trim();
+    if (!name) {
+        throw new OptionError(`Invalid --${flag} "${raw}": expected ${form}.`);
+    }
+    return [name, raw.slice(idx + 1)];
+}
+
 export async function app(program = defaultCommand): Promise<Command> {
-    let seq = 0;
-    const declare = (acc: SequencedDeclaration[] = [], decl: ValueDeclaration): SequencedDeclaration[] => [
-        ...acc,
-        { seq: seq++, decl },
-    ];
+    // Value flags, in command-line order: a later declaration wins.
+    // Commander calls each option's callback in that order, so one shared list keeps it.
+    const valueArgs: ValueArg[] = [];
+    const record = (flag: ValueFlag) => (raw: string) => {
+        valueArgs.push({ flag, raw });
+    };
     program
         .name('inject-markdown')
         .description('Inject file content into markdown files.')
@@ -73,17 +109,12 @@ export async function app(program = defaultCommand): Promise<Command> {
         .option(
             '--value <name=val>',
             'Set a run-wide {@ name @} placeholder value. Repeatable; the last --value, --values-file or --value-alias defining a name wins.',
-            (entry: string, acc?: SequencedDeclaration[]) => {
-                const idx = entry.indexOf('=');
-                if (idx < 0) return acc ?? [];
-                return declare(acc, { kind: 'value', name: entry.slice(0, idx).trim(), value: entry.slice(idx + 1) });
-            },
+            record('value'),
         )
         .option(
             '--values-file <[prefix:]path>',
             'Add a run-wide JSON file of {@ name @} placeholder values, resolved relative to --cwd. Repeatable.',
-            (path: string, acc?: SequencedDeclaration[]) =>
-                declare(acc, { kind: 'values-file', entry: parseValuesFileEntry(path) }),
+            record('values-file'),
         )
         .option(
             '--allow-env <name>',
@@ -93,15 +124,7 @@ export async function app(program = defaultCommand): Promise<Command> {
         .option(
             '--value-alias <new=target>',
             'Resolve the {@ new @} placeholder as if it were {@ target @}. Repeatable; ordered with --value and --values-file.',
-            (entry: string, acc?: SequencedDeclaration[]) => {
-                const idx = entry.indexOf('=');
-                if (idx < 0) return acc ?? [];
-                return declare(acc, {
-                    kind: 'alias',
-                    name: entry.slice(0, idx).trim(),
-                    target: entry.slice(idx + 1).trim(),
-                });
-            },
+            record('value-alias'),
         )
         .option('--strict-vars', 'Treat an unresolved {@ name @} placeholder as a directive error.')
         .option('--no-rebase-links', 'Keep relative links in injected Markdown as written instead of rebasing them.')
@@ -124,10 +147,10 @@ export async function app(program = defaultCommand): Promise<Command> {
         .action(async (files: string[], optionsCli: CliOptions, _command: Command) => {
             // console.log('Options: %o', optionsCli);
             program.showHelpAfterError(false);
-            const option = fixOptions(optionsCli);
-            // A bad `--values-file` is operator input, not a document error: report it as a CLI
-            // message rather than letting it escape as an uncaught exception.
-            const result = await processGlobs(files, option).catch((e) => {
+            // A bad value flag or values file is operator input, not a document error.
+            // Report it as a CLI message rather than letting it escape as an uncaught exception.
+            const run = async () => processGlobs(files, fixOptions(optionsCli, valueArgs));
+            const result = await run().catch((e) => {
                 if (e instanceof OptionError) program.error(chalk.red(e.message));
                 throw e;
             });

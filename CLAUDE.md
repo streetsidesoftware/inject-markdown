@@ -20,11 +20,18 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for environment setup (Node/corepack), bu
 
 ## Writing comments
 
-Assume an expert-programmer reader. Keep comments succinct — 1-2 lines. Cover What and, where non-obvious, Why; only explain How if it isn't already obvious from the code.
+Assume an expert-programmer reader. Write for reading, not to save space:
+
+- Keep comments short by leaving out what the reader doesn't need, not by compressing.
+- Don't chain clauses together with semicolons or commas to save lines. One idea per sentence.
+- If it is a list, make it a list: one item per line.
+- Cover What and, where non-obvious, Why; only explain How if it isn't already obvious from the code.
+- A comment describes its own level; it doesn't refer to the code that calls it (the CLI, the API, directive syntax).
+- Don't cite ADRs; state the rule itself.
 
 ## Code-specific gotchas
 
-- Only `.md` files are processed (enforced in `process.mts`); remote files (GitHub blob URLs) are fetched via the built-in `fetch`, local files go through `FileSystemAdapter`.
+- The CLI's file search (`findFiles` in `process.mts`) only returns `.md` files; remote files (GitHub blob URLs) are fetched via the built-in `fetch`, local files go through `FileSystemAdapter`.
 - Directive matching is two-step: a quick regex pre-filter (`directiveRegExp`), then a full parse via `parseDirective` — both must pass for a comment to be treated as a directive.
 - The remark stringify options (bullet style, fence char, etc.) are detected per-file from the source document (`detectMarkdownStyle` in `detectStyle.ts`), falling back to fixed defaults for constructs the file doesn't use — this preserves a file's existing formatting across an injection pass instead of normalizing it.
 - `--clean` removes injected sections but keeps the directive comment markers; `--dry-run` processes/reports without writing.

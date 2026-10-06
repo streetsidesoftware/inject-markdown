@@ -71,6 +71,20 @@ describe('app', () => {
             await rm(outDir, { recursive: true, force: true });
         }
     });
+
+    test.each`
+        flag                               | message
+        ${'--values-file=build info.json'} | ${'Invalid --values-file "build info.json": no valid prefix can be derived'}
+        ${'--value=version'}               | ${'Invalid --value "version": expected name=value.'}
+        ${'--value==1.2.3'}                | ${'Invalid --value "=1.2.3": expected name=value.'}
+        ${'--value-alias=version'}         | ${'Invalid --value-alias "version": expected name=target.'}
+    `('$flag is a usage error', async ({ flag, message }) => {
+        const command = new Command();
+        const argv = createArgv('README.md', flag, '--dry-run');
+        command.exitOverride(errorHandler);
+        command.configureOutput({ writeErr: () => undefined });
+        await expect(app.run(command, argv)).rejects.toThrow(message);
+    });
 });
 
 function createArgv(...args: (string | string[])[]): string[] {

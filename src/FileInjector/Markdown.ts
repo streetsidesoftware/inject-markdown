@@ -1,4 +1,5 @@
 import type { BlockContent, Code, DefinitionContent, Heading, Html, Root, RootContent } from 'mdast';
+import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
@@ -102,11 +103,27 @@ export function extractHeader(root: Root, header: string | undefined): Root {
 }
 
 /**
+ * A Markdown parser with GitHub Flavored Markdown.
+ * Front matter is parsed too when `text` starts with `---`.
+ */
+export function markdownParser(text: string) {
+    if (text.startsWith('---\n')) {
+        return unified().use(remarkParse).use(remarkFrontmatter, ['yaml', 'toml']).use(remarkGfm);
+    }
+    return unified().use(remarkParse).use(remarkGfm);
+}
+
+/** An `@@inject` directive comment: a start directive or an end marker. */
+export function isDirectiveComment(n: unknown): n is Html {
+    return isHtmlNode(n) && directiveRegExp.test(n.value);
+}
+
+/**
  * Remove any `@@inject` directive comments from an imported tree
  * so nested directives are not re-processed.
  */
 export function sanitizeImport(root: Root): Root {
-    remove(root, (n) => isHtmlNode(n) && directiveRegExp.test(n.value));
+    remove(root, isDirectiveComment);
     return root;
 }
 

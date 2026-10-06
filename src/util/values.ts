@@ -6,24 +6,76 @@ export interface JsonObject {
     [key: string]: JsonValue | undefined;
 }
 
-/** A `values-file=`/`--values-file` entry's namespace: an explicit prefix, an auto-derived one, or a root merge. */
-export type ValuesFilePrefixKind = 'explicit' | 'auto' | 'root';
-
+/** A values file, and where its values go. */
 export interface ValuesFileEntry {
-    prefixKind: ValuesFilePrefixKind;
-    /** Only set when `prefixKind` is `'explicit'`. */
-    prefixName?: string | undefined;
+    /** The JSON file to read. */
     path: string;
+    /**
+     * Where the file's values go:
+     * - A prefix nests all of the file's values under it.
+     *   For example, with the prefix `package`, the file's `version` is `{​@ package.version @​}`.
+     * - `''` puts them at the top level.
+     *   For example, the file's `version` is `{​@ version @​}`.
+     */
+    prefix: string;
 }
 
 /**
- * One entry in the ordered value sequence, per ADR-0012: a pair (`values=`/`value=`/`--value`),
- * a values-file entry, or an alias. Resolution walks the sequence newest first.
+ * Sets one placeholder to a fixed value.
+ * @example
+ * {
+ *     kind: 'value',
+ *     name: 'version',
+ *     value: '1.2.3',
+ * }
  */
-export type ValueDeclaration =
-    | { kind: 'value'; name: string; value: string }
-    | { kind: 'values-file'; entry: ValuesFileEntry }
-    | { kind: 'alias'; name: string; target: string };
+export interface ValuePairDeclaration {
+    kind: 'value';
+    /** The placeholder name, such as `version` or `package.version`. */
+    name: string;
+    /** The text the placeholder is replaced with. */
+    value: string;
+}
+
+/**
+ * Reads placeholder values from a JSON file.
+ * @example
+ * {
+ *     kind: 'values-file',
+ *     path: 'package.json',
+ *     prefix: 'package',
+ * }
+ */
+export interface ValuesFileDeclaration extends ValuesFileEntry {
+    kind: 'values-file';
+}
+
+/**
+ * Makes one placeholder name stand for another.
+ * @example
+ * {
+ *     kind: 'alias',
+ *     name: 'version',
+ *     target: 'package.version',
+ * }
+ */
+export interface ValueAliasDeclaration {
+    kind: 'alias';
+    /** The new placeholder name. */
+    name: string;
+    /** The placeholder name it stands for. */
+    target: string;
+}
+
+/**
+ * A placeholder value declaration, one of:
+ * - {@link ValuePairDeclaration}: a fixed value.
+ * - {@link ValuesFileDeclaration}: values from a JSON file.
+ * - {@link ValueAliasDeclaration}: one name standing for another.
+ *
+ * When declarations disagree, the later one in the list wins.
+ */
+export type ValueDeclaration = ValuePairDeclaration | ValuesFileDeclaration | ValueAliasDeclaration;
 
 const validPlaceholderSegment = /^[A-Za-z0-9_][A-Za-z0-9_-]*$/;
 
@@ -50,10 +102,17 @@ export function isValidPlaceholderSegment(name: string): boolean {
     return validPlaceholderSegment.test(name) && !unsafeSegments.has(name);
 }
 
+/** A dotted placeholder name: one or more valid segments separated by `.`. */
+export function isValidPlaceholderName(name: string): boolean {
+    return name.split('.').every(isValidPlaceholderSegment);
+}
+
 /**
- * A `values-file=`/`--values-file` explicit prefix, per ADR-0009 point 1. Two characters or more,
- * dot-separated segments with none empty and none starting with `-` or `.`, and no path
- * separators — so `C:`, `..`, `.env` and `-foo` are all paths rather than prefixes.
+ * A valid explicit prefix in `[prefix:]path` text:
+ * - two characters or more;
+ * - dot-separated segments, none empty, none starting with `-` or `.`;
+ * - no path separators.
+ * So `C:`, `..`, `.env` and `-foo` are read as paths, not prefixes.
  */
 export function isValidValuesFilePrefix(name: string): boolean {
     return validValuesFilePrefix.test(name) && !name.split('.').some((seg) => unsafeSegments.has(seg));
@@ -65,10 +124,9 @@ function emptyTree(): JsonObject {
 }
 
 /**
- * Parse `values=name:val,name2:val2`, per ADR-0002 point 1.
- * A whole value wrapped in double quotes suppresses comma-splitting, producing one pair whose
- * value may contain literal commas/colons (`values="name:1, 2, 3"`). Pairs keep their written
- * order, repeats included, so each stays positioned in the declaration sequence (ADR-0012).
+ * Parse a comma-separated `name:value` list, e.g. `a:1,b:2`.
+ * Pairs keep their written order, repeats included.
+ * A list wrapped in double quotes isn't split: it is one pair, e.g. `"name:1, 2, 3"`.
  */
 export function parseValuesPairs(raw: string): [name: string, value: string][] {
     const pairs: [string, string][] = [];
@@ -92,8 +150,9 @@ export function parseValuesPairs(raw: string): [name: string, value: string][] {
 }
 
 /**
- * Parse one `value=name:val`, per ADR-0013: split at the first `:`, and the rest is the value,
- * commas and colons included. `undefined` when there is no `:` or the name is empty.
+ * Parse one `name:value`.
+ * It splits at the first `:`. The rest is the value, including any commas and colons.
+ * Returns `undefined` when there is no `:` or the name is empty.
  */
 export function parseSingleValue(raw: string): [name: string, value: string] | undefined {
     return splitPair(raw);
@@ -107,33 +166,48 @@ function splitPair(entry: string): [string, string] | undefined {
     return [name, entry.slice(idx + 1).trim()];
 }
 
-/** Parse one `values-file=`/`--values-file` entry: `[prefix:]path`, per ADR-0007. */
-export function parseValuesFileEntry(raw: string): ValuesFileEntry {
+/**
+ * Parse one `[prefix:]path` entry:
+ * - `prefix:path` uses that prefix;
+ * - `:path` uses an empty (root) prefix;
+ * - `path` derives the prefix from the file's base name (`package.json` → `package`).
+ * Returns `undefined` when a derived prefix isn't a valid name segment.
+ */
+export function parseValuesFileEntry(raw: string): ValuesFileEntry | undefined {
     const entry = raw.trim();
     if (entry.startsWith(':')) {
-        return { prefixKind: 'root', path: unquote(entry.slice(1).trim()) };
+        return { prefix: '', path: unquote(entry.slice(1).trim()) };
     }
     if (isQuoted(entry)) {
-        return { prefixKind: 'auto', path: unquote(entry) };
+        return withDerivedPrefix(unquote(entry));
     }
     // The colon separates only when what precedes it is a prefix (ADR-0009 point 1). Anything
     // else -- a drive letter, `..`, a path-shaped head -- leaves the whole entry a path.
     const idx = entry.indexOf(':');
     if (idx > 0) {
-        const prefixName = entry.slice(0, idx).trim();
-        if (isValidValuesFilePrefix(prefixName)) {
-            return { prefixKind: 'explicit', prefixName, path: unquote(entry.slice(idx + 1).trim()) };
+        const prefix = entry.slice(0, idx).trim();
+        if (isValidValuesFilePrefix(prefix)) {
+            return { prefix, path: unquote(entry.slice(idx + 1).trim()) };
         }
     }
-    return { prefixKind: 'auto', path: unquote(entry) };
+    return withDerivedPrefix(unquote(entry));
 }
 
 /**
- * Parse a directive-level `values-file=[prefix:]path[,[prefix:]path...]` list, per ADR-0007.
- * A comma inside a double-quoted entry is not treated as a separator.
+ * A derived prefix must be a single name segment.
+ * Only an explicit prefix may be dotted.
  */
-export function parseValuesFileList(raw: string): ValuesFileEntry[] {
-    return splitTopLevel(raw.trim(), ',').map(parseValuesFileEntry);
+function withDerivedPrefix(path: string): ValuesFileEntry | undefined {
+    const prefix = deriveAutoPrefixFromPath(path);
+    return isValidPlaceholderSegment(prefix) ? { prefix, path } : undefined;
+}
+
+/**
+ * Split a comma-separated list of `[prefix:]path` entries.
+ * A comma inside a double-quoted entry is not a separator.
+ */
+export function splitValuesFileList(raw: string): string[] {
+    return splitTopLevel(raw.trim(), ',');
 }
 
 function splitTopLevel(s: string, sep: string): string[] {
@@ -179,9 +253,10 @@ export function deriveAutoPrefixFromPath(p: string): string {
 }
 
 /**
- * Walk a dotted placeholder name into a value tree. `undefined` means the name is not defined.
- * Only own properties count: a `values-file=` tree comes from `JSON.parse` and still inherits from
- * `Object.prototype`, so `{@ toString @}` must not resolve to an inherited member.
+ * Walk a dotted placeholder name into a value tree.
+ * `undefined` means the name is not defined.
+ * Only own properties count. A values-file tree comes from `JSON.parse`, so it inherits from
+ * `Object.prototype`, and the placeholder `toString` must not resolve to an inherited member.
  */
 export function getPath(tree: JsonObject | undefined, name: string): JsonValue | undefined {
     if (!tree) return undefined;
@@ -196,8 +271,8 @@ export function getPath(tree: JsonObject | undefined, name: string): JsonValue |
 
 /**
  * Set a dotted placeholder name into a value tree, creating intermediate objects as needed.
- * A name containing a prototype-reaching segment is dropped: directive text is untrusted input
- * (ADR-0003), and `values=__proto__.x:y` must not be able to write to `Object.prototype`.
+ * A name with a prototype-reaching segment is dropped.
+ * Directive text is untrusted, and a name like `__proto__.x` must not write to `Object.prototype`.
  */
 export function setPath(tree: JsonObject, name: string, value: JsonValue): void {
     const segments = name.split('.');
@@ -234,11 +309,22 @@ export type ValueLayer = JsonObject;
  */
 export type UnresolvedReason = 'undefined' | 'object' | 'array' | 'null' | 'cycle';
 
-export type ResolveResult = { value: string } | { unresolved: UnresolvedReason };
+/** A placeholder name that resolved to a value. */
+export interface ResolvedValue {
+    value: string;
+}
+
+/** A placeholder name that did not resolve, and why. */
+export interface UnresolvedValue {
+    unresolved: UnresolvedReason;
+}
+
+export type ResolveResult = ResolvedValue | UnresolvedValue;
 
 /**
- * The layer for one `name -> value` pair (`values=`/`value=`/`--value`). One layer per pair rather
- * than one folded tree, so `--value a=1 --value a.b=2` keeps both names (ADR-0008 point 1).
+ * The layer for one `name -> value` pair.
+ * Each pair gets its own layer rather than one folded tree.
+ * That way, the pairs `a -> 1` and `a.b -> 2` keep both names.
  */
 export function layerFromPair(name: string, value: string): ValueLayer {
     const layer = emptyTree();
@@ -261,9 +347,9 @@ export function resolveInLayers(layers: readonly ValueLayer[], name: string): Re
 }
 
 /**
- * Read one `values-file=`/`--values-file` entry into its layer. A read/parse failure or invalid
- * auto-derived prefix is reported via `onError` and yields `undefined`, so one bad entry doesn't
- * fail the rest of the sequence.
+ * Read one values file into its layer.
+ * A read or parse failure is reported via `onError` and yields `undefined`.
+ * One bad entry doesn't fail the rest of the sequence.
  */
 export async function readValuesFileLayer(
     fs: FileSystemAdapter,
@@ -282,7 +368,7 @@ export async function readValuesFileLayer(
         onError(`Failed to read values file "${entry.path}": ${err}`);
         return undefined;
     }
-    if (entry.prefixKind === 'root') {
+    if (entry.prefix === '') {
         // A root entry contributes its own keys, so it is only usable as a layer if it is an
         // object; an array or scalar at the top level has no names to offer.
         if (typeof data !== 'object' || data === null || Array.isArray(data)) return undefined;
@@ -290,18 +376,8 @@ export async function readValuesFileLayer(
         for (const [k, v] of Object.entries(data)) layer[k] = v;
         return layer;
     }
-    const explicit = entry.prefixKind === 'explicit';
-    const prefix = explicit ? (entry.prefixName ?? '') : deriveAutoPrefixFromPath(entry.path);
-    // An explicit prefix was already checked by `parseValuesFileEntry` -- the colon would not
-    // have separated otherwise. An auto-derived one stays a single segment (ADR-0009 point 4).
-    if (!explicit && !isValidPlaceholderSegment(prefix)) {
-        onError(
-            `Invalid values-file prefix "${prefix}" derived from "${entry.path}". Use an explicit prefix or ":${entry.path}" to merge at the root.`,
-        );
-        return undefined;
-    }
     const layer = emptyTree();
     // `setPath` so a dotted explicit prefix nests, per ADR-0009 point 3.
-    setPath(layer, prefix, data);
+    setPath(layer, entry.prefix, data);
     return layer;
 }

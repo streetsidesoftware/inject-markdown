@@ -10,7 +10,7 @@ import { nodeFsa } from '../FileSystemAdapter/fsa.js';
 import { createStore, normalizePath, type Store } from '../FileSystemAdapter/fsStore.mjs';
 import { OptionError } from '../util/errors.js';
 import { isURL, relativePath } from '../util/url_helper.js';
-import type { ValueDeclaration } from '../util/values.js';
+import { deriveAutoPrefixFromPath, type ValueDeclaration } from '../util/values.js';
 import { FileInjector, type Logger } from './FileInjector.js';
 
 const __file__ = fileURLToPath(import.meta.url);
@@ -77,6 +77,8 @@ describe('FileInjector', () => {
         options.cwd = options.cwd || __root__;
         options.color = options.color ?? false;
         options.logger = logger;
+        // These snapshots record whole-file output.
+        options.injectOnly ??= false;
         expectedFile = path.resolve(__root__, expectedFile);
         const fsa = createFSA();
         const fi = new FileInjector(fsa, options);
@@ -96,6 +98,8 @@ describe('FileInjector', () => {
         options.cwd = options.cwd || __root__;
         options.color = options.color ?? false;
         options.logger = logger;
+        // These snapshots record whole-file output.
+        options.injectOnly ??= false;
         const fsa = createFSA();
         const fi = new FileInjector(fsa, options);
         const r = await fi.processFile(file);
@@ -340,7 +344,8 @@ describe('template variables', () => {
     const alias = (name: string, target: string): ValueDeclaration => ({ kind: 'alias', name, target });
     const valuesFile = (path: string): ValueDeclaration => ({
         kind: 'values-file',
-        entry: { prefixKind: 'auto', path },
+        path,
+        prefix: deriveAutoPrefixFromPath(path),
     });
 
     function count(text: string, needle: string): number {
