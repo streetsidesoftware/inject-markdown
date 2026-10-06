@@ -59,9 +59,8 @@ export async function processGlobs(
 }
 
 function printFileErrors(_relFile: string, r: ProcessFileResult): void {
-    if (r.hasErrors || r.hasMessages) {
-        console.error(reportFileErrors(r.file));
-    }
+    if (!r.hasErrors && !r.hasMessages) return;
+    console.error(reportFileErrors(r.file));
 }
 
 export interface Options extends FileInjectorOptions {

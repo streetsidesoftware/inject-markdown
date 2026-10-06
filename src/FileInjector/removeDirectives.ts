@@ -19,9 +19,7 @@ export function removeDirectives(markdown: string): string {
     visit(root, isDirectiveComment, (node) => {
         const start = node.position?.start.offset;
         const end = node.position?.end.offset;
-        if (start === undefined || end === undefined) {
-            return;
-        }
+        if (start === undefined || end === undefined) return;
         patches.push(removalPatch(markdown, start, end));
     });
     const text = applyPatches(markdown, patches);
@@ -47,9 +45,8 @@ function lineCuts(markdown: string, patches: Patch[]): number[] {
         const cut = patch.start - removed;
         removed += patch.end - patch.start;
         if (!isWholeLines(markdown, patch)) continue;
-        if (cuts.at(-1) !== cut) {
-            cuts.push(cut);
-        }
+        if (cuts.at(-1) === cut) continue;
+        cuts.push(cut);
     }
     return cuts;
 }
@@ -62,9 +59,7 @@ function isWholeLines(text: string, patch: Patch): boolean {
 function tidyBlankLines(text: string, offset: number): string {
     const nextEnd = endOfLine(text, offset);
     const nextBlank = offset < text.length && isBlank(text.slice(offset, nextEnd));
-    if (offset === 0) {
-        return nextBlank ? text.slice(nextEnd) : text;
-    }
+    if (offset === 0) return nextBlank ? text.slice(nextEnd) : text;
 
     const previousStart = startOfLine(text, offset - 1);
     const previousBlank = isBlank(text.slice(previousStart, offset));
