@@ -542,8 +542,11 @@ Placeholders are only replaced when the directive has `values=`, `value=`, `valu
 import { injectFiles } from 'inject-markdown';
 
 const result = await injectFiles(['README.md'], { cwd: 'samples' });
-// { filesFound: 1, filesWritten: 1, errors: [], warnings: [], ... }
-if (result.errors.length) throw new Error(result.errors.map((e) => `${e.file}:${e.line}: ${e.message}`).join('\n'));
+
+console.log(`Files written: ${result.filesWritten}`);
+for (const error of result.errors) {
+  console.error(`${error.file}:${error.line}: ${error.message}`);
+}
 ```
 
 - **Options mirror the CLI flags,** in camelCase: `cwd`, `outputDir`, `dryRun`, `clean`, `injectOnly`, `mustFindFiles`, `stopOnErrors`, `writeOnError`, `rebaseLinks`, `allowOutsideRoot`, `allowEnv` and `strictVars`. Defaults match the CLI.
@@ -552,10 +555,28 @@ if (result.errors.length) throw new Error(result.errors.map((e) => `${e.file}:${
   ```ts
   await injectFiles(['README.md'], {
     valueDeclarations: [
-      { kind: 'values-file', path: 'package.json', prefix: 'package' }, // {@ package.version @}
-      { kind: 'values-file', path: 'release.json', prefix: '' }, // top-level keys
-      { kind: 'value', name: 'channel', value: 'beta' },
-      { kind: 'alias', name: 'version', target: 'package.version' }
+      {
+        // The file's values, under `package`: {@ package.version @}
+        kind: 'values-file',
+        path: 'package.json',
+        prefix: 'package'
+      },
+      {
+        // The file's values, at the top level.
+        kind: 'values-file',
+        path: 'release.json',
+        prefix: ''
+      },
+      {
+        kind: 'value',
+        name: 'channel',
+        value: 'beta'
+      },
+      {
+        kind: 'alias',
+        name: 'version',
+        target: 'package.version'
+      }
     ]
   });
   ```

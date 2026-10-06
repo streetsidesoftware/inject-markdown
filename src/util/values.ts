@@ -22,7 +22,12 @@ export interface ValuesFileEntry {
 
 /**
  * Sets one placeholder to a fixed value.
- * @example { kind: 'value', name: 'version', value: '1.2.3' }
+ * @example
+ * {
+ *     kind: 'value',
+ *     name: 'version',
+ *     value: '1.2.3',
+ * }
  */
 export interface ValuePairDeclaration {
     kind: 'value';
@@ -34,7 +39,12 @@ export interface ValuePairDeclaration {
 
 /**
  * Reads placeholder values from a JSON file.
- * @example { kind: 'values-file', path: 'package.json', prefix: 'package' }
+ * @example
+ * {
+ *     kind: 'values-file',
+ *     path: 'package.json',
+ *     prefix: 'package',
+ * }
  */
 export interface ValuesFileDeclaration extends ValuesFileEntry {
     kind: 'values-file';
@@ -42,7 +52,12 @@ export interface ValuesFileDeclaration extends ValuesFileEntry {
 
 /**
  * Makes one placeholder name stand for another.
- * @example { kind: 'alias', name: 'version', target: 'package.version' }
+ * @example
+ * {
+ *     kind: 'alias',
+ *     name: 'version',
+ *     target: 'package.version',
+ * }
  */
 export interface ValueAliasDeclaration {
     kind: 'alias';
