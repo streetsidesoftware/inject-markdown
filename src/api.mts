@@ -94,7 +94,7 @@ export async function injectFiles(files: string[], options: InjectFilesOptions =
     const errors: InjectMessage[] = [];
     const warnings: InjectMessage[] = [];
     const collect = (relFile: string, r: ProcessFileResult) => collectMessages(relFile, r, errors, warnings);
-    checkValuesFilePrefixes(options.valueDeclarations);
+    assertValidValuesFilePrefixes(options.valueDeclarations);
     const { mustFindFiles = true, silent = true, ...opts } = options;
     const r = await processGlobs(files, { ...opts, mustFindFiles, silent }, collect);
     if (!r.numberOfFiles && mustFindFiles) throw new InjectMarkdownError('No Markdown files found.');
@@ -115,7 +115,7 @@ export async function injectFiles(files: string[], options: InjectFilesOptions =
  * @throws {InjectMarkdownError} if an injection fails.
  */
 export async function injectMarkdown(markdown: string, options: InjectMarkdownOptions): Promise<string> {
-    checkValuesFilePrefixes(options.valueDeclarations);
+    assertValidValuesFilePrefixes(options.valueDeclarations);
     const { file, ...opts } = options;
     const injector = new FileInjector(nodeFsa(), { ...opts, silent: true, dryRun: true });
     const r = await injector.processContent(markdown, file);
@@ -129,10 +129,11 @@ export async function injectMarkdown(markdown: string, options: InjectMarkdownOp
 }
 
 /**
- * Throw an `OptionError` for a values file whose prefix can't be used.
+ * Assert that every values file's prefix can be used.
  * A prefix is `''` or a name such as `package` or `pkg.build`.
+ * Throws an `OptionError` for one that isn't.
  */
-function checkValuesFilePrefixes(decls: ValueDeclaration[] | undefined): void {
+function assertValidValuesFilePrefixes(decls: ValueDeclaration[] | undefined): void {
     for (const decl of decls ?? []) {
         if (decl.kind !== 'values-file' || decl.prefix === '' || isValidPlaceholderName(decl.prefix)) continue;
         throw new OptionError(`Invalid prefix "${decl.prefix}" for values file "${decl.path}".`);
