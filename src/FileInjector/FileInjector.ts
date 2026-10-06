@@ -69,10 +69,8 @@ export interface Logger {
     writeStderr(text: string): void;
 }
 
-/** Options for a run. */
-export interface FileInjectorOptions {
-    /** Write the results to this directory instead of in place. */
-    outputDir?: string | undefined;
+/** How content is injected into Markdown. */
+export interface InjectOptions {
     /**
      * The injection root.
      * Relative paths resolve against it.
@@ -80,8 +78,18 @@ export interface FileInjectorOptions {
      * @default process.cwd()
      */
     cwd?: PathLike | undefined;
-    /** Remove injected content, keeping the directives. */
-    clean?: boolean | undefined;
+
+    /**
+     * Directories outside the injection root (`cwd`) that a local reference may resolve into.
+     */
+    allowOutsideRoot?: string[] | undefined;
+
+    /**
+     * Rebase relative links in injected Markdown onto the host file.
+     * A directive's own `rebase-links=` wins.
+     * @default true
+     */
+    rebaseLinks?: boolean | undefined;
 
     /**
      * How much of the file to rewrite:
@@ -93,49 +101,8 @@ export interface FileInjectorOptions {
      */
     injectOnly?: boolean | undefined;
 
-    /** Don't print progress to stderr. */
-    silent?: boolean | undefined;
-
-    /**
-     * Whether to use color:
-     * - `true`: force color.
-     * - `false`: no color.
-     * - `undefined`: let chalk decide.
-     */
-    color?: boolean | undefined;
-
-    /**
-     * How much detail to print about each file:
-     * - `0` or `false`: none.
-     * - `1` or `true`: also list each file it injects.
-     */
-    verbose?: number | boolean | undefined;
-
-    /**
-     * What to do with a file when an injection in it fails:
-     * - `false`: skip it. The file isn't written.
-     * - `true`: write it anyway.
-     * @default false
-     */
-    writeOnError?: boolean | undefined;
-
-    /**
-     * What to do after a file has an error:
-     * - `true`: stop. The remaining files aren't processed.
-     * - `false`: keep going with the remaining files.
-     * @default true
-     */
-    stopOnErrors?: boolean | undefined;
-
-    logger?: Logger;
-
-    /** Process the files, but don't write anything. */
-    dryRun?: boolean | undefined;
-
-    /**
-     * Directories outside the injection root (`cwd`) that a local reference may resolve into.
-     */
-    allowOutsideRoot?: string[] | undefined;
+    /** Remove injected content, keeping the directives. */
+    clean?: boolean | undefined;
 
     /**
      * Placeholder values for every file in the run.
@@ -157,13 +124,51 @@ export interface FileInjectorOptions {
 
     /** Treat an unresolved placeholder as a directive error instead of a warning. */
     strictVars?: boolean | undefined;
+}
+
+/** A run over files: how the results are written, reported and stopped. */
+export interface FileInjectorOptions extends InjectOptions {
+    /** Write the results to this directory instead of in place. */
+    outputDir?: string | undefined;
+
+    /** Process the files, but don't write anything. */
+    dryRun?: boolean | undefined;
 
     /**
-     * Rebase relative links in injected Markdown onto the host file.
-     * A directive's own `rebase-links=` wins.
+     * What to do with a file when an injection in it fails:
+     * - `false`: skip it. The file isn't written.
+     * - `true`: write it anyway.
+     * @default false
+     */
+    writeOnError?: boolean | undefined;
+
+    /**
+     * What to do after a file has an error:
+     * - `true`: stop. The remaining files aren't processed.
+     * - `false`: keep going with the remaining files.
      * @default true
      */
-    rebaseLinks?: boolean | undefined;
+    stopOnErrors?: boolean | undefined;
+
+    /** Don't print progress to stderr. */
+    silent?: boolean | undefined;
+
+    /**
+     * How much detail to print about each file:
+     * - `0` or `false`: none.
+     * - `1` or `true`: also list each file it injects.
+     */
+    verbose?: number | boolean | undefined;
+
+    /**
+     * Whether to use color:
+     * - `true`: force color.
+     * - `false`: no color.
+     * - `undefined`: let chalk decide.
+     */
+    color?: boolean | undefined;
+
+    logger?: Logger;
 }
 
 export class FileInjector {
