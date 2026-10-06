@@ -111,7 +111,8 @@ export function parseHashString(hash: string): InjectInfo {
                         valueDecls.push({ kind: 'values-file', ...entry });
                     } else {
                         valueErrors.push(
-                            `Invalid values-file="${raw}": no valid prefix can be derived from the file name; write prefix:${raw}, or :${raw} to merge at the root.`,
+                            `Invalid values-file="${raw}": no valid prefix can be derived from the file name; ` +
+                                `write prefix:${raw}, or :${raw} to merge at the root.`,
                         );
                     }
                 }

@@ -70,7 +70,8 @@ function parseValueFlag(flag: ValueFlag, raw: string): ValueDeclaration {
             const entry = parseValuesFileEntry(raw);
             if (!entry) {
                 throw new OptionError(
-                    `Invalid --values-file "${raw}": no valid prefix can be derived from the file name; use prefix:${raw}, or :${raw} to merge at the root.`,
+                    `Invalid --values-file "${raw}": no valid prefix can be derived from the file name; ` +
+                        `use prefix:${raw}, or :${raw} to merge at the root.`,
                 );
             }
             return { kind: 'values-file', ...entry };

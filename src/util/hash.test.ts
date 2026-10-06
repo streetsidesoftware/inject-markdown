@@ -47,7 +47,8 @@ describe('hash', () => {
             expect.objectContaining({
                 valueDecls: [],
                 valueErrors: [
-                    'Invalid values-file="build info.json": no valid prefix can be derived from the file name; write prefix:build info.json, or :build info.json to merge at the root.',
+                    'Invalid values-file="build info.json": no valid prefix can be derived from the file name; ' +
+                        'write prefix:build info.json, or :build info.json to merge at the root.',
                 ],
             }),
         );
