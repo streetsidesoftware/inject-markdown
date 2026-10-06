@@ -597,3 +597,12 @@ const updated = await injectMarkdown(markdown, { file: 'samples/README.md' });
 ```
 
 It writes nothing, and throws an `InjectMarkdownError` (with an `errors` array) if an injection fails.
+
+To remove the `@@inject` directives and end markers from Markdown, use `removeDirectives`. This is useful for a copy that is published rather than maintained. Everything else stays exactly as written, including the injected content.
+
+```ts
+import { injectMarkdown, removeDirectives } from 'inject-markdown';
+
+const injected = await injectMarkdown(markdown, { file: 'docs/guide.md' });
+const published = removeDirectives(injected);
+```

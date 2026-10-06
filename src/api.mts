@@ -4,6 +4,7 @@ import { processGlobs } from './processor/process.mjs';
 import { OptionError } from './util/errors.js';
 import { isValidPlaceholderName, type ValueDeclaration } from './util/values.js';
 
+export { removeDirectives } from './FileInjector/removeDirectives.js';
 export type {
     ValueAliasDeclaration,
     ValueDeclaration,
@@ -135,7 +136,9 @@ export async function injectMarkdown(markdown: string, options: InjectMarkdownOp
  */
 function assertValidValuesFilePrefixes(decls: ValueDeclaration[] | undefined): void {
     for (const decl of decls ?? []) {
-        if (decl.kind !== 'values-file' || decl.prefix === '' || isValidPlaceholderName(decl.prefix)) continue;
+        if (decl.kind !== 'values-file' || decl.prefix === '' || isValidPlaceholderName(decl.prefix)) {
+            continue;
+        }
         throw new OptionError(`Invalid prefix "${decl.prefix}" for values file "${decl.path}".`);
     }
 }

@@ -35,6 +35,7 @@ describe('api', () => {
             'app',
             'injectFiles',
             'injectMarkdown',
+            'removeDirectives',
             'run',
         ]);
     });

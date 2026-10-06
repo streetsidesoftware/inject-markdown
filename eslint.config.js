@@ -35,6 +35,8 @@ export default defineConfig(
             // Put one after `{` and one between the closing `@` and `}`.
             // The closing one is what fixes the hover.
             'no-irregular-whitespace': ['error', { skipComments: true }],
+            // A single-statement `if` without braces must fit on one line.
+            curly: ['error', 'multi-line'],
         },
     },
     {

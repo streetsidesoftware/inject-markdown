@@ -81,7 +81,9 @@ function parseValueFlag(flag: ValueFlag, raw: string): ValueDeclaration {
 function splitAssignment(flag: ValueFlag, raw: string, form: string): [name: string, rest: string] {
     const idx = raw.indexOf('=');
     const name = idx < 0 ? '' : raw.slice(0, idx).trim();
-    if (!name) throw new OptionError(`Invalid --${flag} "${raw}": expected ${form}.`);
+    if (!name) {
+        throw new OptionError(`Invalid --${flag} "${raw}": expected ${form}.`);
+    }
     return [name, raw.slice(idx + 1)];
 }
 

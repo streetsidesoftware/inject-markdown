@@ -3,11 +3,7 @@ import * as path from 'node:path';
 import assert from 'assert';
 import chalk, { supportsColor } from 'chalk';
 import type { Html, Parent, Root } from 'mdast';
-import remarkFrontmatter from 'remark-frontmatter';
-import remarkGfm from 'remark-gfm';
-import remarkParse from 'remark-parse';
 import remarkStringify, { type Options as StringifyOptions } from 'remark-stringify';
-import { unified } from 'unified';
 import { remove } from 'unist-util-remove';
 import { visit } from 'unist-util-visit';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -24,7 +20,16 @@ import type { ValueDeclaration } from '../util/values.js';
 import { detectMarkdownStyle } from './detectStyle.js';
 import { type Directive, directiveRegExp, type DirectiveType, parseDirective } from './Directive.js';
 import { jsonToRows, mapJsonStrings } from './jsonTable.js';
-import { applyQuote, errorToComment, extractHeader, isHtmlNode, sanitizeImport, toCode, toRoot } from './Markdown.js';
+import {
+    applyQuote,
+    errorToComment,
+    extractHeader,
+    isHtmlNode,
+    markdownParser,
+    sanitizeImport,
+    toCode,
+    toRoot,
+} from './Markdown.js';
 import { applyPatches, indentContinuationLines, lineIndent, type Patch, stringifyFragment } from './patchContent.js';
 import {
     applySubstitution,
@@ -376,7 +381,7 @@ async function processFileInjections(
         // remarkStringify reads this object lazily at compile time, so
         // processHasInjections can still mutate it after `.use()`.
         const outputOptions: StringifyOptions = { ...defaultOutputOptions };
-        const result = await initParser(toInitOptions(file))
+        const result = await markdownParser(file.content)
             .use(processHasInjections, outputOptions)
             .use(processInjections, outputOptions)
             .use(remarkStringify, outputOptions)
@@ -708,7 +713,7 @@ async function processFileInjections(
     }
 
     function parseMarkdownFile(file: VFileEx): Root {
-        return initParser(toInitOptions(file)).parse(file);
+        return markdownParser(file.content).parse(file);
     }
 
     function relativePathNormalized(path: URL, relDir?: URL): string {
@@ -988,26 +993,6 @@ class OutsideInjectionRootError extends Error {}
 function isWithinRoot(root: string, target: string): boolean {
     const rel = path.relative(root, target);
     return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
-}
-
-interface ParserOptions {
-    frontmatter?: boolean;
-    gfm?: boolean;
-}
-
-function initParser(options: ParserOptions) {
-    if (options.frontmatter) {
-        return unified().use(remarkParse).use(remarkFrontmatter, ['yaml', 'toml']).use(remarkGfm);
-    }
-    return unified().use(remarkParse).use(remarkGfm);
-}
-
-function toInitOptions(file: VFileEx): ParserOptions {
-    const options: ParserOptions = { gfm: true };
-    if (file.content.startsWith('---\n')) {
-        options.frontmatter = true;
-    }
-    return options;
 }
 
 interface ParseResult {
