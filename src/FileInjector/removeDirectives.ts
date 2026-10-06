@@ -47,7 +47,9 @@ function lineCuts(markdown: string, patches: Patch[]): number[] {
         const cut = patch.start - removed;
         removed += patch.end - patch.start;
         if (!isWholeLines(markdown, patch)) continue;
-        if (cuts.at(-1) !== cut) cuts.push(cut);
+        if (cuts.at(-1) !== cut) {
+            cuts.push(cut);
+        }
     }
     return cuts;
 }
