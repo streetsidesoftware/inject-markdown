@@ -1,7 +1,7 @@
 export type {
-    InjectFilesOptions,
-    InjectFilesResult,
+    InjectFileResult,
     InjectMarkdownOptions,
+    InjectMarkdownResult,
     InjectMessage,
     InjectOptions,
     ValueAliasDeclaration,
@@ -9,6 +9,6 @@ export type {
     ValuePairDeclaration,
     ValuesFileDeclaration,
 } from './api.mjs';
-export { injectFiles, injectMarkdown, InjectMarkdownError, removeDirectives } from './api.mjs';
+export { injectFile, injectMarkdown, removeDirectives } from './api.mjs';
 export { app, run } from './app.mjs';
 export { OptionError } from './util/errors.js';

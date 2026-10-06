@@ -1,9 +1,9 @@
-import { FileInjector, type FileInjectorOptions, type ProcessFileResult } from './FileInjector/FileInjector.js';
+import { FileInjector, type InjectOptions, type ProcessFileResult } from './FileInjector/FileInjector.js';
 import { nodeFsa } from './FileSystemAdapter/fsa.js';
-import { processGlobs } from './processor/process.mjs';
 import { OptionError } from './util/errors.js';
 import { isValidPlaceholderName, type ValueDeclaration } from './util/values.js';
 
+export type { InjectOptions } from './FileInjector/FileInjector.js';
 export { removeDirectives } from './FileInjector/removeDirectives.js';
 export type {
     ValueAliasDeclaration,
@@ -12,42 +12,13 @@ export type {
     ValuesFileDeclaration,
 } from './util/values.js';
 
-/**
- * Options shared by {@link injectFiles} and {@link injectMarkdown}. Fields picked from
- * `FileInjectorOptions` are documented there.
- */
-export type InjectOptions = Pick<
-    FileInjectorOptions,
-    | 'cwd'
-    | 'allowOutsideRoot'
-    | 'valueDeclarations'
-    | 'allowEnv'
-    | 'strictVars'
-    | 'rebaseLinks'
-    | 'clean'
-    | 'injectOnly'
->;
-
-export interface InjectFilesOptions
-    extends
-        InjectOptions,
-        Pick<FileInjectorOptions, 'outputDir' | 'stopOnErrors' | 'writeOnError' | 'dryRun' | 'silent' | 'verbose'> {
-    /**
-     * Throw if the patterns match no Markdown files.
-     * @default true
-     */
-    mustFindFiles?: boolean | undefined;
-}
-
 export interface InjectMarkdownOptions extends InjectOptions {
     /** The path of the Markdown, relative to `cwd`. Relative `@@inject` references resolve from it. */
     file: string;
 }
 
-/** An error or warning reported for a Markdown file. */
+/** An error or warning about the Markdown. */
 export interface InjectMessage {
-    /** The Markdown file, as matched (relative to `cwd`) or as given to {@link injectMarkdown}. */
-    file: string;
     message: string;
     /** 1-based line of the directive, if known. */
     line?: number | undefined;
@@ -55,78 +26,51 @@ export interface InjectMessage {
     column?: number | undefined;
 }
 
-export interface InjectFilesResult {
-    /** Markdown files matched by the patterns. */
-    filesFound: number;
-    filesProcessed: number;
-    filesWithInjections: number;
-    /** Files whose content changed (or, with `dryRun`, would change). */
-    filesUpdated: number;
-    filesWritten: number;
-    /** Files not written because of an error or `dryRun`. */
-    filesSkipped: number;
+/** What happened to a Markdown file. */
+export interface InjectFileResult {
+    /** The content changed. */
+    updated: boolean;
+    /** The file was written. */
+    written: boolean;
+    errors: InjectMessage[];
+    warnings: InjectMessage[];
+}
+
+/** The Markdown after injection, and what happened. */
+export interface InjectMarkdownResult {
+    /** The Markdown after injection. */
+    markdown: string;
+    /** The Markdown changed. */
+    updated: boolean;
     errors: InjectMessage[];
     warnings: InjectMessage[];
 }
 
 /**
- * Thrown by:
- * - {@link injectFiles} when no files match;
- * - {@link injectMarkdown} when an injection fails.
- */
-export class InjectMarkdownError extends Error {
-    constructor(
-        message: string,
-        readonly errors: InjectMessage[] = [],
-    ) {
-        super(message);
-        this.name = 'InjectMarkdownError';
-    }
-}
-
-/**
- * Inject content into Markdown files and return what happened, without printing or exiting.
- * - Errors in the files are returned in `errors`.
+ * Inject content into a Markdown file.
+ * The file is written back only if it changed and had no errors.
+ * - Errors in the Markdown are returned in `errors`.
  * - Invalid options throw an `OptionError`.
- * - `silent` defaults to `true`.
- * @param files - files or glob patterns, relative to `cwd`. Only `.md` files are processed.
+ * @param file - the Markdown file, relative to `cwd`.
  */
-export async function injectFiles(files: string[], options: InjectFilesOptions = {}): Promise<InjectFilesResult> {
-    const errors: InjectMessage[] = [];
-    const warnings: InjectMessage[] = [];
-    const collect = (relFile: string, r: ProcessFileResult) => collectMessages(relFile, r, errors, warnings);
+export async function injectFile(file: string, options: InjectOptions = {}): Promise<InjectFileResult> {
     assertValidValuesFilePrefixes(options.valueDeclarations);
-    const { mustFindFiles = true, silent = true, ...opts } = options;
-    const r = await processGlobs(files, { ...opts, mustFindFiles, silent }, collect);
-    if (!r.numberOfFiles && mustFindFiles) throw new InjectMarkdownError('No Markdown files found.');
-    return {
-        filesFound: r.numberOfFiles,
-        filesProcessed: r.numberOfFilesProcessed,
-        filesWithInjections: r.numberOfFilesWithInjections,
-        filesUpdated: r.numberOfFilesUpdated,
-        filesWritten: r.numberOfFilesWritten,
-        filesSkipped: r.numberOfFilesSkipped,
-        errors,
-        warnings,
-    };
+    const injector = new FileInjector(nodeFsa(), { ...options, silent: true });
+    const r = await injector.processFile(file);
+    return { updated: r.hasChanged, written: r.written, ...collectMessages(r) };
 }
 
 /**
- * Inject content into a Markdown string and return the result. Nothing is written.
- * @throws {InjectMarkdownError} if an injection fails.
+ * Inject content into Markdown text. Nothing is read from `file` or written.
+ * - Errors in the Markdown are returned in `errors`.
+ * - Invalid options throw an `OptionError`.
  */
-export async function injectMarkdown(markdown: string, options: InjectMarkdownOptions): Promise<string> {
+export async function injectMarkdown(markdown: string, options: InjectMarkdownOptions): Promise<InjectMarkdownResult> {
     assertValidValuesFilePrefixes(options.valueDeclarations);
     const { file, ...opts } = options;
     const injector = new FileInjector(nodeFsa(), { ...opts, silent: true, dryRun: true });
     const r = await injector.processContent(markdown, file);
-    const errors: InjectMessage[] = [];
-    collectMessages(file, r, errors, []);
-    if (errors.length) {
-        const details = errors.map((e) => `\n  ${e.line ?? 0}:${e.column ?? 0} ${e.message}`).join('');
-        throw new InjectMarkdownError(`Failed to inject into ${file}:${details}`, errors);
-    }
-    return String(r.file.value);
+    return { markdown: String(r.file.value), updated: r.hasChanged, ...collectMessages(r) };
 }
 
 /**
@@ -143,9 +87,16 @@ function assertValidValuesFilePrefixes(decls: ValueDeclaration[] | undefined): v
     }
 }
 
-function collectMessages(file: string, r: ProcessFileResult, errors: InjectMessage[], warnings: InjectMessage[]) {
+function collectMessages(r: ProcessFileResult): { errors: InjectMessage[]; warnings: InjectMessage[] } {
+    const errors: InjectMessage[] = [];
+    const warnings: InjectMessage[] = [];
     for (const m of r.file.messages) {
-        const msg: InjectMessage = { file, message: m.reason, line: m.line, column: m.column };
-        (m.fatal ? errors : warnings).push(msg);
+        const msg: InjectMessage = { message: m.reason, line: m.line, column: m.column };
+        if (m.fatal) {
+            errors.push(msg);
+        } else {
+            warnings.push(msg);
+        }
     }
+    return { errors, warnings };
 }
