@@ -12,9 +12,12 @@ export type {
     ValuesFileDeclaration,
 } from './util/values.js';
 
-export interface InjectMarkdownOptions extends InjectOptions {
-    /** The path of the Markdown, relative to `cwd`. Relative `@@inject` references resolve from it. */
+/** Markdown text and the path it belongs to. */
+export interface MarkdownDocument {
+    /** The document's path, relative to `cwd`. Relative `@@inject` references resolve from it. */
     file: string;
+    /** The Markdown text. */
+    content: string;
 }
 
 /** An error or warning about the Markdown. */
@@ -36,11 +39,11 @@ export interface InjectFileResult {
     warnings: InjectMessage[];
 }
 
-/** The Markdown after injection, and what happened. */
+/** The document after injection, and what happened. */
 export interface InjectMarkdownResult {
-    /** The Markdown after injection. */
-    markdown: string;
-    /** The Markdown changed. */
+    /** The document after injection: the same `file`, with the new `content`. */
+    document: MarkdownDocument;
+    /** The content changed. */
     updated: boolean;
     errors: InjectMessage[];
     warnings: InjectMessage[];
@@ -61,16 +64,19 @@ export async function injectFile(file: string, options: InjectOptions = {}): Pro
 }
 
 /**
- * Inject content into Markdown text. Nothing is read from `file` or written.
+ * Inject content into a Markdown document. Nothing is read from its `file` or written.
  * - Errors in the Markdown are returned in `errors`.
  * - Invalid options throw an `OptionError`.
  */
-export async function injectMarkdown(markdown: string, options: InjectMarkdownOptions): Promise<InjectMarkdownResult> {
+export async function injectMarkdown(
+    document: MarkdownDocument,
+    options: InjectOptions = {},
+): Promise<InjectMarkdownResult> {
     assertValidValuesFilePrefixes(options.valueDeclarations);
-    const { file, ...opts } = options;
-    const injector = new FileInjector(nodeFsa(), { ...opts, silent: true, dryRun: true });
-    const r = await injector.processContent(markdown, file);
-    return { markdown: String(r.file.value), updated: r.hasChanged, ...collectMessages(r) };
+    const injector = new FileInjector(nodeFsa(), { ...options, silent: true, dryRun: true });
+    const r = await injector.processContent(document.content, document.file);
+    const injected: MarkdownDocument = { file: document.file, content: String(r.file.value) };
+    return { document: injected, updated: r.hasChanged, ...collectMessages(r) };
 }
 
 /**

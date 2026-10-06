@@ -104,17 +104,24 @@ describe('api', () => {
         test('resolves references from file and writes nothing', async () => {
             await mkdir(path.join(dir, 'samples'));
             await writeFile(path.join(dir, 'samples/sample-sources.csv'), csv);
-            const result = await injectMarkdown(readme, { cwd: dir, file: 'samples/README.md' });
+            const result = await injectMarkdown({ file: 'samples/README.md', content: readme }, { cwd: dir });
             expect(result.updated).toBe(true);
-            expect(result.markdown).toContain('| name | value |');
-            expect(result.markdown.startsWith('# Samples\n\n<!--- @@inject: sample-sources.csv --->\n')).toBe(true);
+            expect(result.document.content).toContain('| name | value |');
+            expect(result.document.content.startsWith('# Samples\n\n<!--- @@inject: sample-sources.csv --->\n')).toBe(
+                true,
+            );
             expect(await read('README.md')).toBe(readme);
         });
 
         test('returns Markdown without directives unchanged', async () => {
             const md = '# Title\n\n* item\n';
-            const result = await injectMarkdown(md, { cwd: dir, file: 'README.md' });
-            expect(result).toEqual({ markdown: md, updated: false, errors: [], warnings: [] });
+            const result = await injectMarkdown({ file: 'README.md', content: md }, { cwd: dir });
+            expect(result).toEqual({
+                document: { file: 'README.md', content: md },
+                updated: false,
+                errors: [],
+                warnings: [],
+            });
         });
 
         test.each`
@@ -125,15 +132,18 @@ describe('api', () => {
             await mkdir(path.join(dir, 'parts'));
             await writeFile(path.join(dir, 'parts/links.md'), '[up](../up.md)\n');
             const md = '<!--- @@inject: parts/links.md --->\n';
-            const result = await injectMarkdown(md, { cwd: dir, file: 'README.md', rebaseLinks });
-            expect(result.markdown).toContain(expected);
+            const result = await injectMarkdown({ file: 'README.md', content: md }, { cwd: dir, rebaseLinks });
+            expect(result.document.content).toContain(expected);
         });
 
         describe('values', () => {
             const md = '<!--- @@inject: show.md#vars --->\n';
             const inject = async (values: ValueDeclaration[]) => {
-                const result = await injectMarkdown(md, { cwd: dir, file: 'README.md', valueDeclarations: values });
-                return result.markdown;
+                const result = await injectMarkdown(
+                    { file: 'README.md', content: md },
+                    { cwd: dir, valueDeclarations: values },
+                );
+                return result.document.content;
             };
 
             beforeEach(async () => {
@@ -178,7 +188,7 @@ describe('api', () => {
 
         test('returns injection errors instead of throwing', async () => {
             const md = '<!--- @@inject: missing.ts --->\n';
-            const result = await injectMarkdown(md, { cwd: dir, file: 'README.md' });
+            const result = await injectMarkdown({ file: 'README.md', content: md }, { cwd: dir });
             expect(result.errors).toEqual([
                 expect.objectContaining({ line: 1, message: expect.stringContaining('missing.ts') }),
             ]);

@@ -557,17 +557,20 @@ for (const error of result.errors) {
   - `errors` and `warnings`: each has a `message`, and the directive's `line` and `column`.
 - To process several files, call it once for each.
 
-### Inject into a string
+### Inject into a document
 
 ```ts
 import { injectMarkdown } from 'inject-markdown';
 
-const result = await injectMarkdown(markdown, { file: 'samples/README.md' });
+const result = await injectMarkdown({
+  file: 'samples/README.md',
+  content: markdown
+});
 ```
 
-- `file` is the path the Markdown belongs to. Relative `@@inject` paths resolve from it.
+- A document is the Markdown `content` and the `file` it belongs to. Relative `@@inject` paths resolve from `file`.
 - Nothing is read from `file`, and nothing is written.
-- It returns `markdown`, `updated`, `errors` and `warnings`.
+- It returns the injected `document`, plus `updated`, `errors` and `warnings`.
 
 ### Remove the directives
 
@@ -576,8 +579,11 @@ const result = await injectMarkdown(markdown, { file: 'samples/README.md' });
 ```ts
 import { injectMarkdown, removeDirectives } from 'inject-markdown';
 
-const result = await injectMarkdown(markdown, { file: 'docs/guide.md' });
-const published = removeDirectives(result.markdown);
+const result = await injectMarkdown({
+  file: 'docs/guide.md',
+  content: markdown
+});
+const published = removeDirectives(result.document.content);
 ```
 
 ### Options

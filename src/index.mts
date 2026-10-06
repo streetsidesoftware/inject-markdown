@@ -1,9 +1,9 @@
 export type {
     InjectFileResult,
-    InjectMarkdownOptions,
     InjectMarkdownResult,
     InjectMessage,
     InjectOptions,
+    MarkdownDocument,
     ValueAliasDeclaration,
     ValueDeclaration,
     ValuePairDeclaration,
