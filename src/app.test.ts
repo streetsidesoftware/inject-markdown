@@ -72,12 +72,18 @@ describe('app', () => {
         }
     });
 
-    test('a --values-file with no valid derived prefix is a usage error', async () => {
+    test.each`
+        flag                               | message
+        ${'--values-file=build info.json'} | ${'Invalid --values-file "build info.json": no valid prefix can be derived'}
+        ${'--value=version'}               | ${'Invalid --value "version": expected name=value.'}
+        ${'--value==1.2.3'}                | ${'Invalid --value "=1.2.3": expected name=value.'}
+        ${'--value-alias=version'}         | ${'Invalid --value-alias "version": expected name=target.'}
+    `('$flag is a usage error', async ({ flag, message }) => {
         const command = new Command();
-        const argv = createArgv('README.md', '--values-file=build info.json', '--dry-run');
+        const argv = createArgv('README.md', flag, '--dry-run');
         command.exitOverride(errorHandler);
         command.configureOutput({ writeErr: () => undefined });
-        await expect(app.run(command, argv)).rejects.toThrow('Invalid --values-file "build info.json"');
+        await expect(app.run(command, argv)).rejects.toThrow(message);
     });
 });
 
