@@ -48,9 +48,7 @@ function fixOptions(options: CliOptions, valueArgs: readonly ValueArg[]): Option
     const { value: _value, valuesFile: _valuesFile, valueAlias: _valueAlias, ...opts } = options;
     opts.valueDeclarations = valueArgs.map((arg) => parseValueFlag(arg.flag, arg.raw));
 
-    if (options.stopOnError !== undefined) opts.stopOnErrors = options.stopOnError;
-    if (options.stopOnErrors !== undefined) opts.stopOnErrors = options.stopOnErrors;
-    opts.stopOnErrors = opts.stopOnErrors ?? true;
+    opts.stopOnErrors = options.stopOnErrors ?? options.stopOnError ?? true;
     return opts;
 }
 
