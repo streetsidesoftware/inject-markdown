@@ -13,15 +13,7 @@ const allowedFileExtensions: Record<string, boolean | undefined> = {
     '.md': true,
 };
 
-/**
- * @param onFileResult - called with each processed file's result.
- *   By default, it prints the file's errors and warnings to stderr.
- */
-export async function processGlobs(
-    globs: string[],
-    options: Options,
-    onFileResult: (relFile: string, r: ProcessFileResult) => void = printFileErrors,
-): Promise<Result> {
+export async function processGlobs(globs: string[], options: Options): Promise<Result> {
     const fs = nodeFsa();
 
     const result: Result = {
@@ -47,7 +39,7 @@ export async function processGlobs(
         result.numberOfFilesWritten += r.written ? 1 : 0;
         result.numberOfFilesUpdated += r.hasChanged ? 1 : 0;
         result.numberOfFilesSkipped += r.skipped ? 1 : 0;
-        onFileResult(file, r);
+        printFileErrors(r);
         if (r.hasErrors) {
             result.errorCount += 1;
             result.filesWithErrors.push(file);
@@ -58,7 +50,7 @@ export async function processGlobs(
     return result;
 }
 
-function printFileErrors(_relFile: string, r: ProcessFileResult): void {
+function printFileErrors(r: ProcessFileResult): void {
     if (!r.hasErrors && !r.hasMessages) return;
     console.error(reportFileErrors(r.file));
 }
