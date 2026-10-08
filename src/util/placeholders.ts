@@ -2,7 +2,7 @@ import type { Root } from 'mdast';
 import { visit } from 'unist-util-visit';
 
 /**
- * Matches `{@ name @}` placeholders (ADR-0001), with an optional leading backslash escape.
+ * Matches `{​@ name @​}` placeholders, with an optional leading backslash escape.
  * Whitespace immediately inside the delimiters is optional and trimmed by the regex itself.
  */
 const placeholderRegExp = /(\\)?\{@\s*([A-Za-z0-9_][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_][A-Za-z0-9_-]*)*)\s*@\}/g;
@@ -10,9 +10,10 @@ const placeholderRegExp = /(\\)?\{@\s*([A-Za-z0-9_][A-Za-z0-9_-]*(?:\.[A-Za-z0-9
 export type PlaceholderResolver = (name: string) => string | undefined;
 
 /**
- * Replace placeholders in a single string. `\{@ ... @}` is unescaped to literal `{@ ... @}` text.
- * An unresolved name is left untouched and reported via `onUnresolved` (once per occurrence — the
- * caller is responsible for deduping per directive, per ADR-0005).
+ * Replace placeholders in a single string.
+ * `\{​@ ... @​}` is unescaped to literal `{​@ ... @​}` text.
+ * An unresolved name is left untouched and reported via `onUnresolved`, once per occurrence.
+ * The caller is responsible for deduping.
  */
 export function substituteInString(
     text: string,
@@ -30,12 +31,13 @@ export function substituteInString(
     });
 }
 
-/** Text-bearing mdast node types eligible for substitution, per ADR-0006 point 2. */
+/** Text-bearing mdast node types eligible for substitution. */
 const textBearingTypes = ['text', 'inlineCode', 'code', 'html'] as const;
 
 /**
  * Walk a markdown subtree's text-bearing nodes and substitute placeholders within each node's
- * own string value, in place. Does not stringify/re-parse the tree, per ADR-0006 point 2.
+ * own string value, in place.
+ * It does not stringify and re-parse the tree, so only the substituted text changes.
  */
 export function substituteInTree(root: Root, resolve: PlaceholderResolver, onUnresolved: (name: string) => void): void {
     visit(root, [...textBearingTypes], (node) => {

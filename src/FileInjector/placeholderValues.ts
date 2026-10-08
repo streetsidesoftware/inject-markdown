@@ -29,7 +29,7 @@ export interface LayerResolutionEntry {
     layer: ValueLayer;
 }
 
-/** One declaration ready to resolve against (ADR-0012): an alias, or the value layer it supplies. */
+/** One declaration ready to resolve against: an alias, or the value layer it supplies. */
 export type ResolutionEntry = AliasResolutionEntry | LayerResolutionEntry;
 
 /**
@@ -43,9 +43,12 @@ export interface UnresolvedName extends UnresolvedValue {
 export type NameResolution = ResolvedValue | UnresolvedName;
 
 /**
- * ADR-0005 point 4's unresolved cases: nothing defines the name, versus every layer that has it
- * holds a branch rather than a leaf — the kind is named so an author can tell a typo from a name
- * that stopped one segment short. ADR-0010 point 9 adds the aliased forms, which name both sides.
+ * Explain why a name is unresolved, so an author can tell a typo from a name that stopped one
+ * segment short:
+ * - Nothing defines the name.
+ * - Every layer that has it holds a branch rather than a leaf.
+ *
+ * For an aliased name, the explanation names both the alias and its target.
  */
 export function explainUnresolved(r: NameResolution): string {
     if ('value' in r) return '';
@@ -131,10 +134,10 @@ export async function resolveRunWideValueSources(
 }
 
 /**
- * Resolve one placeholder name. The `env.` namespace is reserved rather than layered
- * (ADR-0003 point 4): it is answered before any value layer is consulted, so `{@ env.X @}`
- * always means the OS environment and a value source defining a top-level `env` key stays
- * unreachable.
+ * Resolve one placeholder name.
+ * The `env.` namespace is reserved rather than layered.
+ * It is answered before any value layer is consulted, so `{​@ env.X @​}` always means the OS environment.
+ * A value source that defines a top-level `env` key stays unreachable.
  */
 export function resolveValueName(
     entries: readonly ResolutionEntry[],
@@ -150,14 +153,14 @@ export function resolveValueName(
         const v = process.env[envName];
         return v === undefined ? { unresolved: 'undefined' } : { value: v };
     }
-    // A non-scalar never ends the search (ADR-0008 point 3), so the reason a newer layer gave
+    // A non-scalar never ends the search, so the reason a newer layer gave
     // is carried down and only reported if no older entry produces a scalar.
     let blocked: UnresolvedReason | undefined;
     for (const entry of entries) {
         if ('alias' in entry) {
             if (entry.alias !== name) continue;
-            // The newest alias decides the name (ADR-0012 point 5), so its target's failure is
-            // the answer -- resolution does not fall back to older entries for the name itself.
+            // The newest alias decides the name, so its target's failure is the answer.
+            // Resolution does not fall back to older entries for the name itself.
             const target = entry.target;
             if (seen?.has(name)) return { unresolved: 'cycle', via: target };
             const r = resolveValueName(entries, target, allowEnvSet, new Set(seen).add(name));
@@ -240,7 +243,7 @@ export async function applySubstitution(
         (name) => unresolved.add(name),
     );
     for (const name of unresolved) {
-        // Re-resolve only the names that failed, to say which of ADR-0005 point 4's two cases it is.
+        // Re-resolve only the names that failed, to say why each one failed.
         const r = resolveValueName(entries, name, deps.runWide.allowEnvSet);
         const message = `Unresolved placeholder "{@ ${name} @}": ${explainUnresolved(r)}`;
         if (deps.strictVars) {

@@ -100,7 +100,7 @@ describe('hash', () => {
     });
 });
 
-describe('repeated hash keys (ADR-0011)', () => {
+describe('repeated hash keys', () => {
     test('a repeated values-file= is identical to the equivalent comma list', () => {
         const repeated = parseHashString('#values-file=:./package.json&values-file=release:releases.json');
         const commaList = parseHashString('#values-file=:./package.json,release:releases.json');
@@ -126,7 +126,7 @@ describe('repeated hash keys (ADR-0011)', () => {
     });
 });
 
-describe('declaration order (ADR-0012)', () => {
+describe('declaration order', () => {
     test('value options interleave in written order', () => {
         const info = parseHashString('#values-file=:a.json&values=v:1&value-alias=w:v&values-file=:b.json&value=v:2');
         expect(info.valueDecls).toEqual([
@@ -143,7 +143,7 @@ describe('declaration order (ADR-0012)', () => {
     });
 });
 
-describe('value= (ADR-0013)', () => {
+describe('value=', () => {
     test('splits at the first colon; commas and colons after it are literal', () => {
         const info = parseHashString(`#value=range:${e('1, 2, 3')}&value=url:https://x.dev`);
         expect(info.valueDecls).toEqual([

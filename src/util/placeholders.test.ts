@@ -55,7 +55,7 @@ describe('substituteInTree', () => {
     });
 });
 
-describe('name grammar (ADR-0001)', () => {
+describe('name grammar', () => {
     const resolve = (name: string) => (name === 'ok' || name === 'a-b' ? 'X' : undefined);
 
     test.each`

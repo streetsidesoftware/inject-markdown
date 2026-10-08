@@ -21,24 +21,28 @@ export interface InjectInfo {
     quote?: boolean;
     /** Indicate that markdown should be injected as code. */
     code?: string;
-    /** Bare `#markdown`: parse table cells as inline Markdown. See ADR-0008. */
+    /** Bare `#markdown`: parse table cells as inline Markdown. */
     markdown?: boolean | undefined;
-    /** Bare `#html-table`: emit an HTML table whose cells hold Markdown. See ADR-0010. */
+    /** Bare `#html-table`: emit an HTML table whose cells hold Markdown. */
     htmlTable?: boolean | undefined;
-    /** `rebase-links=false` keeps relative URLs as written. See docs/ADRs/relative-links/0002-default-on-with-opt-out.md. */
+    /** `rebase-links=false` keeps relative URLs as written. */
     rebaseLinks?: boolean | undefined;
-    /** Raw `header-rows` value; bare means 1. Validated when the table is built. See ADR-0002. */
+    /**
+     * Raw `header-rows` value.
+     * Bare means 1.
+     * Validated when the table is built.
+     */
     headerRows?: string | undefined;
-    /** Row window for tables, validated when the table is built. See ADR-0004. */
+    /** Row window for tables, validated when the table is built. */
     startRow?: string | undefined;
     endRow?: string | undefined;
     numRows?: string | undefined;
     /**
-     * `values=`, `value=`, `values-file=` and `value-alias=` entries in written order; the newest
-     * wins (ADR-0012). See ADR-0002, ADR-0007, ADR-0010, ADR-0013.
+     * `values=`, `value=`, `values-file=` and `value-alias=` entries in written order.
+     * The newest wins, whatever its option.
      */
     valueDecls?: ValueDeclaration[] | undefined;
-    /** Malformed `value=` occurrences, reported as directive errors (ADR-0013 point 3). */
+    /** Malformed `value=` occurrences, reported as directive errors. */
     valueErrors?: string[] | undefined;
     /** Bare `#vars` opt-in: scan for placeholders using run-wide and environment sources alone. */
     vars?: boolean | undefined;
@@ -94,7 +98,8 @@ export function parseHashString(hash: string): InjectInfo {
                 for (const [name, v] of parseValuesPairs(value)) valueDecls.push({ kind: 'value', name, value: v });
                 continue;
             case 'value': {
-                // A bare `#value` is indistinguishable from `#value=` and keeps its heading meaning (ADR-0013 point 3).
+                // A bare `#value` is indistinguishable from `#value=`.
+                // It keeps its heading meaning.
                 if (!value) break;
                 const pair = parseSingleValue(value);
                 if (pair) {
@@ -142,7 +147,7 @@ export function parseHashString(hash: string): InjectInfo {
                 info.rebaseLinks = parseFlagValue(value, true);
                 continue;
             case 'value-alias':
-                // Same `name:target` list shape as `values=` (ADR-0010 point 1).
+                // Same `name:target` list shape as `values=`.
                 for (const [name, target] of parseValuesPairs(value)) valueDecls.push({ kind: 'alias', name, target });
                 continue;
             case 'lines':
@@ -179,7 +184,7 @@ export function parseHashString(hash: string): InjectInfo {
     }
 
     // Kept even when empty, so a `values=`/`values-file=`/`value-alias=` that parsed to nothing still
-    // opts the directive in. A bare `value` is excluded: it keeps its heading meaning (ADR-0013 point 3).
+    // opts the directive in. A bare `value` is excluded: it keeps its heading meaning.
     if (valueDecls.length || hasValueKey(p)) info.valueDecls = valueDecls;
     if (valueErrors.length) info.valueErrors = valueErrors;
 

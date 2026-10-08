@@ -361,7 +361,8 @@ describe('template variables', () => {
         // Inline `values=`, auto-derived prefix, explicit prefix, root merge, and a values file declared
         // after `values=` all resolve `version` to "1.2.3".
         expect(count(written, 'npm install pkg@1.2.3')).toBe(5);
-        // The newest declaration wins whatever its option (ADR-0012): `value=` after `values-file=`.
+        // The newest declaration wins, whatever its option.
+        // Here, `value=` comes after `values-file=`.
         expect(count(written, 'npm install pkg@9.9.9')).toBe(1);
         // Not opted in (no `values=`/`values-file=`/`vars`) and a non-scalar values-file lookup both
         // leave the placeholder untouched, literally.
@@ -382,7 +383,7 @@ describe('template variables', () => {
         expect(messages).toContain('Unresolved placeholder "{@ version @}"');
     });
 
-    test('value= keeps commas and colons literal, and a malformed one is a directive error (ADR-0013)', async () => {
+    test('value= keeps commas and colons literal, and a malformed one is a directive error', async () => {
         const fsa = createFSA();
         const fi = new FileInjector(fsa, { cwd: valuesRoot, silent: true });
         const r = await fi.processFile('malformed-value.md');
@@ -440,7 +441,7 @@ describe('template variables', () => {
         expect(r.hasMessages).toBe(true);
     });
 
-    test('layers union per leaf: prefixed and root-merged values-file entries (ADR-0008)', async () => {
+    test('layers union per leaf: prefixed and root-merged values-file entries', async () => {
         const fsa = createFSA();
         const fi = new FileInjector(fsa, { cwd: layersRoot, silent: true });
         const r = await fi.processFile('README.md');
@@ -485,24 +486,24 @@ describe('template variables', () => {
         expect(r.hasErrors).toBe(false);
     });
 
-    test('a repeated hash key accumulates, matching the comma list (ADR-0011)', async () => {
+    test('a repeated hash key accumulates, matching the comma list', async () => {
         const fsa = createFSA();
         const fi = new FileInjector(fsa, { cwd: aliasRoot, silent: true });
         // Same directive as README.md's first section, spelled with `values-file=` repeated
-        // instead of comma-separated. Before ADR-0011 the first entry was dropped silently,
-        // so `name` — which only package.json supplies — was unresolved.
+        // instead of comma-separated.
+        // Dropping the first entry would leave `name` unresolved, because only package.json supplies it.
         const r = await fi.processFile('repeated.md');
         expect(r.file.value).toContain('name=demo version=2.5.0 date=2026-09-22');
         expect(r.hasErrors).toBe(false);
         expect(r.hasMessages).toBe(false);
     });
 
-    test('value-alias= redefines, chains, detects cycles and names both sides (ADR-0010)', async () => {
+    test('value-alias= redefines, chains, detects cycles and names both sides', async () => {
         const fsa = createFSA();
         const fi = new FileInjector(fsa, { cwd: aliasRoot, silent: true });
         const r = await fi.processFile('README.md');
         const written = r.file.value as string;
-        // The alias is declared after the values files, so it decides `version` (ADR-0012 point 5):
+        // The alias is declared after the values files, so it decides `version`:
         // it comes from releases.json, not from the root-merged package.json, while `name` still does.
         expect(written).toContain('name=demo version=2.5.0 date=2026-09-22');
         // a -> b -> release.latest.version
@@ -513,7 +514,7 @@ describe('template variables', () => {
         expect(r.hasErrors).toBe(false);
     });
 
-    test('any directive declaration is newer than every CLI declaration (ADR-0012 point 3)', async () => {
+    test('any directive declaration is newer than every run-wide declaration', async () => {
         const fsa = createFSA();
         const fi = new FileInjector(fsa, {
             cwd: aliasRoot,
@@ -525,7 +526,7 @@ describe('template variables', () => {
         expect(r.file.value).toContain('version=2.5.0');
     });
 
-    test('CLI declarations resolve newest first, aliases included (ADR-0012 points 4-5)', async () => {
+    test('run-wide declarations resolve newest first, aliases included', async () => {
         const fsa = createFSA();
         const run = async (valueDeclarations: ValueDeclaration[]) => {
             const fi = new FileInjector(fsa, { cwd: cliRoot, silent: true, valueDeclarations });
@@ -586,7 +587,7 @@ describe('template variables', () => {
         });
         const r = await fi.processFile('README.md');
         const written = r.file.value as string;
-        // Substitution runs per parsed cell (ADR-0006 point 3), so `1,2` must not add a column.
+        // Substitution runs per parsed cell, so `1,2` must not add a column.
         expect(written).toContain('| pkg   | 1,2           |');
         expect(written).not.toContain('| 1     | 2 |');
         // An unresolved placeholder in a cell is left as written.
@@ -603,7 +604,7 @@ describe('template variables', () => {
     });
 });
 
-describe('#markdown table cells (ADR-0008)', () => {
+describe('#markdown table cells', () => {
     async function processTables() {
         const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
         const r = await fi.processFile('README.md');
@@ -629,7 +630,7 @@ describe('#markdown table cells (ADR-0008)', () => {
     });
 });
 
-describe('#html-table (ADR-0010)', () => {
+describe('#html-table', () => {
     async function processTables() {
         const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
         const r = await fi.processFile('README.md');
@@ -652,7 +653,7 @@ describe('#html-table (ADR-0010)', () => {
     });
 });
 
-describe('row window (ADR-0004)', () => {
+describe('row window', () => {
     test('windows data rows and keeps the header', async () => {
         const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
         const written = (await fi.processFile('README.md')).file.value as string;
@@ -711,7 +712,7 @@ describe('row window (ADR-0004)', () => {
     });
 });
 
-describe('JSON table source (ADR-0011)', () => {
+describe('JSON table source', () => {
     test('renders each table form, windowed columns, and substituted nested strings', async () => {
         const fi = new FileInjector(createFSA(), { cwd: path.join(__root__, 'fixtures/tables'), silent: true });
         const written = (await fi.processFile('README.md')).file.value as string;
@@ -720,7 +721,7 @@ describe('JSON table source (ADR-0011)', () => {
         expect(written).toContain('<td>\n\n```json\n{\n  "v": "1.0"\n}\n```\n\n</td>');
         expect(written).toContain('| name  | role            | active | note |');
         expect(written).toContain('| name | born | tags | meta | role | active | note |');
-        // header-rows=0 drops the key header, so the pipe form numbers the columns (ADR-0011 point 9).
+        // header-rows=0 drops the key header, so the pipe form numbers the columns.
         expect(written).toContain('| 1     | 2    | 3                  | 4                     |');
     });
 

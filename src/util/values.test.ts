@@ -155,7 +155,8 @@ describe('getPath / setPath / treeFromFlatMap', () => {
     });
 
     test('one layer per pair keeps both names when one is a prefix of another', () => {
-        // One folded tree would lose `a` to `a.b`; separate layers keep both (ADR-0008 point 1).
+        // One folded tree would lose `a` to `a.b`.
+        // Separate layers keep both.
         const layers = layersFromPairs([
             ['a', '1'],
             ['a.b', '2'],
@@ -232,7 +233,7 @@ describe('readValuesFileLayer', () => {
             async (p: string) => `/root/${p}`,
             vi.fn(),
         );
-        // Last-listed first (ADR-0008 point 2), and `a.json` survives underneath it (point 3).
+        // Last-listed first, and `a.json` survives underneath it.
         expect(layers).toEqual([{ ns: { v: 2 } }, { ns: { v: 1, onlyInA: 'A' } }]);
         expect(resolveInLayers(layers, 'ns.v')).toEqual({ value: '2' });
         expect(resolveInLayers(layers, 'ns.onlyInA')).toEqual({ value: 'A' });
@@ -253,7 +254,7 @@ describe('readValuesFileLayer', () => {
 });
 
 describe('prototype safety', () => {
-    // Directive text is untrusted input (ADR-0003): no placeholder name may reach `Object.prototype`.
+    // Directive text is untrusted input: no placeholder name may reach `Object.prototype`.
     test.each`
         name
         ${'__proto__.polluted'}
@@ -358,7 +359,7 @@ describe('resolveInLayers', () => {
     });
 });
 
-describe('prefix grammar (ADR-0009)', () => {
+describe('prefix grammar', () => {
     // A colon only separates a valid prefix; otherwise the whole entry is a path, and its prefix
     // is derived from the base name (`undefined` when that isn't a valid segment).
     test.each`
@@ -409,7 +410,7 @@ describe('prefix grammar (ADR-0009)', () => {
         expect(deriveAutoPrefixFromPath(path)).toBe(prefix);
     });
 
-    test('an auto-derived prefix stays a single segment (ADR-0007 point 5 stands)', () => {
+    test('an auto-derived prefix stays a single segment', () => {
         expect(isValidPlaceholderSegment(deriveAutoPrefixFromPath('v1.2.json'))).toBe(false);
         expect(isValidPlaceholderSegment(deriveAutoPrefixFromPath('data.local.json'))).toBe(false);
     });
@@ -422,10 +423,7 @@ describe('prefix grammar (ADR-0009)', () => {
         ${'foo-'} | ${true}
         ${'-foo'} | ${false}
         ${'.foo'} | ${false}
-    `(
-        'isValidPlaceholderSegment($segment) === $valid (ADR-0001)',
-        ({ segment, valid }: { segment: string; valid: boolean }) => {
-            expect(isValidPlaceholderSegment(segment)).toBe(valid);
-        },
-    );
+    `('isValidPlaceholderSegment($segment) === $valid', ({ segment, valid }: { segment: string; valid: boolean }) => {
+        expect(isValidPlaceholderSegment(segment)).toBe(valid);
+    });
 });

@@ -35,7 +35,8 @@ describe('parseCellMarkdown', () => {
         expect(types).toEqual(expect.arrayContaining(['strong', 'emphasis', 'inlineCode', 'link', 'delete', 'html']));
     });
 
-    // Block syntax renders literally (ADR-0008 point 5); newlines become `<br />` (point 7).
+    // Block syntax renders literally.
+    // Newlines become `<br />`.
     test.each`
         value             | expected
         ${'a\nb'}         | ${'a<br />b'}

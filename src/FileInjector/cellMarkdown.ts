@@ -7,7 +7,7 @@ import { SKIP, visit } from 'unist-util-visit';
 
 /**
  * micromark flow (block) constructs switched off for cell parsing, so block syntax such as
- * `# Title` or `- item` falls through to a plain paragraph and renders literally (ADR-0008 point 5).
+ * `# Title` or `- item` falls through to a plain paragraph and renders literally.
  */
 const disabledBlockConstructs = [
     'blockQuote',
@@ -41,12 +41,12 @@ function createBlockProcessor() {
 }
 
 /**
- * Parse a table cell's text as a standalone Markdown document, blocks included (ADR-0010 point 6).
+ * Parse a table cell's text as a standalone Markdown document, blocks included.
  */
 export function parseCellBlocks(value: string): RootContent[] {
     blockProcessor ??= createBlockProcessor();
     const root = blockProcessor.parse(value);
-    // A definition would apply document-wide once emitted, so keep it as literal text (point 12).
+    // A definition would apply document-wide once emitted, so keep it as literal text.
     visit(root, (node, index, parent) => {
         if (node.type !== 'definition' && node.type !== 'footnoteDefinition') return;
         if (!parent || index === undefined) return;
@@ -59,8 +59,9 @@ export function parseCellBlocks(value: string): RootContent[] {
 }
 
 /**
- * Parse a table cell's text as inline GFM Markdown (ADR-0008).
- * Each line is parsed on its own; line breaks become `<br />` (point 7).
+ * Parse a table cell's text as inline GFM Markdown.
+ * Each line is parsed on its own.
+ * Line breaks become `<br />`.
  */
 export function parseCellMarkdown(value: string): PhrasingContent[] {
     processor ??= createProcessor();
@@ -83,7 +84,7 @@ function parseLine(p: ReturnType<typeof createProcessor>, line: string): Phrasin
 }
 
 /**
- * Keep a `|` from splitting the cell (ADR-0008 point 6). remark-stringify escapes it in text,
+ * Keep a `|` from splitting the cell. remark-stringify escapes it in text,
  * code and resource links, but not in raw HTML or autolinks.
  */
 function escapePipes(node: PhrasingContent): PhrasingContent {

@@ -7,7 +7,6 @@ const schemeRegExp = /^[a-z][a-z\d+.-]*:/i;
 
 /**
  * Is `url` path-relative: no scheme and not starting with `/` or `#`.
- * See docs/ADRs/relative-links/0001-rebase-scope.md point 3.
  */
 export function isPathRelativeUrl(url: string): boolean {
     return !!url && !schemeRegExp.test(url) && !url.startsWith('/') && !url.startsWith('#');
@@ -16,7 +15,6 @@ export function isPathRelativeUrl(url: string): boolean {
 /**
  * Rewrite `url`, written relative to `sourceUrl`, so it resolves the same from `hostUrl`.
  * Returns `url` unchanged when it isn't path-relative or both files share a directory.
- * See docs/ADRs/relative-links/0003-rebase-base-resolution.md and 0004-rebased-path-format.md.
  */
 export function rebaseUrl(url: string, sourceUrl: URL, hostUrl: URL): string {
     if (!isPathRelativeUrl(url)) return url;
@@ -43,7 +41,6 @@ export function rebaseUrl(url: string, sourceUrl: URL, hostUrl: URL): string {
 
 /**
  * Rebase the URLs of every `link`, `image` and `definition` node in `tree`, in place.
- * See docs/ADRs/relative-links/0001-rebase-scope.md.
  */
 export function rebaseLinks<T extends Nodes>(tree: T, sourceUrl: URL, hostUrl: URL): T {
     visit(tree, ['link', 'image', 'definition'], (node) => {

@@ -9,7 +9,7 @@ const people = JSON.stringify([
     { name: 'Grace', role: 'Admiral' },
 ]);
 
-describe('jsonToRows (ADR-0011)', () => {
+describe('jsonToRows', () => {
     test('columns are the union of keys in first-seen order; missing keys are empty', () => {
         expect(jsonToRows(people, all)).toEqual([
             ['name', 'born', 'role'],

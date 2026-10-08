@@ -60,7 +60,7 @@ describe('rowsToTable', () => {
         });
     });
 
-    test('a nested JSON value is compact text, or a code span with markdown (ADR-0011)', () => {
+    test('a nested JSON value is compact text, or a code span with markdown', () => {
         const rows = [['h'], [{ json: { x: 1 } }]];
         expect(rowsToTable(rows).children[1].children[0].children).toEqual([{ type: 'text', value: '{"x":1}' }]);
         expect(rowsToTable(rows, { markdown: true }).children[1].children[0].children).toEqual([
@@ -68,7 +68,7 @@ describe('rowsToTable', () => {
         ]);
     });
 
-    describe('header-rows (ADR-0002)', () => {
+    describe('headerRows', () => {
         const texts = (table: ReturnType<typeof rowsToTable>) =>
             table.children[0].children.map((c) => c.children.map((n) => ('value' in n ? n.value : '')).join(''));
 
