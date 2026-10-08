@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { Command, CommanderError } from 'commander';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import * as app from './app.mjs';
 
@@ -22,6 +22,29 @@ describe('app', () => {
         const argv = createArgv('--help');
         command.exitOverride(errorHandler);
         await expect(app.run(command, argv)).rejects.toBeInstanceOf(CommanderError);
+    });
+
+    describe('help width', () => {
+        afterEach(() => {
+            vi.unstubAllEnvs(); // cspell:ignore unstub
+        });
+
+        test.each`
+            columns
+            ${'72'}
+            ${'60'}
+        `('help fits in COLUMNS=$columns', async ({ columns }) => {
+            vi.stubEnv('COLUMNS', columns);
+            const width = Number(columns);
+            const command = new Command();
+            let out = '';
+            command.configureOutput({ writeOut: (str) => (out += str) });
+            command.exitOverride(errorHandler);
+            await expect(app.run(command, createArgv('--help'))).rejects.toBeInstanceOf(CommanderError);
+
+            expect(out).toContain('Usage: inject-markdown');
+            expect(out.split('\n').filter((line) => line.length > width)).toEqual([]);
+        });
     });
 
     test.each`

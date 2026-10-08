@@ -8,6 +8,7 @@ import * as path from 'path';
 import { type Options, processGlobs } from './processor/process.mjs';
 import { formatSummary } from './reporting/formatSummary.mjs';
 import { OptionError } from './util/errors.js';
+import { getOutputWidth } from './util/outputWidth.js';
 import { parseValuesFileEntry, type ValueDeclaration } from './util/values.js';
 
 async function version(): Promise<string> {
@@ -165,6 +166,13 @@ export async function app(program = defaultCommand): Promise<Command> {
         });
 
     program.showHelpAfterError();
+    program.configureOutput({
+        getOutHelpWidth: () => getOutputWidth(process.stdout) ?? 80,
+        getErrHelpWidth: () => getOutputWidth(process.stderr) ?? 80,
+    });
+    // Commander stops wrapping when the description column is under 40 wide.
+    // That's too wide for narrow output.
+    program.configureHelp({ minWidthToWrap: 20 });
     return program;
 }
 

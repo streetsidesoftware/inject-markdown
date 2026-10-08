@@ -577,6 +577,12 @@ A values file's `prefix` is a dotted name for its values, or `''` to put its key
 
 ### CLI options
 
+Help fits the width of your terminal. To use a different width, set the `COLUMNS` environment variable:
+
+```sh
+COLUMNS=60 inject-markdown --help
+```
+
 <details>
 <summary><code>inject-markdown --help</code></summary>
 
@@ -594,32 +600,34 @@ Options:
   --no-must-find-files           No error if files are not found.
   --output-dir <dir>             Output Directory
   --cwd <dir>                    Current Directory
-  --allow-outside-root <dir>     Allow local @@inject references to resolve into
-                                 <dir>, outside the injection root (cwd).
-                                 Repeatable.
-  --value <name=val>             Set a run-wide {@ name @} placeholder value.
-                                 Repeatable; the last --value, --values-file or
-                                 --value-alias defining a name wins.
+  --allow-outside-root <dir>     Allow local @@inject references to
+                                 resolve into <dir>, outside the
+                                 injection root (cwd). Repeatable.
+  --value <name=val>             Set a run-wide {@ name @} placeholder
+                                 value. Repeatable; the last --value,
+                                 --values-file or --value-alias defining
+                                 a name wins.
   --values-file <[prefix:]path>  Add a run-wide JSON file of {@ name @}
-                                 placeholder values, resolved relative to --cwd.
-                                 Repeatable.
+                                 placeholder values, resolved relative
+                                 to --cwd. Repeatable.
   --allow-env <name>             Allow a directive to reference the OS
-                                 environment variable <name> via {@ env.name @}.
-                                 Repeatable.
-  --value-alias <new=target>     Resolve the {@ new @} placeholder as if it were
-                                 {@ target @}. Repeatable; ordered with --value
-                                 and --values-file.
-  --strict-vars                  Treat an unresolved {@ name @} placeholder as a
-                                 directive error.
-  --no-rebase-links              Keep relative links in injected Markdown as
-                                 written instead of rebasing them.
+                                 environment variable <name> via {@
+                                 env.name @}. Repeatable.
+  --value-alias <new=target>     Resolve the {@ new @} placeholder as if
+                                 it were {@ target @}. Repeatable;
+                                 ordered with --value and --values-file.
+  --strict-vars                  Treat an unresolved {@ name @}
+                                 placeholder as a directive error.
+  --no-rebase-links              Keep relative links in injected
+                                 Markdown as written instead of rebasing
+                                 them.
   --clean                        Remove the injected content.
   --no-inject-only               Update the whole file.
   --verbose                      Verbose output.
   --silent                       Only output errors.
   --no-stop-on-errors            Do not stop if an error occurs.
-  --write-on-error               write the file even if an injection error
-                                 occurs.
+  --write-on-error               write the file even if an injection
+                                 error occurs.
   --color                        Force color.
   --no-color                     Do not use color.
   --no-summary                   Do not show the summary
