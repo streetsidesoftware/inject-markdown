@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.2.0](https://github.com/streetsidesoftware/inject-markdown/compare/v6.1.0...v6.2.0) (2026-10-08)
+
+
+### Features
+
+* add a typed API to inject files without the CLI ([#869](https://github.com/streetsidesoftware/inject-markdown/issues/869)) ([bbb2c70](https://github.com/streetsidesoftware/inject-markdown/commit/bbb2c709c6d0ad8ed2cd88c6352db94aefaaa368))
+
+
+### Bug Fixes
+
+* Wrap help in narrow terminals and respect COLUMNS ([#876](https://github.com/streetsidesoftware/inject-markdown/issues/876)) ([1a0105e](https://github.com/streetsidesoftware/inject-markdown/commit/1a0105e0c23fb02a9e38f71c25dee42265400541))
+
 ## [6.1.0](https://github.com/streetsidesoftware/inject-markdown/compare/v6.0.0...v6.1.0) (2026-09-23)
 
 
