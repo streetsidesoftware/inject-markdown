@@ -546,8 +546,8 @@ async function processFileInjections(
             }
             const vFile = await resolveAndReadFile(fileName);
             const content = extractLines(extractContent(vFile), lines);
-            // Substitution runs on the parsed cell values, per ADR-0006 point 3 — substituting into
-            // the raw text first would let a value containing the delimiter add phantom columns.
+            // Substitution runs on the parsed cell values.
+            // Substituting into the raw text first would let a value containing the delimiter add phantom columns.
             const { rows, tableOptions } = isJson
                 ? jsonTableRows(content, window, headerRows)
                 : delimitedTableRows(content, fileName, window, headerRows);
@@ -560,13 +560,13 @@ async function processFileInjections(
                     }
                 }
             });
-            // `#html-table` wins over `#markdown` when both are given (ADR-0010 point 2).
+            // `htmlTable` wins over `markdown` when both are set.
             const table = toRoot(
                 info.htmlTable
                     ? rowsToHtmlTable(rows, tableOptions)
                     : rowsToTable(rows, { ...tableOptions, markdown: info.markdown }),
             );
-            // Only Markdown cells hold link nodes (ADR-0005 point 3).
+            // Only Markdown cells hold link nodes.
             const root = info.htmlTable || info.markdown ? maybeRebaseLinks(table, fileName, info) : table;
             return { root, info };
         } catch (e) {
@@ -584,8 +584,8 @@ async function processFileInjections(
     function delimitedTableRows(content: string, fileName: URL, window: RowWindow, headerRows: number): TableRows {
         const delimiter = delimiterForExtension(path.extname(fileName.pathname));
         const parsed = parseDelimitedText(content, delimiter);
-        // The window counts data rows only, after the header rows (ADR-0004). A file shorter
-        // than `header-rows` is all header and no data.
+        // The window counts data rows only, after the header rows.
+        // A file shorter than `headerRows` is all header and no data.
         const header = parsed.slice(0, headerRows);
         const rows = [...header, ...applyRowWindow(parsed.slice(headerRows), window)];
         const tableOptions = {
@@ -597,7 +597,10 @@ async function processFileInjections(
         return { rows, tableOptions };
     }
 
-    /** The keys are the one header row; `header-rows=0` drops it (ADR-0011 point 9). */
+    /**
+     * The keys are the one header row.
+     * A `headerRows` of 0 drops it.
+     */
     function jsonTableRows(content: string, window: RowWindow, headerRows: number): TableRows {
         const [keys, ...data] = jsonToRows(content, window);
         if (headerRows) return { rows: [keys, ...data], tableOptions: { headerRows } };
@@ -642,7 +645,7 @@ async function processFileInjections(
             await applySubstitution(info, directive.node, substitutionDeps, (resolve, onUnresolved) => {
                 substituteInTree(markdown, resolve, onUnresolved);
             });
-            // A code block shows the source verbatim, so its links are left as written (ADR-0005 point 1).
+            // A code block shows the source verbatim, so its links are left as written.
             const root =
                 info.code !== undefined || info.lang !== undefined
                     ? toRoot(toCode(info.lang || 'markdown', markdown))
@@ -710,7 +713,7 @@ async function processFileInjections(
 
     /**
      * Rebase `root`'s relative URLs from `sourceUrl` (as written in the directive, not the realpath)
-     * onto the host file, unless opted out. See docs/ADRs/relative-links/.
+     * onto the host file, unless opted out.
      */
     function maybeRebaseLinks(root: Root, sourceUrl: URL, info: InjectInfo): Root {
         if (!(info.rebaseLinks ?? options.rebaseLinks ?? true)) return root;

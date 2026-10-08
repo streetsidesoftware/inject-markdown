@@ -4,8 +4,8 @@ import type { CellValue } from './Table.js';
 type JsonObject = Record<string, unknown>;
 
 /**
- * Turn a JSON table source into rows: the key header, then one row per element in the window
- * (ADR-0011). Throws on invalid JSON or any shape other than a non-empty array of objects.
+ * Turn a JSON table source into rows: the key header, then one row per element in the window.
+ * Throws on invalid JSON or any shape other than a non-empty array of objects.
  */
 export function jsonToRows(text: string, window: RowWindow): CellValue[][] {
     const data = parseJson(text);
@@ -18,12 +18,15 @@ export function jsonToRows(text: string, window: RowWindow): CellValue[][] {
     });
     const objects = data as JsonObject[];
     const windowed = applyRowWindow(objects, window);
-    // An empty window still gets a header: all keys in the file (point 4).
+    // An empty window still gets a header: all keys in the file.
     const columns = collectKeys(windowed.length ? windowed : objects);
     return [columns, ...windowed.map((obj) => columns.map((key) => toCellValue(obj, key)))];
 }
 
-/** Apply `fn` to every string leaf of a nested JSON value; keys are left alone (point 8). */
+/**
+ * Apply `fn` to every string leaf of a nested JSON value.
+ * Keys are left alone.
+ */
 export function mapJsonStrings(value: unknown, fn: (s: string) => string): unknown {
     if (typeof value === 'string') return fn(value);
     if (Array.isArray(value)) return value.map((v) => mapJsonStrings(v, fn));
