@@ -19,7 +19,7 @@ function render2(rows: CellValue[][], headerRows: number): string {
         .stringify({ type: 'root', children: rowsToHtmlTable(rows, { headerRows }) });
 }
 
-describe('rowsToHtmlTable (ADR-0010)', () => {
+describe('rowsToHtmlTable', () => {
     test('plain cells stay on one line with HTML-escaped text', () => {
         expect(
             render([
@@ -69,7 +69,7 @@ describe('rowsToHtmlTable (ADR-0010)', () => {
         expect(render([['a', 'b'], ['1']])).toContain('<td>1</td>\n<td></td>');
     });
 
-    // ADR-0010 point 12: a definition must not apply to the rest of the document.
+    // A definition must not apply to the rest of the document.
     test.each`
         value                                     | expected
         ${'[a]: https://x.y'}                     | ${'<td>[a]: https://x.y</td>'}
@@ -84,13 +84,13 @@ describe('rowsToHtmlTable (ADR-0010)', () => {
         expect(out).not.toMatch(/^\[\^1\]:/m);
     });
 
-    test('a nested JSON value becomes a pretty-printed json code block (ADR-0011)', () => {
+    test('a nested JSON value becomes a pretty-printed json code block', () => {
         expect(render([['h'], [{ json: { x: [1] } }]])).toContain(
             '<td>\n\n```json\n{\n  "x": [\n    1\n  ]\n}\n```\n\n</td>',
         );
     });
 
-    test('header-rows=2 gives two header rows (ADR-0010 point 4)', () => {
+    test('headerRows: 2 gives two header rows', () => {
         const out = render2([['a'], ['b'], ['c']], 2);
         expect(out).toContain('<thead>\n<tr>\n<th>a</th>\n</tr>\n<tr>\n<th>b</th>\n</tr>\n</thead>');
         expect(out).toContain('<td>c</td>');

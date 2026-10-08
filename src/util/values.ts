@@ -80,23 +80,24 @@ export type ValueDeclaration = ValuePairDeclaration | ValuesFileDeclaration | Va
 const validPlaceholderSegment = /^[A-Za-z0-9_][A-Za-z0-9_-]*$/;
 
 /**
- * A values-file prefix, per ADR-0009 point 1: the placeholder-name grammar plus a two-character
- * minimum, which is what keeps a one-character Windows drive letter from ever being read as one.
+ * A values-file prefix: the placeholder-name grammar, at least two characters long.
+ * The minimum keeps a one-character Windows drive letter from ever being read as a prefix.
  */
 const validValuesFilePrefix = /^(?=.{2,})[A-Za-z0-9_][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_][A-Za-z0-9_-]*)*$/;
 
-/** A leading `<letter>:`, which is a Windows drive and not part of the basename (ADR-0009 point 5). */
+/** A leading `<letter>:`, which is a Windows drive and not part of the basename. */
 const driveLetterPrefix = /^[A-Za-z]:/;
 
 /**
- * Segments that would reach `Object.prototype` if walked or written. They match the ADR-0001
+ * Segments that would reach `Object.prototype` if walked or written. They match the placeholder-name
  * grammar, so they have to be rejected by name rather than by the character class.
  */
 const unsafeSegments = new Set(['__proto__', 'constructor', 'prototype']);
 
 /**
- * A placeholder-name segment: `[A-Za-z0-9_][A-Za-z0-9_-]*`, per ADR-0001 point 2 — a hyphen may
- * appear inside a segment but never at its start — excluding prototype-reaching names.
+ * A placeholder-name segment: `[A-Za-z0-9_][A-Za-z0-9_-]*`.
+ * A hyphen may appear inside a segment but never at its start.
+ * Prototype-reaching names are excluded.
  */
 export function isValidPlaceholderSegment(name: string): boolean {
     return validPlaceholderSegment.test(name) && !unsafeSegments.has(name);
@@ -181,7 +182,7 @@ export function parseValuesFileEntry(raw: string): ValuesFileEntry | undefined {
     if (isQuoted(entry)) {
         return withDerivedPrefix(unquote(entry));
     }
-    // The colon separates only when what precedes it is a prefix (ADR-0009 point 1). Anything
+    // The colon separates only when what precedes it is a prefix. Anything
     // else -- a drive letter, `..`, a path-shaped head -- leaves the whole entry a path.
     const idx = entry.indexOf(':');
     if (idx > 0) {
@@ -240,9 +241,8 @@ function unquote(s: string): string {
 }
 
 /**
- * Strip a path's Windows drive, directory and final extension to derive its auto prefix, per
- * ADR-0007 point 2 and ADR-0009 point 5. The drive goes first, so `c:package.json` derives
- * `package` rather than the unusable `c:package`.
+ * Strip a path's Windows drive, directory and final extension to derive its auto prefix.
+ * The drive goes first, so `c:package.json` derives `package` rather than the unusable `c:package`.
  */
 export function deriveAutoPrefixFromPath(p: string): string {
     const normalized = p.replace(driveLetterPrefix, '').replace(/\\/g, '/');
@@ -292,20 +292,22 @@ export function setPath(tree: JsonObject, name: string, value: JsonValue): void 
     cur[segments[segments.length - 1]] = value;
 }
 
-/** A JSON object/array is never a valid substitution value, per ADR-0005 point 3. */
+/** A JSON object/array is never a valid substitution value. */
 export function isScalar(v: JsonValue | undefined): v is JsonScalar {
     return v !== undefined && v !== null && (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean');
 }
 
 /**
- * One assignment's worth of values, per ADR-0008 point 1. Layers are never combined; resolution
- * walks an ordered list of them.
+ * One assignment's worth of values.
+ * Layers are never combined.
+ * Resolution walks an ordered list of them.
  */
 export type ValueLayer = JsonObject;
 
 /**
- * How a name failed to resolve, so the caller can report which of ADR-0005 point 4's two cases it
- * is: nothing defines the name at all, or every layer holding it holds a branch rather than a leaf.
+ * How a name failed to resolve, so the caller can report which case it is:
+ * - Nothing defines the name at all.
+ * - Every layer holding it holds a branch rather than a leaf.
  */
 export type UnresolvedReason = 'undefined' | 'object' | 'array' | 'null' | 'cycle';
 
@@ -332,15 +334,15 @@ export function layerFromPair(name: string, value: string): ValueLayer {
     return layer;
 }
 
-/** Walk an ordered layer list, taking the first layer holding `name` as a scalar, per ADR-0008 point 3. */
+/** Walk an ordered layer list, taking the first layer holding `name` as a scalar. */
 export function resolveInLayers(layers: readonly ValueLayer[], name: string): ResolveResult {
     let blocked: UnresolvedReason | undefined;
     for (const layer of layers) {
         const v = getPath(layer, name);
         if (v === undefined) continue;
         if (isScalar(v)) return { value: String(v) };
-        // A non-scalar or null never resolves and never stops the search (ADR-0008 points 3-4);
-        // remember the most specific one seen so the warning can name it.
+        // A non-scalar or null never resolves and never stops the search.
+        // Remember the most specific one seen so the warning can name it.
         blocked ??= v === null ? 'null' : Array.isArray(v) ? 'array' : 'object';
     }
     return { unresolved: blocked ?? 'undefined' };
@@ -377,7 +379,7 @@ export async function readValuesFileLayer(
         return layer;
     }
     const layer = emptyTree();
-    // `setPath` so a dotted explicit prefix nests, per ADR-0009 point 3.
+    // `setPath` so a dotted explicit prefix nests.
     setPath(layer, entry.prefix, data);
     return layer;
 }

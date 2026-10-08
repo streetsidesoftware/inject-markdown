@@ -2,7 +2,7 @@ import type { Html, PhrasingContent, RootContent, Table, TableCell, TableRow } f
 
 import { parseCellBlocks, parseCellMarkdown } from './cellMarkdown.js';
 
-/** A nested JSON object or array, rendered per table form (ADR-0011 point 5). */
+/** A nested JSON object or array, rendered per table form. */
 export interface JsonCell {
     json: object;
 }
@@ -15,20 +15,24 @@ export function isJsonCell(value: unknown): value is JsonCell {
 }
 
 export interface HeaderRowsOption {
-    /** Leading rows that form the header; default 1. See ADR-0002. */
+    /**
+     * Leading rows that form the header.
+     * @default 1
+     */
     headerRows?: number | undefined;
     /** Column count when `rows` can't supply it, e.g. no header and an empty row window. */
     columnCount?: number | undefined;
 }
 
 export interface RowsToTableOptions extends HeaderRowsOption {
-    /** Parse cell text as inline Markdown instead of literal text. See ADR-0008. */
+    /** Parse cell text as inline Markdown instead of literal text. */
     markdown?: boolean | undefined;
 }
 
 /**
  * Convert parsed rows into a GFM table. The first `headerRows` rows are joined per column into the
- * single GFM header row with `<br />`; with none, the header is the column numbers (ADR-0002).
+ * single GFM header row with `<br />`.
+ * With none, the header is the column numbers.
  */
 export function rowsToTable(rows: CellValue[][], options: RowsToTableOptions = {}): Table {
     const columnCount = options.columnCount ?? widestRow(rows);
@@ -82,7 +86,7 @@ export function rowsToTable(rows: CellValue[][], options: RowsToTableOptions = {
 }
 
 /**
- * Convert parsed rows into an HTML `<table>` whose cells hold Markdown (ADR-0010). The first
+ * Convert parsed rows into an HTML `<table>` whose cells hold Markdown. The first
  * `headerRows` rows (default 1) each become a `<thead>` row; with none there is no `<thead>`.
  * Returns sibling nodes: `html` nodes for the tags, interleaved with the parsed
  * blocks of each cell that has markup. The blank line remark-stringify puts between siblings is what
@@ -128,7 +132,8 @@ export function rowsToHtmlTable(rows: CellValue[][], options: HeaderRowsOption =
     const { header, body } = splitHeader(rows, options.headerRows);
 
     html += '<table>\n';
-    // Each header row is a real row; with none there is no `<thead>` (ADR-0010 point 4).
+    // Each header row is a real row.
+    // With none, there is no `<thead>`.
     if (header.length) {
         html += '<thead>\n';
         header.forEach((row) => addRow('th', row));
@@ -153,7 +158,7 @@ function splitHeader(rows: CellValue[][], headerRows = 1): { header: CellValue[]
 
 /**
  * The text of a cell that can stay on one line: empty, or a single paragraph of plain text with no
- * line break (ADR-0010 point 8). `undefined` means the cell has markup and must be blank-line wrapped.
+ * line break. `undefined` means the cell has markup and must be blank-line wrapped.
  */
 function plainParagraphText(blocks: RootContent[]): string | undefined {
     if (!blocks.length) return '';

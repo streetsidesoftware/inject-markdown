@@ -4,7 +4,7 @@ import { applyRowWindow, defaultNumRows, resolveHeaderRows, resolveRowWindow } f
 
 const rows = [1, 2, 3, 4, 5];
 
-describe('rowWindow (ADR-0004)', () => {
+describe('rowWindow', () => {
     test.each`
         options                                          | expected
         ${{}}                                            | ${[1, 2, 3, 4, 5]}
