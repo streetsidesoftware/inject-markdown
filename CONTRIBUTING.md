@@ -62,6 +62,17 @@ The script writes `content/help.txt` from `--help`, hydrates every file under `c
 - `docs/guide/*.md` — hand-written user guides for rules too detailed for the README. Not generated.
 - `static/footer.md` — the footer.
 
+### Code blocks: 72 characters at most
+
+`README.md` is also the package page on npm, which doesn't display long code-block lines well. Keep every line inside a code block in `README.md` to 72 characters or fewer. The limit applies to the generated `README.md`, so fix a long line in its source:
+
+- Prose: break the line. Markdown keeps it one paragraph.
+- Tables: shorten the cell text. Every row is padded to the widest cell.
+- Code: inject shorter lines or a different snippet.
+- `--help`: already generated with `COLUMNS=72`, so it wraps to fit.
+
+The one exception is the GitHub recipe: its permalink and `@@inject-end` marker can't be shorter.
+
 ### Adding a recipe
 
 Recipes show the real output of a directive rather than a hand-written copy, so the example can't drift from the tool's behavior:
