@@ -1,6 +1,6 @@
 {
   "name": "inject-markdown",
-  "version": "6.1.0",
+  "version": "6.2.0",
   "description": "Command line tool and library to inject files into markdown files.",
   "publishConfig": {
     "access": "public",
