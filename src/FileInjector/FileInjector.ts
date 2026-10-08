@@ -288,7 +288,6 @@ async function processFileInjections(
     };
     setColor();
     const logger = options.logger;
-    // console.log('File: %s\nOptions: %o', file.path, options);
     const yellow = chalk.yellow;
     const green = chalk.green;
     const gray = chalk.gray;
@@ -356,7 +355,6 @@ async function processFileInjections(
                 processFileResult.skipped = true;
             }
         }
-        // console.log('Result: %o', { hasErrors, hasChanged, stale, injectionsFound });
         return processFileResult;
     }
 
@@ -671,7 +669,6 @@ async function processFileInjections(
             const readFrom = await resolveWithinInjectionRoot(file);
             return await readFile(fs, file, 'utf8', readFrom);
         } catch (e) {
-            // console.log('resolveAndReadFile: (%s) %o', file.href, e);
             // A denial already names the boundary and the way around it; every other failure is
             // reported as a plain read failure, without saying why.
             if (e instanceof OutsideInjectionRootError) throw e;

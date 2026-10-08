@@ -146,7 +146,6 @@ export async function app(program = defaultCommand): Promise<Command> {
         .option('--dry-run', 'Process the files, but do not write.')
         .version(await version())
         .action(async (files: string[], optionsCli: CliOptions, _command: Command) => {
-            // console.log('Options: %o', optionsCli);
             program.showHelpAfterError(false);
             // A bad value flag or values file is operator input, not a document error.
             // Report it as a CLI message rather than letting it escape as an uncaught exception.

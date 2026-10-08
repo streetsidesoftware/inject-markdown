@@ -70,7 +70,6 @@ async function findFiles(globs: string[], cwd: PathLike | undefined) {
         globs.map((a) => a.trim()).filter((a) => !!a),
         options,
     );
-    // console.log('%o', files);
     return files.filter((f) => path.extname(f) in allowedFileExtensions);
 }
 
