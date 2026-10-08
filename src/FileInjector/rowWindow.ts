@@ -26,7 +26,10 @@ export function resolveRowWindow(options: RowWindowOptions): RowWindow {
     return { first, last: endRow === undefined ? last : Math.min(last, endRow) };
 }
 
-/** The data rows inside the window; empty when it is out of range or `last < first`. */
+/**
+ * The data rows inside the window.
+ * Empty when it is out of range or `last < first`.
+ */
 export function applyRowWindow<T>(rows: T[], window: RowWindow): T[] {
     if (window.last < window.first) return [];
     return rows.slice(window.first - 1, window.last);

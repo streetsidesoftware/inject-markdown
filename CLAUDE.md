@@ -24,9 +24,9 @@ Assume an expert-programmer reader. Write for reading, not to save space:
 
 - Keep comments short by leaving out what the reader doesn't need, not by compressing.
 - Don't chain clauses together with semicolons or commas to save lines. One idea per sentence.
-- If it is a list, make it a list: one item per line.
+- If it is a list, make it a list: one item per line. Option docs are read in VS Code hovers, which join plain lines into one paragraph, so a field whose comment describes several values (true/false/undefined, levels) needs `- ` Markdown list items.
 - Cover What and, where non-obvious, Why; only explain How if it isn't already obvious from the code.
-- A comment describes its own level; it doesn't refer to the code that calls it (the CLI, the API, directive syntax).
+- A comment describes its own level; it doesn't refer to the code that calls it (the CLI, the API, directive syntax). Parsers may name the syntax they parse.
 - Don't cite ADRs; state the rule itself.
 
 ## Code-specific gotchas

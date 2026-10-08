@@ -21,9 +21,11 @@ const appFsa = nodeFsa();
 
 /**
  * Canned bodies for the remote references the fixtures contain, so the suite never makes a live
- * request — a network hiccup would otherwise fail an unrelated assertion in an unrelated test.
- * Keyed by the reference exactly as written: `normalizePath` percent-encodes a remote URL's `#`
- * into the key rather than stripping it, so the fragment is part of the identity.
+ * request.
+ * A network hiccup would otherwise fail an unrelated assertion in an unrelated test.
+ * Keyed by the reference exactly as written.
+ * `normalizePath` percent-encodes a remote URL's `#` into the key rather than stripping it, so
+ * the fragment is part of the identity.
  */
 const remoteResponses: Record<string, string> = {
     'https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe/src/app.mts#L15-L19': readFileSync(
@@ -203,8 +205,8 @@ describe('injectOnly', () => {
         const lines = section.split('\n');
         expect(lines[0]).toBe('- Prices');
         for (const line of lines.slice(1)) {
-            // every continuation line stays indented under the list item;
-            // a blank line is allowed to be indentation-only.
+            // Every continuation line stays indented under the list item.
+            // A blank line is allowed to be indentation-only.
             expect(line === '  ' || line.startsWith('  ')).toBe(true);
         }
         expect(section).toContain('  <!--- @@inject: parts/prices.md --->');
@@ -278,7 +280,7 @@ describe('injection root boundary', () => {
         const fsa = createFSA();
         const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
         const r = await fi.processFile('escape-markdown.md');
-        // Fatal, unlike a merely missing markdown file, so `--stop-on-errors` applies.
+        // Fatal, unlike a merely missing markdown file, so `stopOnErrors` applies.
         expect(r.hasErrors).toBe(true);
         expect(r.file.messages.map(String).join('\n')).toContain(
             'Access denied: "../outside/secret.md" is outside the injection root',
@@ -358,14 +360,19 @@ describe('template variables', () => {
         const r = await fi.processFile('README.md');
         const written = r.file.value as string;
 
-        // Inline `values=`, auto-derived prefix, explicit prefix, root merge, and a values file declared
-        // after `values=` all resolve `version` to "1.2.3".
+        // These all resolve `version` to "1.2.3":
+        // - inline `values=`
+        // - an auto-derived prefix
+        // - an explicit prefix
+        // - a root merge
+        // - a values file declared after `values=`
         expect(count(written, 'npm install pkg@1.2.3')).toBe(5);
         // The newest declaration wins, whatever its option.
         // Here, `value=` comes after `values-file=`.
         expect(count(written, 'npm install pkg@9.9.9')).toBe(1);
-        // Not opted in (no `values=`/`values-file=`/`vars`) and a non-scalar values-file lookup both
-        // leave the placeholder untouched, literally.
+        // These both leave the placeholder untouched, literally:
+        // - a directive that isn't opted in (no `values=`, `values-file=` or `vars`)
+        // - a values-file lookup that finds a non-scalar
         expect(count(written, 'npm install pkg@{@ version @}')).toBe(2);
         // A backslash-escaped placeholder is unescaped to literal text, not substituted.
         expect(written).toContain('Literal: {@ version @}');
@@ -446,8 +453,8 @@ describe('template variables', () => {
         const fi = new FileInjector(fsa, { cwd: layersRoot, silent: true });
         const r = await fi.processFile('README.md');
         const written = r.file.value as string;
-        // Last-listed wins on the shared name, but the earlier entry's own names survive —
-        // including a nested branch both files define.
+        // Last-listed wins on the shared name.
+        // The earlier entry's own names survive, including a nested branch both files define.
         expect(written).toContain('v=fromB a=A b=B deepA=yes deepB=yes');
         expect(written).toContain('v=fromB a=A b=B deepA=yes');
         // A branch, an array and a null are all unresolved, each naming its kind.
@@ -467,7 +474,8 @@ describe('template variables', () => {
             valueDeclarations: [value('a', '1'), value('a.b', '2')],
         });
         const r = await fi.processFile('cli-nested.md');
-        // One folded tree would lose `a` to `a.b`; one layer per flag keeps both.
+        // One folded tree would lose `a` to `a.b`.
+        // One layer per declaration keeps both.
         expect(r.file.value).toContain('a=1 ab=2');
         expect(r.hasErrors).toBe(false);
     });
@@ -475,7 +483,7 @@ describe('template variables', () => {
     test('a non-scalar in a higher-precedence source falls through to a lower one', async () => {
         const fsa = createFSA();
         // The directive's `values=x.y:...` creates an object at `x` as a side effect of the dotted
-        // name. The lower-precedence CLI `--value x=...` scalar must still resolve `{@ x @}`.
+        // name. The lower-precedence run-wide `value` declaration must still resolve `{@ x @}`.
         const fi = new FileInjector(fsa, {
             cwd: layersRoot,
             silent: true,
@@ -503,8 +511,9 @@ describe('template variables', () => {
         const fi = new FileInjector(fsa, { cwd: aliasRoot, silent: true });
         const r = await fi.processFile('README.md');
         const written = r.file.value as string;
-        // The alias is declared after the values files, so it decides `version`:
-        // it comes from releases.json, not from the root-merged package.json, while `name` still does.
+        // The alias is declared after the values files, so it decides `version`.
+        // `version` comes from releases.json, not from the root-merged package.json.
+        // `name` still comes from package.json.
         expect(written).toContain('name=demo version=2.5.0 date=2026-09-22');
         // a -> b -> release.latest.version
         expect(written).toContain('a=2.5.0');
@@ -522,7 +531,7 @@ describe('template variables', () => {
             valueDeclarations: [alias('version', 'name'), value('version', 'fromCliValue')],
         });
         const r = await fi.processFile('README.md');
-        // The directive's own alias wins over both CLI declarations.
+        // The directive's own alias overrides both run-wide declarations.
         expect(r.file.value).toContain('version=2.5.0');
     });
 
@@ -532,7 +541,8 @@ describe('template variables', () => {
             const fi = new FileInjector(fsa, { cwd: cliRoot, silent: true, valueDeclarations });
             return (await fi.processFile('README.md')).file.value as string;
         };
-        // cli-value.txt reads `{@ fromCli @}`; cliData.json supplies `town` under the `cliData` prefix.
+        // cli-value.txt reads `{@ fromCli @}`.
+        // cliData.json supplies `town` under the `cliData` prefix.
         expect(await run([value('fromCli', 'old'), value('fromCli', 'new')])).toContain('Value: new');
         expect(
             await run([alias('fromCli', 'cliData.town'), valuesFile('cliData.json'), value('fromCli', 'v')]),
@@ -560,7 +570,7 @@ describe('template variables', () => {
                 silent: true,
                 valueDeclarations: [alias('token', 'env.TV_ALIAS_VAR')],
             });
-            // Without --allow-env the alias resolves through the namespace and finds nothing.
+            // Without `allowEnv` the alias resolves through the namespace and finds nothing.
             expect((await denied.processFile('README.md')).file.value).toContain('token={@ token @}');
         } finally {
             if (previous === undefined) delete process.env.TV_ALIAS_VAR;
@@ -809,11 +819,13 @@ function createFSA(): FSA {
 }
 
 /**
- * The suite is offline by design. A remote reference has to be seeded in `remoteResponses`;
- * reaching the network instead makes the run depend on github.com being up and on the response
- * still matching the snapshots. `resolveAndReadFile` rewrites every read failure to
- * `Failed to read`, so the reason is logged as well as thrown — otherwise a newly added remote
- * fixture fails an assertion with nothing pointing at the cause.
+ * The suite is offline by design.
+ * A remote reference has to be seeded in `remoteResponses`.
+ * Reaching the network instead makes the run depend on github.com being up and on the response
+ * still matching the snapshots.
+ * `resolveAndReadFile` rewrites every read failure to `Failed to read`, so the reason is logged
+ * as well as thrown.
+ * Otherwise a newly added remote fixture fails an assertion with nothing pointing at the cause.
  */
 function assertNotRemote(p: PathLike): void {
     if (!isURL(p) || p.protocol === 'file:') return;

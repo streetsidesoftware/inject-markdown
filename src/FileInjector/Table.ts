@@ -86,11 +86,13 @@ export function rowsToTable(rows: CellValue[][], options: RowsToTableOptions = {
 }
 
 /**
- * Convert parsed rows into an HTML `<table>` whose cells hold Markdown. The first
- * `headerRows` rows (default 1) each become a `<thead>` row; with none there is no `<thead>`.
- * Returns sibling nodes: `html` nodes for the tags, interleaved with the parsed
- * blocks of each cell that has markup. The blank line remark-stringify puts between siblings is what
- * lets a renderer parse that Markdown.
+ * Convert parsed rows into an HTML `<table>` whose cells hold Markdown.
+ * The first `headerRows` rows (default 1) each become a `<thead>` row.
+ * With none, there is no `<thead>`.
+ * Returns sibling nodes: `html` nodes for the tags, interleaved with the parsed blocks of each
+ * cell that has markup.
+ * The blank line remark-stringify puts between siblings is what lets a renderer parse that
+ * Markdown.
  */
 export function rowsToHtmlTable(rows: CellValue[][], options: HeaderRowsOption = {}): RootContent[] {
     const columnCount = options.columnCount ?? widestRow(rows);

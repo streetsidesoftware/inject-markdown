@@ -11,9 +11,8 @@ export type Range = [number, number];
 
 export interface InjectInfo {
     heading?: string | undefined;
-    /** code bock language */
+    /** The code block language. */
     lang?: string | undefined;
-    /** lines to use */
     lines?: Range | undefined;
     tags?: string[] | undefined;
     params?: Map<string, string | string[]>;

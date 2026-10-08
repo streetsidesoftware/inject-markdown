@@ -26,7 +26,8 @@ export function rebaseUrl(url: string, sourceUrl: URL, hostUrl: URL): string {
     const hostDir = posix.dirname(hostUrl.pathname);
     if (sourceDir === hostDir) return url;
 
-    // Split off `?query#fragment` so only the path is touched; its encoding is kept as written.
+    // Split off `?query#fragment` so only the path is touched.
+    // Its encoding is kept as written.
     const suffixAt = url.search(/[?#]/);
     const path = suffixAt < 0 ? url : url.slice(0, suffixAt);
     const suffix = suffixAt < 0 ? '' : url.slice(suffixAt);
