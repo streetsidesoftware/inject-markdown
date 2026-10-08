@@ -372,7 +372,8 @@ export async function readValuesFileLayer(
     }
     if (entry.prefix === '') {
         // A root entry contributes its own keys, so it is only usable as a layer if it is an
-        // object; an array or scalar at the top level has no names to offer.
+        // object.
+        // An array or scalar at the top level has no names to offer.
         if (typeof data !== 'object' || data === null || Array.isArray(data)) return undefined;
         const layer = emptyTree();
         for (const [k, v] of Object.entries(data)) layer[k] = v;

@@ -1,7 +1,9 @@
 /**
  * Parse delimited text (CSV/TSV) into rows of string fields.
- * Supports RFC 4180 style quoting: `"` quoted fields, doubled `""` as an escaped quote,
- * and quoted fields containing the delimiter or newlines.
+ * Supports RFC 4180 style quoting:
+ * - fields quoted with `"`
+ * - a doubled `""` as an escaped quote
+ * - quoted fields that contain the delimiter or newlines
  */
 export function parseDelimitedText(content: string, delimiter: string): string[][] {
     const rows: string[][] = [];

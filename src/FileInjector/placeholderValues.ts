@@ -187,7 +187,8 @@ export async function buildDirectiveEntries(
     runWide: RunWideValueSources,
 ): Promise<ResolutionEntry[]> {
     // Return the path the boundary approved, so the read can't follow a symlink swapped in after
-    // the check (time-of-check/time-of-use) -- the same guard directive file references are read through.
+    // the check (time-of-check/time-of-use).
+    // Directive file references are read through the same guard.
     const resolvePath = (p: string): Promise<PathLike> =>
         resolveWithinInjectionRoot(parseRelativeUrl(p).toUrl(fileUrl));
     const directive = await buildResolutionEntries(decls, (entry) =>
@@ -199,7 +200,10 @@ export async function buildDirectiveEntries(
 /** Dependencies {@link applySubstitution} needs beyond the directive's own parsed `info`. */
 export interface ApplySubstitutionDeps {
     fs: FileSystemAdapter;
-    /** The containing document's URL; a directive's values-file paths resolve relative to it. */
+    /**
+     * The containing document's URL.
+     * A directive's values-file paths resolve relative to it.
+     */
     fileUrl: URL;
     strictVars: boolean | undefined;
     runWide: RunWideValueSources;

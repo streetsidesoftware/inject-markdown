@@ -30,14 +30,9 @@ interface CliOptions extends Options {
     valuesFile?: unknown;
     valueAlias?: unknown;
 
-    /**
-     * alternate spelling of option
-     */
+    /** Alternate spelling of `stopOnErrors`. */
     stopOnError?: boolean;
 
-    /**
-     * Show the summary
-     */
     summary?: boolean;
 }
 

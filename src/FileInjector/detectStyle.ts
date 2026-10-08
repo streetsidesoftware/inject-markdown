@@ -65,9 +65,9 @@ export function detectMarkdownStyle(root: Root, content: string): Options {
 }
 
 /**
- * Exported for direct testing: `mdast-util-from-markdown` always offsets
- * nodes at the marker itself, not preceding indentation, so this
- * whitespace-skipping isn't reachable via `detectMarkdownStyle` today.
+ * Exported for direct testing.
+ * `mdast-util-from-markdown` always offsets nodes at the marker itself, not preceding
+ * indentation, so this whitespace-skipping isn't reachable via `detectMarkdownStyle` today.
  */
 export function firstNonSpace(content: string, offset: number): string | undefined {
     let i = offset;

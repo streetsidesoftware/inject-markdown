@@ -86,7 +86,7 @@ export interface InjectOptions {
 
     /**
      * Rebase relative links in injected Markdown onto the host file.
-     * A directive's own `rebase-links=` wins.
+     * A directive can explicitly override this setting.
      * @default true
      */
     rebaseLinks?: boolean | undefined;
@@ -107,9 +107,9 @@ export interface InjectOptions {
     /**
      * Placeholder values for every file in the run.
      *
-     * Which value wins:
-     * - A later declaration in this list wins over an earlier one.
-     * - A directive's own declarations win over all of these.
+     * When declarations define the same name:
+     * - A later declaration in this list overrides an earlier one.
+     * - A directive's own declaration overrides any of these.
      *
      * Values-file paths are relative to `cwd`.
      * They may point outside the injection root.
@@ -246,23 +246,14 @@ interface ProcessFileInjections extends Omit<FileInjectorOptions, 'cwd' | 'outpu
 }
 
 export interface ProcessFileResult {
-    /** Were any injections found? */
     injectionsFound: boolean;
-    /** The resulting file */
     file: VFileEx;
-    /** had injection errors? */
     hasErrors: boolean;
-    /** had injection warnings? */
+    /** Had warnings: non-fatal messages. */
     hasMessages: boolean;
-    /** file was written */
     written: boolean;
-    /**
-     * The content was updated.
-     */
     hasChanged: boolean;
-    /**
-     * File was skipped due to errors.
-     */
+    /** The file was skipped because of errors. */
     skipped: boolean;
 }
 
@@ -604,7 +595,8 @@ async function processFileInjections(
     function jsonTableRows(content: string, window: RowWindow, headerRows: number): TableRows {
         const [keys, ...data] = jsonToRows(content, window);
         if (headerRows) return { rows: [keys, ...data], tableOptions: { headerRows } };
-        // Without the key row, an empty window would leave no columns; the keys still count them.
+        // Without the key row, an empty window would leave no columns.
+        // The keys still count them.
         return { rows: data, tableOptions: { headerRows, columnCount: data.length ? undefined : keys.length } };
     }
 
@@ -681,9 +673,11 @@ async function processFileInjections(
 
     /**
      * Local (`file:`) references must resolve inside the injection root (`cwd`) or one of
-     * `allowOutsideRoot`'s directories; remote fetches are unaffected.
-     * @returns the URL to read from: the symlink-resolved target for a local file, `target` as-is
-     * for a remote reference.
+     * `allowOutsideRoot`'s directories.
+     * Remote fetches are unaffected.
+     * @returns the URL to read from:
+     * - a local file: its symlink-resolved target.
+     * - a remote reference: `target` as is.
      */
     async function resolveWithinInjectionRoot(target: URL): Promise<URL> {
         if (target.protocol !== 'file:') return target;
@@ -695,9 +689,10 @@ async function processFileInjections(
         // Textual gate first. Its verdict never depends on the target existing, so a denial can't
         // be used to probe which paths are present on the machine running the tool.
         assertWithinRoots(roots.textual, fileURLToPath(target), target);
-        // Then the real path, which catches a symlink inside the root pointing outside it. Getting
-        // here means the reference is textually in-root, so the symlink is one the tree already
-        // contains — no denial below reveals anything about the wider filesystem.
+        // Then the real path, which catches a symlink inside the root pointing outside it.
+        // Getting here means the reference is textually in-root, so the symlink is one the tree
+        // already contains.
+        // No denial below reveals anything about the wider filesystem.
         const realTarget = await fs.realpath(target);
         assertWithinRoots(roots.real, realTarget, target);
         return pathToFileURL(realTarget);
@@ -807,7 +802,7 @@ interface DirectiveNode extends DirectiveNodeBase {
 /** State for `injectOnly` mode, passed through the inject calls to collect patches. */
 interface InjectOnlyCtx {
     outputOptions: StringifyOptions;
-    /** original end-marker offset for each surviving start node, from a matched pair. */
+    /** The original end-marker offset for each surviving start node, from a matched pair. */
     endOffsets: Map<Html, number>;
     lineEnding: string;
     patches: Patch[];
@@ -898,9 +893,10 @@ function collectInjectionNodesAndParse(root: Root): DirectiveNodeBase[] {
 }
 
 /**
- * @param path - the reference as written, kept as the resulting file's identity (it carries the
- *   directive's `#` options and drives extension-based decisions downstream).
- * @param readFrom - the location to actually read; defaults to `path`.
+ * @param path - the reference as written, kept as the resulting file's identity.
+ *   It carries the directive's `#` options and drives extension-based decisions downstream.
+ * @param readFrom - the location to actually read.
+ *   Defaults to `path`.
  */
 async function readFile(
     fs: FileSystemAdapter,
@@ -973,10 +969,12 @@ interface InjectionRoots {
 
 /**
  * The injection root and any `allowOutsideRoot` directories, in both forms the boundary check
- * needs. An unresolvable `allowOutsideRoot` entry (e.g. a typo'd path) is dropped from `real`
- * rather than failing the whole set — it couldn't have matched a directive's resolved target
- * anyway, and letting it reject here would otherwise deny every read in the file, including ones
- * inside the (still-valid) injection root.
+ * needs.
+ * An unresolvable `allowOutsideRoot` entry (e.g. a typo'd path) is dropped from `real` rather
+ * than failing the whole set.
+ * It couldn't have matched a directive's resolved target anyway.
+ * Rejecting here would deny every read in the file, including ones inside the (still-valid)
+ * injection root.
  */
 async function resolveInjectionRoots(
     fs: FileSystemAdapter,

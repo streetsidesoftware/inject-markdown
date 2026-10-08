@@ -322,7 +322,7 @@ describe('resolveInLayers', () => {
     });
 
     test('a missing leaf falls through to a lower layer', () => {
-        // The cross-source case: --value patches one leaf, the values file supplies its siblings.
+        // The cross-source case: one layer patches one leaf, and a lower layer supplies its siblings.
         const layers = [layer({ package: { engines: { node: '26.0' } } }), layer({ package: { version: '1.0.0' } })];
         expect(resolveInLayers(layers, 'package.engines.node')).toEqual({ value: '26.0' });
         expect(resolveInLayers(layers, 'package.version')).toEqual({ value: '1.0.0' });
@@ -360,8 +360,9 @@ describe('resolveInLayers', () => {
 });
 
 describe('prefix grammar', () => {
-    // A colon only separates a valid prefix; otherwise the whole entry is a path, and its prefix
-    // is derived from the base name (`undefined` when that isn't a valid segment).
+    // A colon only separates a valid prefix.
+    // Otherwise the whole entry is a path, and its prefix is derived from the base name.
+    // The derived prefix is `undefined` when the base name isn't a valid segment.
     test.each`
         entry                     | expected
         ${'pkg:data.json'}        | ${{ prefix: 'pkg', path: 'data.json' }}
