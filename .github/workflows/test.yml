@@ -9,6 +9,12 @@ on:
     branches: ['main']
   pull_request:
     branches: ['main']
+    paths-ignore:
+      - 'CONTRIBUTING.md'
+      - 'CLAUDE.md'
+      - 'CHANGELOG.md'
+      - 'docs/**'
+      - '.claude/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
