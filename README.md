@@ -163,7 +163,8 @@ Relative links in an injected file are rewritten to resolve from the file they'r
 ```markdown
 <!--- @@inject: parts/links.md --->
 
-Read the [relative links guide](../docs/guide/relative-links.md) or the [example](example.md).
+Read the [relative links guide](../docs/guide/relative-links.md)
+or the [example](example.md).
 
 <!--- @@inject-end: parts/links.md --->
 ```
@@ -251,17 +252,16 @@ This is an example bit of markdown.
 On GitHub, select the lines, choose **Copy permalink**, and use the URL as the file reference.
 
 ````markdown
-<!--- @@inject: https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe/src/app.mts#L15-L19 --->
+<!--- @@inject: https://github.com/streetsidesoftware/inject-markdown/blob/bbb2c709c/src/FileSystemAdapter/fsa.ts#L26-L29 --->
 
-```typescript
-async function version(): Promise<string> {
-    const pathSelf = fileURLToPath(import.meta.url);
-    const pathPackageJson = path.join(path.dirname(pathSelf), '../package.json');
-    const packageJson = JSON.parse(await fs.readFile(pathPackageJson, 'utf8'));
-    return (typeof packageJson === 'object' && packageJson?.version) || '0.0.0';
+```ts
+async function fetchUrl(url: URL): Promise<string> {
+  const response = await fetch(mapUrl(url));
+  return await response.text();
+}
 ```
 
-<!--- @@inject-end: https://github.com/streetsidesoftware/inject-markdown/blob/d7de2f5fe/src/app.mts#L15-L19 --->
+<!--- @@inject-end: https://github.com/streetsidesoftware/inject-markdown/blob/bbb2c709c/src/FileSystemAdapter/fsa.ts#L26-L29 --->
 ````
 
 <!--- cspell:dictionaries typescript --->
@@ -365,20 +365,20 @@ By default, Markdown in a cell is escaped and shown literally. Add `#markdown` t
 ```markdown
 <!--- @@inject: sample-markdown.csv#markdown --->
 
-| option       | description                                                             |
-| ------------ | ----------------------------------------------------------------------- |
-| `#markdown`  | Render **inline** Markdown, e.g. [links](https://github.com) and `a\|b` |
-| - not a list | Block syntax stays literal<br />and a newline becomes a line break      |
+| option       | description                                      |
+| ------------ | ------------------------------------------------ |
+| `#markdown`  | **Bold**, [links](https://github.com) and `a\|b` |
+| - not a list | Stays literal<br />and a newline is a line break |
 
 <!--- @@inject-end: sample-markdown.csv#markdown --->
 ```
 
 Renders as:
 
-| option       | description                                                             |
-| ------------ | ----------------------------------------------------------------------- |
-| `#markdown`  | Render **inline** Markdown, e.g. [links](https://github.com) and `a\|b` |
-| - not a list | Block syntax stays literal<br />and a newline becomes a line break      |
+| option       | description                                      |
+| ------------ | ------------------------------------------------ |
+| `#markdown`  | **Bold**, [links](https://github.com) and `a\|b` |
+| - not a list | Stays literal<br />and a newline is a line break |
 
 #### Block Markdown in table cells
 
