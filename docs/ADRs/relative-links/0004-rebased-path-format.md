@@ -28,5 +28,5 @@
 
 ## Consequences
 
-- Placeholder substitution ([template-variables ADR-0006](../template-variables/0006-substitution-mechanics-and-timing.md)) only visits `text`, `inlineCode`, `code` and `html` nodes, never `url` fields. So a `{@ … @}` in a link destination is neither substituted nor treated specially: it is rebased like any other path characters.
+- Placeholder substitution (the decision in [template-variables](../template-variables/README.md) on how substitution runs) only visits `text`, `inlineCode`, `code` and `html` nodes, never `url` fields. So a `{@ … @}` in a link destination is neither substituted nor treated specially: it is rebased like any other path characters.
 - Point 3 relies on how `remark-parse` stores `url`. Checked against the installed version: `[a](my%20file.png)` gives `url: "my%20file.png"` (percent-escapes kept), while `<my file.png>` gives `"my file.png"` and `a&amp;b\)x.png` gives `"a&b)x.png"` (character references and backslash escapes decoded). Round-tripping through `remark-stringify` re-escapes as needed. The implementation should keep a test for this.

@@ -31,26 +31,34 @@
 
 ## Decisions
 
-| ADR                                                     | Title                                                | Status                                                     |
-| ------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------- |
-| [0001](0001-placeholder-syntax.md)                      | Placeholder syntax and encoding conventions          | Accepted                                                   |
-| [0002](0002-directive-value-sources.md)                 | Directive-level value sources and opt-in trigger     | Accepted                                                   |
-| [0003](0003-cli-and-env-value-sources.md)               | CLI and environment value sources                    | Accepted                                                   |
-| [0004](0004-value-source-precedence.md)                 | Value source precedence and combination              | Superseded by [0012](0012-declaration-order-precedence.md) |
-| [0005](0005-unresolved-placeholders-and-strict-mode.md) | Unresolved placeholders and strict mode              | Accepted                                                   |
-| [0006](0006-substitution-mechanics-and-timing.md)       | Substitution mechanics and timing                    | Accepted                                                   |
-| [0007](0007-values-file-prefixing.md)                   | `values-file=` multi-file imports and prefixing      | Accepted                                                   |
-| [0008](0008-value-layering-and-resolution.md)           | Value layering and per-leaf resolution               | Accepted                                                   |
-| [0009](0009-prefix-grammar-and-drive-letters.md)        | Values-file prefix grammar and Windows drive letters | Accepted                                                   |
-| [0010](0010-value-alias.md)                             | `value-alias=` redefining a name to point at another | Accepted                                                   |
-| [0011](0011-repeated-hash-keys.md)                      | Repeated directive hash keys                         | Accepted                                                   |
-| [0012](0012-declaration-order-precedence.md)            | Declaration-order value precedence                   | Accepted                                                   |
-| [0013](0013-singular-value-option.md)                   | Singular `value=` directive option                   | Accepted                                                   |
+| ADR                                                     | Title                                                            | Status   |
+| ------------------------------------------------------- | ---------------------------------------------------------------- | -------- |
+| [0001](0001-placeholder-syntax-and-escaping.md)         | Placeholder syntax and escaping                                  | Accepted |
+| [0002](0002-opting-a-directive-in.md)                   | Opting a directive in                                            | Accepted |
+| [0003](0003-inline-values-and-repeated-keys.md)         | Inline values: `values=` and `value=`, and repeated keys         | Accepted |
+| [0004](0004-values-files.md)                            | Values files: format, paths, the injection root, and read errors | Accepted |
+| [0005](0005-values-file-prefixes.md)                    | Values-file prefixes: derived, explicit, root, and drive letters | Accepted |
+| [0006](0006-run-wide-values-on-the-command-line.md)     | Run-wide values on the command line                              | Accepted |
+| [0007](0007-environment-variables.md)                   | Environment variables and `env.`                                 | Accepted |
+| [0008](0008-declaration-order-precedence.md)            | Declaration-order precedence                                     | Accepted |
+| [0009](0009-per-leaf-layered-resolution.md)             | Per-leaf layered resolution and `null`                           | Accepted |
+| [0010](0010-aliases.md)                                 | Aliases                                                          | Accepted |
+| [0011](0011-unresolved-placeholders-and-strict-vars.md) | Unresolved placeholders and `--strict-vars`                      | Accepted |
+| [0012](0012-when-and-how-substitution-runs.md)          | When and how substitution runs                                   | Accepted |
+
+## What we learned
+
+- **Reading order beats source type.** Ranking values by where they came from looked principled, but once options could repeat, it contradicted the order a reader sees. The rule became "newest declaration wins", with the command line older than any directive.
+- **A merge rule has to be one rule everywhere.** Three different merge behaviors grew up for cases that look identical in directive text. They were replaced by one: every declaration is a layer, and each name resolves per leaf.
+- **Make the safe form the default.** Values files merged at the root by default, so adding a second file could shadow the first. Prefixing every file unless the author opts out removed that.
+- **Ambiguous separators bite on Windows.** `:` separates a prefix from a path, and every absolute Windows path has one. A prefix needs two characters or more, so a drive letter is never one.
+- **Silent loss is the worst failure.** A repeated key that discarded a file, a wholesale replace, a non-scalar that hid a real value: each produced wrong output with no message. Each fix either kept the data or reported the problem.
 
 ## Open questions
 
 - **YAML values files.** Waiting on a need: the project has no YAML parser today.
 - **An option that prints the resolved values.** Waiting on a request. Values are layered, not merged into one tree, so it would print the layers in order.
 - **An error for a malformed `values=` entry**, as `value=` already gives. Waiting on a decision, since it changes an existing option.
+- **A warning for a root-merged values file whose top level isn't an object.** Today it contributes nothing, silently. Should this warn?
 
 See also: [glossary](../../glossary.md), [ADR glossary](../glossary.md).
