@@ -10,7 +10,7 @@
 
 ## Decision
 
-1. **Grammar.** In a directive, `value-alias=new:target[,new2:target2...]`, the same comma-separated `name:value` shape as `values=`: pairs split at the first `:`, both sides are trimmed, a whole value in double quotes is one pair, and a malformed pair is dropped. On the command line, a repeatable `--value-alias <new>=<target>`, split at the first `=`; an empty name stops the run. In the library API, `{ kind: 'alias', name, target }` in `valueDeclarations`.
+1. **Grammar.** In a directive, `value-alias=new:target[,new2:target2...]`, the same comma-separated `name:value` shape as `values=`: pairs split at the first `:`, both sides are trimmed, a whole value in double quotes is one pair, and a malformed pair is dropped. On the command line, a repeatable `--value-alias <new>=<target>`, split at the first `=`; an empty name, or no `=` at all, stops the run with an error. In the library API, `{ kind: 'alias', name, target }` in `valueDeclarations`.
 2. **Both sides are placeholder names.** The new name and the target both follow the dotted name grammar ([Placeholder syntax and escaping](0001-placeholder-syntax-and-escaping.md)). `--value-alias build.version=release.latest.version` makes `{@ build.version @}` resolve through it.
 3. **An alias is a declaration, ordered like any other.** For a given name, the newer of an alias for it and a value for it decides the name. In `#values=version:1.0&value-alias=version:release.version`, the alias applies. Reversed, `1.0` does. See [Declaration-order precedence](0008-declaration-order-precedence.md).
 4. **An alias holds no value.** Resolving the new name resolves the target at that moment, against the whole sequence. A values file declared after the alias can satisfy it.
@@ -29,8 +29,8 @@
 ## Context
 
 - The motivating directive loads two files and wants one name from the second to win: `#values-file=:./package.json&values-file=release:releases.json&value-alias=version:release.latest.version`. `package.json` is root-merged, so it already defines `version`, and the alias has to redefine it.
-- Aliases first ranked above the values of their own scope, directive or command line. Declaration order replaced that, so an alias is one more entry in the sequence.
-- Removing single-character prefixes made the shortest namespace two characters. Aliases cover the case a short name was wanted for.
+- An alias is one more entry in the declaration sequence, not a rank above the values of its scope, so the directive's order is the whole rule.
+- A values-file prefix is at least two characters. Aliases cover the case where a shorter name is wanted.
 - Rule 2 is not enforced yet: #884.
 
 ## Rejected approaches

@@ -15,7 +15,7 @@
    - `value=`
    - `values-file=`
    - `value-alias=`
-   - the bare flag `#vars`
+   - the [bare flag](../../glossary.md#bareflag-option) `#vars`
 2. **An option that parses to nothing still opts in.** `#values=` with no pairs, or a malformed `value=` that is reported as a directive error, still makes the directive scanned.
 3. **`#vars` is for directives with no values of their own.** It opts in so the directive can use run-wide values and allowed environment variables alone. `#vars=false` (or `no`, `n`, `f`) does not opt in.
 4. **A bare `#value` (or `#value=`) is not a trigger.** It keeps its meaning as a heading reference, so a directive that injects a section titled "value" is unaffected.
@@ -30,7 +30,7 @@
 ## Context
 
 - `#vars` follows the bare-flag form that `header-rows` introduced; see the option-encoding conventions in [table-improvements](../table-improvements/README.md).
-- The trigger list grew with the feature. `value-alias=` and `value=` were added as options and became triggers, so every way a directive declares values opts it in.
+- Every option that declares values is a trigger, so a directive never declares values that are then ignored.
 - `URLSearchParams` can't tell `#value` from `#value=`, which is why both keep the heading meaning.
 
 ## Rejected approaches

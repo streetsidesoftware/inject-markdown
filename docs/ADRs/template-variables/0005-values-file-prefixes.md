@@ -40,9 +40,9 @@
 
 ## Context
 
-- Auto-prefixing was first an opt-in: a bare `path` merged at the root and `:path` asked for a derived prefix. That made the unsafe form the easy one: a second file added later could silently shadow the first. The default flipped so every file is namespaced unless the author opts out.
-- The colon first split at its first occurrence. `c:package.json` was read as prefix `c` and path `package.json`, which silently read a real file under a namespace nobody wrote. `C:\data\values.json` read the wrong absolute path. Windows is in the test matrix, and `--values-file` is the option most likely to get an absolute path. Quoting was the only escape, and from PowerShell that means `'"C:\data\values.json"'`. That led to the two-character rule.
-- The prefix rule was first a flat class, `[A-Za-z0-9._-]{2,}`. It admitted `..`, `.env` and `-foo`, so it was replaced by the segment structure.
+- Prefixing is the default because the unprefixed form is the unsafe one. If a bare `path` merged at the root, a second file added later could silently shadow the first. So every file is namespaced unless the author opts out with `:path`.
+- Splitting at any first colon misreads drive letters. `c:package.json` would be read as prefix `c` and path `package.json`, silently reading a real file under a namespace nobody wrote. `C:\data\values.json` would read the wrong absolute path. Windows is in the test matrix, and `--values-file` is the option most likely to get an absolute path. Quoting alone is no fix: from PowerShell it means `'"C:\data\values.json"'`. Hence the two-character rule.
+- A flat character class such as `[A-Za-z0-9._-]{2,}` would admit `..`, `.env` and `-foo` as prefixes. The segment structure rules them out.
 - Without removing the drive before deriving, `c:package.json` would derive `c:package` and fail. That would trade a silent wrong read for a confusing rejection of a valid path.
 - Derived prefixes stay single-segment because a dot in a file name is not a deliberate namespace. Turning `v1.2.json` into a `v1` tree is the surprise rule 4 prevents.
 - `__proto__`, `constructor` and `prototype` match the segment grammar, so they are excluded by name. Directive text is untrusted, and a prefix is written into a value tree.

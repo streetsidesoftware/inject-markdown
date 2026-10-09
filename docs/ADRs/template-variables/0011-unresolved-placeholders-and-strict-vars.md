@@ -10,7 +10,12 @@
 
 ## Decision
 
-1. **A placeholder is unresolved when no layer holds its name as a scalar.** That covers a name nothing defines, a name every layer holds as an object, array or `null`, an alias whose target doesn't resolve, an alias cycle, and an `env.` name that isn't allowed or set.
+1. **A placeholder is unresolved when resolution finds no scalar for its name.** Resolution walks the declarations newest first ([Per-leaf layered resolution and `null`](0009-per-leaf-layered-resolution.md)). That covers:
+   - a name nothing defines;
+   - a name every layer holds as an object, array or `null`;
+   - a name whose newest matching declaration is an alias with a target that doesn't resolve, even when an older layer holds a value for the name ([Aliases](0010-aliases.md));
+   - an alias cycle;
+   - an `env.` name that isn't allowed or isn't set.
 2. **An unresolved placeholder stays in the output exactly as written.**
 3. **One message per unique name per directive**, at the directive's position, however often the name occurs.
 4. **By default the message is a warning.**
@@ -32,7 +37,7 @@
 ## Context
 
 - The feature request specified this default: unresolved placeholders stay untouched with only a warning, and a strict mode is available when that's not acceptable.
-- The alias reason came with aliases: an alias points somewhere, and that somewhere can be empty, so the message has to name both sides.
+- The alias reason names both sides because an alias points somewhere, and that somewhere can be empty. The author has to know which end is wrong.
 - For an `env.` name, the message doesn't yet hint at `--allow-env`: #886.
 
 ## Rejected approaches

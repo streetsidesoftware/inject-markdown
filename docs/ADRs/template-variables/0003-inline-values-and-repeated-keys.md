@@ -29,8 +29,8 @@
 ## Context
 
 - The feature request proposed `#value:name=project` per name. `values=` follows the comma-list convention of `columns` instead, and whole-value quoting for literal commas; see the option-encoding conventions in [table-improvements](../table-improvements/README.md).
-- A repeated key used to keep only its last occurrence. `#values-file=:./package.json&values-file=release:releases.json` silently dropped `package.json`, and every name it supplied went unresolved. The comma form worked, so the two spellings disagreed with no sign of which one the author got.
-- `value=` came from the same problem from the other side: `values=` needs quoting for a value with a comma, and once declarations are ordered, one value per occurrence is the natural unit. The CLI already had `--value`.
+- A repeated key that kept only its last occurrence would lose data silently. `#values-file=:./package.json&values-file=release:releases.json` would drop `package.json`, and every name it supplies would go unresolved, while the comma form works. The two spellings would disagree with no sign of which one the author got.
+- `value=` exists because `values=` needs quoting for a value with a comma. With ordered declarations, one value per occurrence is also the natural unit, and it matches the CLI's `--value`.
 - `value=` errors on a malformed pair where `values=` drops it. With one pair per occurrence, a missing colon is always a typo. Dropping it would only surface later, as an unresolved placeholder pointing at the wrong place. Changing `values=` to match is an open question.
 - One exception in option parsing predates this feature: a bare key read as a heading (`#Install`) takes the first one. A later `heading=` still replaces it.
 
