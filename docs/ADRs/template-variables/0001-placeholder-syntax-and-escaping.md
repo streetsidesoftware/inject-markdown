@@ -27,7 +27,7 @@
 
 - The feature request's example was `{@ variables.value @}`, which a dotted name covers.
 - A segment can't start with a hyphen so that one rule serves both names and values-file prefixes. A prefix must refuse a leading hyphen because it sits next to a file path, and a name starting with a hyphen has no use.
-- Escaping works on the text that substitution sees. In Markdown prose, the Markdown parser already reads `\{` as a character escape and drops the backslash, so `\{@ name @}` there is substituted. Write `\\{@ name @}` in prose. A single backslash works in code blocks, inline code, HTML and non-Markdown files.
+- Rule 4 doesn't hold in Markdown prose yet: the Markdown parser reads `\{` as a character escape and drops the backslash before substitution runs, so `\{@ name @}` there is replaced. It works in code blocks, inline code, HTML and non-Markdown files: #887.
 
 ## Rejected approaches
 
