@@ -104,12 +104,12 @@ export async function app(program = defaultCommand): Promise<Command> {
         )
         .option(
             '--value <name=val>',
-            'Set a run-wide {@ name @} placeholder value. Repeatable; the last --value, --values-file or --value-alias defining a name wins.',
+            "Set a run-wide {@ name @} placeholder value. Repeatable; the last --value, --values-file or --value-alias defining a name wins. A directive's own values win over all of them.",
             record('value'),
         )
         .option(
             '--values-file <[prefix:]path>',
-            'Add a run-wide JSON file of {@ name @} placeholder values, resolved relative to --cwd. Repeatable.',
+            'Add a run-wide JSON file of {@ name @} placeholder values, resolved relative to --cwd. Repeatable; ordered with --value.',
             record('values-file'),
         )
         .option(
