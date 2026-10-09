@@ -23,7 +23,7 @@ Before doing anything else, use `EnterWorktree` to move the session into an isol
 
 Skip this step only if the session is already inside a worktree (`EnterWorktree` errors if called twice in one session — just continue in the current one) or the user has explicitly said not to bother with one for this task.
 
-When the design work is done — the user says to move to implementation, or asks to open a PR — push the branch and open the PR from inside the worktree (see step 10), then ask whether to `ExitWorktree` with `keep` (if they might come back to extend the design before it's merged) or `remove` (once the PR is merged). This mirrors how a regular feature branch gets cleaned up after merge in this repo.
+When the design work is done — the user says to move to implementation, or the design is finalized — mark the draft PR ready for review (see step 10), then ask whether to `ExitWorktree` with `keep` (if they might come back to extend the design before it's merged) or `remove` (once the PR is merged). This mirrors how a regular feature branch gets cleaned up after merge in this repo.
 
 ### 2. Ground yourself in the code first
 
@@ -63,7 +63,7 @@ Whenever a decision introduces a new term that a later ADR or a future reader wo
 
 ### 6. Commit after every file you create or edit
 
-One commit per ADR/glossary file touched, not a batch at the end. The commits are the design's working history: they let you and the user go back to an earlier point and see how an idea evolved. They stay in the PR, so the ADRs don't need to carry that history. Use Conventional Commits (`docs: add ADR-000N <short title>`, `docs: revise ADR-000N <what changed and why>`). Don't ask permission for each commit — creating/editing files under `docs/` and committing them is the expected shape of this workflow — but do check `git status`/`git diff` before staging in case something unexpected is present.
+One commit per ADR/glossary file touched, not a batch at the end. After the first ADR is committed, open a draft PR (step 10). The commits are the design's working history: they let you and the user go back to an earlier point and see how an idea evolved. They stay in the PR, so the ADRs don't need to carry that history. Use Conventional Commits (`docs: add ADR-000N <short title>`, `docs: revise ADR-000N <what changed and why>`). Don't ask permission for each commit — creating/editing files under `docs/` and committing them is the expected shape of this workflow — but do check `git status`/`git diff` before staging in case something unexpected is present.
 
 ### 7. Before treating a batch as done
 
@@ -79,6 +79,6 @@ Wait until the user says the design is final. Then rewrite the ADRs as "Finalize
 
 Then check it with a fresh reader: start a subagent that is given only the paths of the feature's `README.md` and its ADRs. Ask it to say what gets built, why, and how the decisions fit together, and to list gaps, contradictions, and anything it had to guess. Show the user the report, and fix what they agree with.
 
-### 10. Opening a PR
+### 10. The PR
 
-Only push/open a PR when the user asks, and confirm first via `AskUserQuestion` if it hasn't been explicit in the request — pushing and opening a PR are visible actions per this repo's usual guardrails. A small feature can ship its ADRs and implementation in one PR; ask whether the design gets its own `docs:` PR or goes in the feature's PR (see `docs/ADRs/README.md`). Note in the PR description that it's design/documentation only when no implementation is included yet. If step 1 put this session in a worktree, push and create the PR from there — no need to leave the worktree first.
+Open a draft PR once the first ADR is committed, and tell the user: it makes outside review easier and leaves a trail. Push each later commit to it. A small feature can ship its ADRs and implementation in one PR; ask whether the design gets its own `docs:` PR or goes in the feature's PR (see `docs/ADRs/README.md`). Note in the PR description that it's design/documentation only when no implementation is included yet, and keep the description in line with the design as it changes. If step 1 put this session in a worktree, push and create the PR from there — no need to leave the worktree first. Mark it ready for review once the design is finalized (step 9).
