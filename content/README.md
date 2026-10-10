@@ -595,7 +595,7 @@ const published = removeDirectives(result.document.content);
 - `rebaseLinks`: rebase relative links in injected Markdown. Defaults to `true`.
 - `injectOnly`: only rewrite the injected sections. Defaults to `true`.
 - `clean`: remove the injected content, keeping the directives.
-- `valueDeclarations`: placeholder values, as a list. A later entry wins over an earlier one, and a directive's own values win over all of them.
+- `valueDeclarations`: placeholder values, as a list. A later entry overrides an earlier one, and a directive's own values override all of them.
 - `allowEnv`: environment variables a directive may use.
 - `strictVars`: treat an unresolved placeholder as an error.
 

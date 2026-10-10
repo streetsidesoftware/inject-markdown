@@ -531,7 +531,7 @@ const published = removeDirectives(result.document.content);
 - `rebaseLinks`: rebase relative links in injected Markdown. Defaults to `true`.
 - `injectOnly`: only rewrite the injected sections. Defaults to `true`.
 - `clean`: remove the injected content, keeping the directives.
-- `valueDeclarations`: placeholder values, as a list. A later entry wins over an earlier one, and a directive's own values win over all of them.
+- `valueDeclarations`: placeholder values, as a list. A later entry overrides an earlier one, and a directive's own values override all of them.
 - `allowEnv`: environment variables a directive may use.
 - `strictVars`: treat an unresolved placeholder as an error.
 
@@ -606,8 +606,9 @@ Options:
   --value <name=val>             Set a run-wide {@ name @} placeholder
                                  value. Repeatable; the last --value,
                                  --values-file or --value-alias defining
-                                 a name wins. A directive's own values
-                                 win over all of them.
+                                 a name overrides earlier ones. A
+                                 directive's own values override all of
+                                 them.
   --values-file <[prefix:]path>  Add a run-wide JSON file of {@ name @}
                                  placeholder values, resolved relative
                                  to --cwd. Repeatable; ordered with

@@ -111,9 +111,9 @@ The bare `vars` flag opts a directive in without values of its own. The directiv
 
 ## Precedence
 
-- **The newest declaration wins.** `values=`, `value=`, `values-file=` and `value-alias=` count in the order they are written, whichever option they use. In `values=version:1.0&values-file=:release.json`, the file's `version` wins; swap them and `1.0` does.
+- **The newest declaration overrides older ones.** `values=`, `value=`, `values-file=` and `value-alias=` count in the order they are written, whichever option they use. In `values=version:1.0&values-file=:release.json`, the file's `version` overrides `1.0`; swap them and `1.0` overrides the file's.
 - On the command line, `--value`, `--values-file` and `--value-alias` count in the order they are given.
-- Everything a directive declares is newer than every command-line value, so a directive's own values win over the command line.
+- Everything a directive declares is newer than every command-line value, so a directive's own values override the command line.
 - Values are overridden per name, not per file. Given a `values.json` of `{"version": "1.2.3", "name": "my-package"}`, `--value values.version=2.0.0` changes only that name; `{@ values.name @}` still comes from the file. The same holds when two values files are listed: the later one patches the earlier one instead of replacing it.
 
 ## Errors in values
