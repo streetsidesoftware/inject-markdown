@@ -52,7 +52,7 @@ Much tabular data (API exports, generated reports, config lists) is JSON, typica
 
 7. **`#L1-L10` is a directive error on a JSON source.** Slicing lines out of JSON almost always makes it invalid. The row window options ([ADR-0004](0004-table-row-window-options.md)) are the way to limit rows.
 
-8. **Placeholders are substituted after parsing, keys included.** Substitution never touches the raw JSON text, so a substituted `"` or `\` can never corrupt it. It is the JSON analog of substituting parsed CSV fields ([template-variables/ADR-0006](../template-variables/0006-substitution-mechanics-and-timing.md)):
+8. **Placeholders are substituted after parsing, keys included.** Substitution never touches the raw JSON text, so a substituted `"` or `\` can never corrupt it. It is the JSON analog of substituting parsed CSV fields, the decision in [template-variables](../template-variables/README.md) on when substitution runs:
    - Top-level string values and the header row of keys are substituted per cell.
    - Inside a nested object or array, each string leaf is substituted before the value is serialized (point 5), in every table form. Keys inside nested objects stay literal.
    - Columns are collected before substitution, so two keys that substitute to the same text stay two columns.
