@@ -116,25 +116,27 @@ Add options after a `#` in the file reference, separated by `&`:
 <!--- @@inject: guide.md#heading=Install&quote --->
 ```
 
-| Option                       | Applies to       | Effect                                                                                                                                          |
-| ---------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `heading=<text>`             | Markdown         | Inject only the section under this heading. The shorthand `#<text>` also works.                                                                 |
-| `L<n>-L<m>`                  | All              | Inject only lines `n` to `m`, e.g. `#L5-L7`.                                                                                                    |
-| `lang=<lang>`                | Code             | Set the code block's language. On a CSV/TSV file, this injects it as code instead of a table.                                                   |
-| `code`                       | Markdown         | Inject Markdown as a code block. `code=<lang>` is the same as `lang=<lang>`.                                                                    |
-| `quote`                      | All              | Inject as a block quote.                                                                                                                        |
-| `markdown`                   | Tables           | Render inline Markdown in cells instead of escaping it.                                                                                         |
-| `html-table`                 | Tables           | Emit an HTML table whose cells can hold full Markdown, including lists and paragraphs.                                                          |
-| `header-rows=<n>`            | Tables           | How many leading rows form the header. Default `1`; `0` means no header.                                                                        |
-| `start-row=<n>`              | Tables           | First data row to include, counting from 1 after the header rows.                                                                               |
-| `end-row=<n>`                | Tables           | Last data row to include.                                                                                                                       |
-| `num-rows=<n>`               | Tables           | Maximum number of data rows. Default `10000`.                                                                                                   |
-| `rebase-links=false`         | Markdown, Tables | Keep relative links as written. By default they're rewritten to resolve from the host file. See [Relative links](docs/guide/relative-links.md). |
-| `values=<name:val,…>`        | All              | Values for `{@ name @}` placeholders. See [Template variables](#template-variables).                                                            |
-| `value=<name:val>`           | All              | One placeholder value; commas and colons after the first `:` are part of the value.                                                             |
-| `values-file=<path>`         | All              | A JSON file of placeholder values.                                                                                                              |
-| `value-alias=<new:target,…>` | All              | Resolve one placeholder name as another.                                                                                                        |
-| `vars`                       | All              | Resolve placeholders using only values set on the command line.                                                                                 |
+| Option                       | Applies to       | Effect                                                                                                                                                                                                  |
+| ---------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `heading=<text>`             | Markdown         | Inject only the section under this heading. The shorthand `#<text>` also works.                                                                                                                         |
+| `L<n>-L<m>`                  | All              | Inject only lines `n` to `m`, e.g. `#L5-L7`.                                                                                                                                                            |
+| `lang=<lang>`                | Code             | Set the code block's language. On a CSV/TSV file, this injects it as code instead of a table.                                                                                                           |
+| `code`                       | Markdown         | Inject Markdown as a code block. `code=<lang>` is the same as `lang=<lang>`.                                                                                                                            |
+| `quote`                      | All              | Inject as a block quote.                                                                                                                                                                                |
+| `markdown`                   | Tables           | Render inline Markdown in cells instead of escaping it.                                                                                                                                                 |
+| `html-table`                 | Tables           | Emit an HTML table whose cells can hold full Markdown, including lists and paragraphs.                                                                                                                  |
+| `header-rows=<n>`            | Tables           | How many leading rows form the header. Default `1`; `0` means no header.                                                                                                                                |
+| `start-row=<n>`              | Tables           | First data row to include, counting from 1 after the header rows.                                                                                                                                       |
+| `end-row=<n>`                | Tables           | Last data row to include.                                                                                                                                                                               |
+| `num-rows=<n>`               | Tables           | Maximum number of data rows. Default `10000`.                                                                                                                                                           |
+| `rebase-links=false`         | Markdown, Tables | Keep relative links as written. By default they're rewritten to resolve from the host file. See [Relative links](docs/guide/relative-links.md).                                                         |
+| `values=<name:val,…>`        | All              | Values for `{@ name @}` placeholders. See [Template variables](#template-variables).                                                                                                                    |
+| `value=<name:val>`           | All              | One placeholder value; commas and colons after the first `:` are part of the value.                                                                                                                     |
+| `values-file=<path>`         | All              | JSON files of placeholder values, comma-separated, each under its file name: `values.json` gives `{@ values.version @}`. See [Values files](docs/guide/template-variables.md#values-files-values-file). |
+| `values-file=<:path>`        | All              | Put a file's values at the top level: `:values.json` gives `{@ version @}`.                                                                                                                             |
+| `values-file=<prefix:path>`  | All              | Put a file's values under your own prefix: `pkg:values.json` gives `{@ pkg.version @}`. See [Prefixes](docs/guide/template-variables.md#prefixes).                                                      |
+| `value-alias=<new:target,…>` | All              | Resolve one placeholder name as another.                                                                                                                                                                |
+| `vars`                       | All              | Opt in with no values of its own, to use values from the command line and allowed environment variables.                                                                                                |
 
 ## Recipes
 
@@ -468,7 +470,7 @@ npm install my-package@1.2.3
 <!--- @@inject-end: values-example.md#values=version:1.2.3 --->
 ````
 
-Placeholders are only replaced when the directive has `values=`, `value=`, `values-file=`, `value-alias=` or `vars`. Values can also come from JSON files and the command line (`--value`, `--values-file`, `--allow-env`). See [Template variables](docs/guide/template-variables.md) for the full rules.
+Placeholders are only replaced when the directive has `values=`, `value=`, `values-file=`, `value-alias=` or `vars`. Values can also come from JSON files and the command line (`--value`, `--values-file`, `--value-alias`, `--allow-env`, `--strict-vars`). See [Template variables](docs/guide/template-variables.md) for the full rules.
 
 ## API
 
@@ -531,7 +533,7 @@ const published = removeDirectives(result.document.content);
 - `rebaseLinks`: rebase relative links in injected Markdown. Defaults to `true`.
 - `injectOnly`: only rewrite the injected sections. Defaults to `true`.
 - `clean`: remove the injected content, keeping the directives.
-- `valueDeclarations`: placeholder values, as a list. A later entry wins over an earlier one.
+- `valueDeclarations`: placeholder values, as a list. A later entry overrides an earlier one, and a directive's own values override all of them.
 - `allowEnv`: environment variables a directive may use.
 - `strictVars`: treat an unresolved placeholder as an error.
 
@@ -606,10 +608,13 @@ Options:
   --value <name=val>             Set a run-wide {@ name @} placeholder
                                  value. Repeatable; the last --value,
                                  --values-file or --value-alias defining
-                                 a name wins.
+                                 a name overrides earlier ones. A
+                                 directive's own values override all of
+                                 them.
   --values-file <[prefix:]path>  Add a run-wide JSON file of {@ name @}
                                  placeholder values, resolved relative
-                                 to --cwd. Repeatable.
+                                 to --cwd. Repeatable; ordered with
+                                 --value.
   --allow-env <name>             Allow a directive to reference the OS
                                  environment variable <name> via {@
                                  env.name @}. Repeatable.

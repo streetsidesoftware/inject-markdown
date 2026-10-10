@@ -84,7 +84,7 @@ function splitAssignment(flag: ValueFlag, raw: string, form: string): [name: str
 }
 
 export async function app(program = defaultCommand): Promise<Command> {
-    // Value flags, in command-line order: a later declaration wins.
+    // Value flags, in command-line order: a later declaration overrides an earlier one.
     // Commander calls each option's callback in that order, so one shared list keeps it.
     const valueArgs: ValueArg[] = [];
     const record = (flag: ValueFlag) => (raw: string) => {
@@ -104,12 +104,12 @@ export async function app(program = defaultCommand): Promise<Command> {
         )
         .option(
             '--value <name=val>',
-            'Set a run-wide {@ name @} placeholder value. Repeatable; the last --value, --values-file or --value-alias defining a name wins.',
+            "Set a run-wide {@ name @} placeholder value. Repeatable; the last --value, --values-file or --value-alias defining a name overrides earlier ones. A directive's own values override all of them.",
             record('value'),
         )
         .option(
             '--values-file <[prefix:]path>',
-            'Add a run-wide JSON file of {@ name @} placeholder values, resolved relative to --cwd. Repeatable.',
+            'Add a run-wide JSON file of {@ name @} placeholder values, resolved relative to --cwd. Repeatable; ordered with --value.',
             record('values-file'),
         )
         .option(

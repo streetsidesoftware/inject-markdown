@@ -15,10 +15,13 @@ Options:
   --value <name=val>             Set a run-wide {@ name @} placeholder
                                  value. Repeatable; the last --value,
                                  --values-file or --value-alias defining
-                                 a name wins.
+                                 a name overrides earlier ones. A
+                                 directive's own values override all of
+                                 them.
   --values-file <[prefix:]path>  Add a run-wide JSON file of {@ name @}
                                  placeholder values, resolved relative
-                                 to --cwd. Repeatable.
+                                 to --cwd. Repeatable; ordered with
+                                 --value.
   --allow-env <name>             Allow a directive to reference the OS
                                  environment variable <name> via {@
                                  env.name @}. Repeatable.
