@@ -48,7 +48,7 @@
 
 ## What we learned
 
-- **Reading order beats source type.** Ranking values by where they came from looked principled, but once options could repeat, it contradicted the order a reader sees. The rule became "newest declaration wins", with the command line older than any directive.
+- **Reading order beats source type.** Ranking values by where they came from looked principled, but once options could repeat, it contradicted the order a reader sees. The rule became "newest declaration overrides older ones", with the command line older than any directive.
 - **A merge rule has to be one rule everywhere.** Three different merge behaviors grew up for cases that look identical in directive text. They were replaced by one: every declaration is a layer, and each name resolves per leaf.
 - **Make the safe form the default.** Values files merged at the root by default, so adding a second file could shadow the first. Prefixing every file unless the author opts out removed that.
 - **Ambiguous separators bite on Windows.** `:` separates a prefix from a path, and every absolute Windows path has one. A prefix needs two characters or more, so a drive letter is never one.

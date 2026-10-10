@@ -16,7 +16,7 @@ The option lives in the `#`-fragment like the other table options ([ADR-0001](00
 
 1. **Opt-in bare flag `#html-table`.** `data.csv#html-table` emits the table as HTML and parses every cell as Markdown. It uses `parseFlagValue` like `markdown`, so `html-table=false` is accepted, and `parseHashString` sets `InjectInfo.htmlTable`. The flag implies Markdown cells; `#markdown` isn't needed alongside it.
 
-2. **Precedence with `#markdown`.** If both are given (`#markdown&html-table`), the HTML table wins. `#markdown` is redundant there, not an error. `#markdown&html-table=false` is the pipe form of ADR-0008.
+2. **Precedence with `#markdown`.** If both are given (`#markdown&html-table`), `#html-table` overrides `#markdown`. `#markdown` is redundant there, not an error. `#markdown&html-table=false` is the pipe form of ADR-0008.
 
 3. **Table injections only; a no-op elsewhere.** As with `#markdown`, on a Markdown or code injection the flag has no effect and is not an error. It does not force table mode.
 

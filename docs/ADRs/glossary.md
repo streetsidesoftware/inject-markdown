@@ -44,11 +44,11 @@ Any parsed source row that is not a header row. Row numbering for `start-row`/`e
 
 ### Declaration order
 
-The order value declarations are written in, oldest to newest: every CLI flag in argv order, then the directive's hash options left to right. The newest declaration wins, whichever option it came from. The `env.` namespace is outside the order. From [template-variables](template-variables/README.md).
+The order value declarations are written in, oldest to newest: every CLI flag in argv order, then the directive's hash options left to right. The newest declaration overrides older ones, whichever option each came from. The `env.` namespace is outside the order. From [template-variables](template-variables/README.md).
 
 ### `--deny-access`
 
-A repeatable CLI option (and matching `FileInjectorOptions.denyAccess`) of globs that refuse a directive read even inside the injection root — the operator-supplied answer to secrets that continuous integration writes into the tree. Empty by default; a match always wins over `--allow-outside-root`. From [security-hardening](security-hardening/README.md).
+A repeatable CLI option (and matching `FileInjectorOptions.denyAccess`) of globs that refuse a directive read even inside the injection root — the operator-supplied answer to secrets that continuous integration writes into the tree. Empty by default; a match always overrides `--allow-outside-root`. From [security-hardening](security-hardening/README.md).
 
 ### Deny pattern base
 
@@ -88,7 +88,7 @@ The leading N rows of a table's parsed source data (N = `header-rows`, default 1
 
 ### `html-table` option
 
-A bare table hash flag (`data.csv#html-table`) that emits the table as an HTML `<table>` and parses every cell as full Markdown, blocks included. Cells with markup are wrapped in blank lines so the renderer parses them; plain cells stay on one line. Newlines follow Markdown, alignment is an `align` attribute, and multiple header rows are real `<thead>` rows. Implies Markdown cells, and wins over `#markdown` when both are given. From [table-improvements](table-improvements/README.md).
+A bare table hash flag (`data.csv#html-table`) that emits the table as an HTML `<table>` and parses every cell as full Markdown, blocks included. Cells with markup are wrapped in blank lines so the renderer parses them; plain cells stay on one line. Newlines follow Markdown, alignment is an `align` attribute, and multiple header rows are real `<thead>` rows. Implies Markdown cells, and overrides `#markdown` when both are given. From [table-improvements](table-improvements/README.md).
 
 ### JSON table source
 
@@ -108,7 +108,7 @@ The dotted path inside a placeholder (e.g. `package.version`), each segment `[A-
 
 ### `rebase-links` option
 
-A boolean hash key (`part.md#rebase-links=false`) that turns rebasing off (or explicitly on) for one directive. Rebasing is on by default; the run-wide `--no-rebase-links` CLI flag turns it off, and a directive's own value wins over the CLI. From [relative-links](relative-links/README.md).
+A boolean hash key (`part.md#rebase-links=false`) that turns rebasing off (or explicitly on) for one directive. Rebasing is on by default; the run-wide `--no-rebase-links` CLI flag turns it off, and a directive's own value overrides the CLI. From [relative-links](relative-links/README.md).
 
 ### `--rebase-output-links`
 
@@ -160,7 +160,7 @@ A repeatable directive hash option setting exactly one placeholder value (`value
 
 ### Value source precedence
 
-Which declaration wins when several define a placeholder name. This is [declaration order](#declaration-order), newest first, applied by [per-leaf resolution](#per-leaf-resolution). It replaced an earlier fixed ranking by source type. From [template-variables](template-variables/README.md).
+Which declaration's value is used when several define a placeholder name. This is [declaration order](#declaration-order), newest first, applied by [per-leaf resolution](#per-leaf-resolution). It replaced an earlier fixed ranking by source type. From [template-variables](template-variables/README.md).
 
 ### `--values-file`
 
