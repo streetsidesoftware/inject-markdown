@@ -28,7 +28,7 @@
 
 ## Context
 
-- The motivating directive loads two files and wants one name from the second to override the first: `#values-file=:./package.json&values-file=release:releases.json&value-alias=version:release.latest.version`. `package.json` is root-merged, so it already defines `version`, and the alias has to redefine it.
+- The motivating directive loads two files and wants one name from the second to win: `#values-file=:./package.json&values-file=release:releases.json&value-alias=version:release.latest.version`. `package.json` is root-merged, so it already defines `version`, and the alias has to redefine it.
 - An alias is one more entry in the declaration sequence, not a rank above the values of its scope, so the directive's order is the whole rule.
 - A values-file prefix is at least two characters. Aliases cover the case where a shorter name is wanted.
 - Rule 2 is not enforced yet: #884.

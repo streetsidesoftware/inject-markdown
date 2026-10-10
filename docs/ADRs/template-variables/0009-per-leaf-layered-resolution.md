@@ -6,7 +6,7 @@
 
 **Goal:** each directive alone tells you which values it gets, so a name resolves the same way however its values were declared.
 
-**Problem:** when two declarations each define part of the same dotted namespace, "the newer one overrides the older one" can mean it replaces the whole branch or only the names it defines. Losing names the newer one never mentions reads as data loss.
+**Problem:** when two declarations each define part of the same dotted namespace, "the newer one wins" can mean it replaces the whole branch or only the names it defines. Losing names the newer one never mentions reads as data loss.
 
 ## Decision
 
@@ -22,7 +22,7 @@
 ## Consequences
 
 - `--value package.engines.node=26.0` overrides one leaf of `package.json` and leaves `package.version` resolving from the file.
-- Two files under the same prefix contribute the union of their leaves. The newer file overrides the older one only where both define a name.
+- Two files under the same prefix contribute the union of their leaves. The newer file wins only where both define a name.
 - `--value a=1 --value a.b=2` keeps both names.
 - There is no merged tree to print. An option that printed the resolved values would print the layers in order.
 
