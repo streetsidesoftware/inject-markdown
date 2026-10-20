@@ -9,7 +9,9 @@ A Markdown file you process may come from someone else, such as a pull request. 
 ## What is denied
 
 - A reference that resolves outside the injection root, including through a symlink, fails with a fatal `Access denied` error.
-- The error is worded and reported the same way whether or not the file exists, so it can't be used to probe the machine running the tool.
+- A denial is fatal for every kind of file. A missing Markdown file, by contrast, is only a warning.
+- A path written outside the root is denied the same way whether or not the file exists, so it can't be used to probe the machine running the tool.
+- A symlink inside the root is checked by where it points. If its target doesn't exist, the reference fails as a missing file (`Failed to read`), not as a denial.
 - Remote (`http(s)`) references are not affected.
 
 ## Allowing other directories
@@ -17,6 +19,8 @@ A Markdown file you process may come from someone else, such as a pull request. 
 To allow a reference outside the root, pass `--allow-outside-root <dir>` for each extra directory. It can be repeated.
 
 Like `--cwd`, each `<dir>` is resolved relative to the directory `inject-markdown` is run from, **not** relative to `--cwd`.
+
+A `<dir>` that doesn't exist is ignored without a message.
 
 Example: in a monorepo, `packages/docs/README.md` injects a code sample from `packages/shared/src/example.ts`:
 

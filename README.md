@@ -270,7 +270,7 @@ async function fetchUrl(url: URL): Promise<string> {
 
 ### Inject a CSV or TSV file as a table
 
-All columns are included. Use `@@inject-code` or `#lang=csv` to inject the file as code instead.
+All columns are included. Use `@@inject-code` or `#lang=csv` to inject the file as code instead. See [Tables](docs/guide/tables.md) for the detailed rules.
 
 ```markdown
 <!--- @@inject: sample.csv --->
@@ -349,7 +349,7 @@ Renders as:
 | Ada Lovelace | 1815 | \["mathematics","computing"] |              |
 | Grace Hopper | 1906 |                              | Rear Admiral |
 
-- The columns are every key found in the rows being shown, in the order they first appear. A missing key is an empty cell.
+- The columns are every key found in the rows being shown, in the order they first appear. If no rows are shown, they're every key in the file. A missing key is an empty cell.
 - Numbers and booleans are shown as text, and `null` is an empty cell.
 - A nested object or array is shown as compact JSON. With `#markdown` it's a code span, and with `#html-table` it's a formatted `json` code block.
 - `start-row`, `end-row` and `num-rows` work as for CSV. A line range (`#L1-L10`) is an error on a JSON source.
