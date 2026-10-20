@@ -83,6 +83,8 @@ Recipes show the real output of a directive rather than a hand-written copy, so 
 
 ### Documenting a new feature
 
+To think a feature through before building it, see [Designing a feature](docs/feature-design.md).
+
 - Add a row to the **Directives** or **Injection options** table in `content/README.md`.
 - Add a recipe if the feature has a visible effect.
 - Put detailed rules (precedence, edge cases) in `docs/guide/` and link to it from the README, rather than growing the README.
@@ -149,7 +151,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/). Release Ple
 - `fix:` — a bug fix that changes published behavior.
 - `feat!:` / `fix!:` — either of the above, but breaking.
 - `refactor:` — internal restructuring with no behavior change.
-- `docs:` — documentation only (README, ADRs, CONTRIBUTING.md, etc.).
+- `docs:` — documentation only (README, designs, CONTRIBUTING.md, etc.).
 - `test:` — test-only changes.
 - `ci:` — GitHub Actions/workflow changes, including automated dependency bumps.
 - `chore:` — everything else that doesn't touch published behavior: repo tooling, Claude Code skills/config, dev dependencies, lint/format config, etc.

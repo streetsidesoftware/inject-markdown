@@ -1,4 +1,4 @@
-# value-alias (ADR-0010)
+# value-alias
 
 ## An alias redefines a name its own tier already supplies
 

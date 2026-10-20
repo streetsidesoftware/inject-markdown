@@ -1,4 +1,4 @@
-# Repeated hash keys (ADR-0011)
+# Repeated hash keys
 
 Repeating a key accumulates, exactly as if its contents had been written as one
 comma-separated list. This is the same directive as the first section of

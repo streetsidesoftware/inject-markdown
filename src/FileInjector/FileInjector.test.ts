@@ -300,6 +300,22 @@ describe('injection root boundary', () => {
         );
     });
 
+    test('an in-root symlink to a missing outside target is a read failure, not a denial', async () => {
+        // Documents current behavior: the textual check passes, and the realpath step can't
+        // resolve a target that doesn't exist, so it fails as a plain read.
+        const fsa = createFSA();
+        fsa.store.set(
+            pathToFileURL(path.join(boundaryRoot, 'symlink-escape-missing.md')),
+            '<!--- @@inject: link-to-outside/does-not-exist.md --->\n',
+        );
+        const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
+        const r = await fi.processFile('symlink-escape-missing.md');
+        const messages = r.file.messages.map(String).join('\n');
+        expect(r.hasErrors).toBe(false);
+        expect(messages).toContain('Failed to read "link-to-outside/does-not-exist.md"');
+        expect(messages).not.toContain('Access denied');
+    });
+
     test('a missing in-root markdown reference stays a warning', async () => {
         const fsa = createFSA();
         const fi = new FileInjector(fsa, { cwd: boundaryRoot, silent: true });
