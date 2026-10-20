@@ -128,7 +128,7 @@ A CLI flag making an unresolved placeholder a directive error (via `file.error()
 
 ### Unresolved placeholder
 
-A placeholder no [value layer](#value-layer) holds as a scalar — either nothing defines the name, or every layer that has it holds an object, array or `null` there. The warning distinguishes the two. Left untouched in the output with one warning per unique name per directive by default; becomes a directive error under `--strict-vars`. From [template-variables](template-variables/README.md).
+A placeholder no [value layer](#value-layer) holds as a scalar — nothing defines the name, every layer that has it holds an object, array or `null` there, or it is aliased to a target that doesn't resolve (or to a cycle). The warning says which. Left untouched in the output with one warning per unique name per directive by default; becomes a directive error under `--strict-vars`. From [template-variables](template-variables/README.md).
 
 ### `--value`
 
@@ -180,4 +180,4 @@ A directive hash option supplying inline placeholder values as comma-separated `
 
 ### `vars` flag
 
-A bare directive hash flag (`#vars`) that opts a directive into placeholder scanning against CLI/environment value sources alone, when it defines no `values=`/`values-file=` of its own. From [template-variables](template-variables/README.md).
+A bare directive hash flag (`#vars`) that opts a directive into placeholder scanning against CLI/environment value sources alone, when it declares no `values=`/`value=`/`values-file=`/`value-alias=` of its own. From [template-variables](template-variables/README.md).

@@ -40,7 +40,7 @@ The option lives in the `#`-fragment like the other table options ([ADR-0001](00
 
 8. **Raw HTML passes through.** Inline HTML in a cell (`<b>`, `<br>`, `<sup>`) is emitted verbatim, as it is when injecting a `.md` file. Sanitizing is the renderer's job; `inject-markdown` does not sanitize HTML anywhere else either.
 
-9. **Placeholders are substituted before parsing.** `{@ name @}` substitution still runs on the parsed CSV field values, per [template-variables/ADR-0006](../template-variables/0006-substitution-mechanics-and-timing.md) (no phantom columns). It runs _before_ the Markdown parse, so a substituted value like `*draft*` renders italic. This matches placeholders in an injected `.md` file.
+9. **Placeholders are substituted before parsing.** `{@ name @}` substitution still runs on the parsed CSV field values, per the decision in [template-variables](../template-variables/README.md) on when substitution runs (no phantom columns). It runs _before_ the Markdown parse, so a substituted value like `*draft*` renders italic. This matches placeholders in an injected `.md` file.
 
 ## Options Considered
 

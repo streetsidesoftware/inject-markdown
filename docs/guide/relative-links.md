@@ -43,7 +43,7 @@ Links are rewritten relative to where the host file lives in the source tree, no
 - For one directive: `<!--- @@inject: docs/part.md#rebase-links=false --->`.
 - For a whole run: `--no-rebase-links`.
 
-A directive's own `rebase-links` wins over the command line, so `#rebase-links` turns it back on for one directive in a `--no-rebase-links` run.
+A directive's own `rebase-links` overrides the command line, so `#rebase-links` turns it back on for one directive in a `--no-rebase-links` run.
 
 ## Migrating
 
