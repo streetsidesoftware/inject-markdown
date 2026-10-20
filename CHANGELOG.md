@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.2.1](https://github.com/streetsidesoftware/inject-markdown/compare/v6.2.0...v6.2.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* correct and fill in the template variables guide ([#888](https://github.com/streetsidesoftware/inject-markdown/issues/888)) ([d4fe8c7](https://github.com/streetsidesoftware/inject-markdown/commit/d4fe8c719d96d73260afd8a35ebf6b12f78500a8))
+* **deps:** replace globby with tinyglobby to drop vulnerable braces ([#900](https://github.com/streetsidesoftware/inject-markdown/issues/900)) ([fd75f72](https://github.com/streetsidesoftware/inject-markdown/commit/fd75f72974dcca32f011e797e844b57541248c60))
+
 ## [6.2.0](https://github.com/streetsidesoftware/inject-markdown/compare/v6.1.0...v6.2.0) (2026-10-08)
 
 
