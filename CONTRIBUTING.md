@@ -108,7 +108,7 @@ src/
     fsa.ts                    Node.js fs implementation (nodeFsa()) — used in production
     fsStore.mts               In-memory fs implementation — used in tests
   processor/
-    process.mts               processGlobs(): orchestrates file discovery (globby) and injection
+    process.mts               processGlobs(): orchestrates file discovery (tinyglobby) and injection
     reportFileErrors.mts      Formats per-file error messages
   reporting/
     formatSummary.mts          Formats the CLI summary line

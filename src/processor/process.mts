@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 
-import { globby, type Options as GlobbyOptions } from 'globby';
 import * as path from 'path';
+import { glob, type GlobOptions } from 'tinyglobby';
 
 import { FileInjector, type FileInjectorOptions, type ProcessFileResult } from '../FileInjector/FileInjector.js';
 import type { PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
@@ -61,12 +61,12 @@ export interface Options extends FileInjectorOptions {
 
 async function findFiles(globs: string[], cwd: PathLike | undefined) {
     const cwdToUse = path.resolve(cwd instanceof URL ? fileURLToPath(cwd) : cwd || '.');
-    const options: Mutable<GlobbyOptions> = {
+    const options: GlobOptions = {
         ignore: excludes,
         onlyFiles: true,
         cwd: cwdToUse,
     };
-    const files = await globby(
+    const files = await glob(
         globs.map((a) => a.trim()).filter((a) => !!a),
         options,
     );
@@ -83,7 +83,3 @@ export interface Result {
     filesWithErrors: string[];
     errorCount: number;
 }
-
-type Mutable<Type> = {
-    -readonly [Key in keyof Type]: Type[Key];
-};
