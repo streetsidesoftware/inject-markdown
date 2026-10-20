@@ -17,9 +17,9 @@ Skip it for bug fixes, refactors, dependency updates, and changes that are alrea
 
 ## Where it lives
 
-A design is one file, `docs/designs/<feature>.md`, named by a short kebab-case slug, for example `deny-access`. Add a line for it to the list in [`docs/designs/README.md`](designs/README.md).
+A design is a folder, `docs/designs/<feature>/`, named by a short kebab-case slug, for example `deny-access`. The design itself is its `README.md`. Research notes or a prototype can go next to it, so the design never has to move and links to it keep working.
 
-When a part can be read on its own, such as a sub-feature or research notes, move the design to a folder. `docs/designs/<feature>/README.md` keeps the why and the sketch, and each other file covers one topic.
+Add a line for it under Planned in [`docs/designs/README.md`](designs/README.md). The PR that ships the feature moves the line to Built and links to the feature's user docs.
 
 A design can merge to main before it's settled. Start its title with `WIP:` until it is. A settled design drops `WIP:`, even when its feature isn't built yet.
 
@@ -59,7 +59,7 @@ Work from the top down, and stop when the code is the easier way to answer the r
 4. **Note side questions** in a line under Open questions, and move on.
 5. **Let the code settle the rest.** When a question is easier to answer by building or trying something, stop designing and build.
 
-When the feature ships, update the design where building it changed the design. After that, leave it alone. When a later change makes it wrong, the code and the docs win.
+When the feature ships, update the design where building it changed the design, and move its line in the designs list to Built. After that, leave it alone. When a later change makes it wrong, the code and the docs win.
 
 If a design sets a rule that holds beyond its feature, add it to the [design principles](design-principles.md).
 

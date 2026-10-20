@@ -20,7 +20,7 @@ The directory (default: `cwd`) that every local (`file:`) `@@inject`-family dire
 
 ### Placeholder
 
-A `{@ name @}` marker inside injected content, replaced with a value resolved against sources the _directive_ (not the injected file) supplies. Whitespace inside the delimiters is optional and trimmed; a leading backslash (`\{@ ... @}`) escapes it to literal text. Not a full template engine — no conditionals or loops. See the [template variables design](designs/template-variables.md).
+A `{@ name @}` marker inside injected content, replaced with a value resolved against sources the _directive_ (not the injected file) supplies. Whitespace inside the delimiters is optional and trimmed; a leading backslash (`\{@ ... @}`) escapes it to literal text. Not a full template engine — no conditionals or loops. See the [template variables design](designs/template-variables/README.md).
 
 ### Rebasing (relative links)
 

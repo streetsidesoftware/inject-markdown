@@ -2,7 +2,7 @@
 
 ## Why
 
-Link rebasing already rewrites a relative link in injected Markdown so it resolves from the host file instead of the source file (see the [relative links guide](../guide/relative-links.md)). With `--output-dir`, links stay relative to where the host file sits in the source tree, not where it's written. That matches the host file's own links, but none of the relative links in the output tree work from the output location.
+Link rebasing already rewrites a relative link in injected Markdown so it resolves from the host file instead of the source file (see the [relative links guide](../../guide/relative-links.md)). With `--output-dir`, links stay relative to where the host file sits in the source tree, not where it's written. That matches the host file's own links, but none of the relative links in the output tree work from the output location.
 
 Two use cases need them to:
 

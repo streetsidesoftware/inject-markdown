@@ -2,7 +2,7 @@
 
 ## Why
 
-The [injection root](../guide/injection-root.md) stops a directive reading outside the tree. It says nothing about what sits inside, and CI routinely puts secrets there: an `.npmrc` with a publish token, a `.env` from a setup step, a `kubeconfig`, a `.git/config` with an authenticated remote.
+The [injection root](../../guide/injection-root.md) stops a directive reading outside the tree. It says nothing about what sits inside, and CI routinely puts secrets there: an `.npmrc` with a publish token, a `.env` from a setup step, a `kubeconfig`, a `.git/config` with an authenticated remote.
 
 A directive is text in a Markdown file, so anyone who can open a pull request can add one that reads these into the generated document.
 
@@ -28,7 +28,7 @@ Turned down:
 ### Scope
 
 - **Directive reads only.** The check runs where the injection root is enforced. A denied `.md` file can still be processed as a document. It just can't be injected into another one.
-- **Local files only.** A glob describes paths. Remote destinations are covered by [remote guardrails](remote-guardrails.md).
+- **Local files only.** A glob describes paths. Remote destinations are covered by [remote guardrails](../remote-guardrails/README.md).
 
 Turned down:
 
@@ -54,7 +54,7 @@ The two matching bases are a small surprise that the user docs have to explain.
 
 ### Reporting
 
-A denial is reported like an injection root denial: a fatal directive error worded `Access denied`, naming the pattern that matched. A glob match reveals nothing that the pattern's author doesn't already know, so it can say why. See the design principle [a denial says as much as it safely can](../design-principles.md#a-denial-says-as-much-as-it-safely-can).
+A denial is reported like an injection root denial: a fatal directive error worded `Access denied`, naming the pattern that matched. A glob match reveals nothing that the pattern's author doesn't already know, so it can say why. See the design principle [a denial says as much as it safely can](../../design-principles.md#a-denial-says-as-much-as-it-safely-can).
 
 ### Building it
 

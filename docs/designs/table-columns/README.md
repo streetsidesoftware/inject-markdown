@@ -2,7 +2,7 @@
 
 ## Why
 
-A [table injection](../glossary.md#table-injection) shows every column of the source, in source order, with the source's header text and no alignment. Authors often want less, or different:
+A [table injection](../../glossary.md#table-injection) shows every column of the source, in source order, with the source's header text and no alignment. Authors often want less, or different:
 
 - only some columns, in a different order
 - numbers and currency right-aligned

@@ -8,11 +8,11 @@ Injected snippets repeat values that change, such as versions, package names, an
 - Maintainers running releases or CI want to change a version in one place, and have every injected copy update on the next run.
 - A placeholder that doesn't resolve has to be visible. It's never silently replaced.
 
-The user guide is [docs/guide/template-variables.md](../guide/template-variables.md).
+The user guide is [docs/guide/template-variables.md](../../guide/template-variables.md).
 
 ## Design
 
-A [placeholder](../glossary.md#placeholder) such as `{@ package.version @}` in injected content is replaced with a value the directive supplies. Values come from the directive and the command line, never from the injected file.
+A [placeholder](../../glossary.md#placeholder) such as `{@ package.version @}` in injected content is replaced with a value the directive supplies. Values come from the directive and the command line, never from the injected file.
 
 `snippets/install.md` holds `npm install my-tool@{@ package.version @}`. `README.md` injects it:
 
@@ -88,7 +88,7 @@ Turned down:
 
 - `values-file=[prefix:]path[,[prefix:]path...]` loads JSON files. JSON is the only format, since the project has no YAML parser.
 - Paths are relative to the document that holds the directive.
-- Each path passes the same [injection root](../guide/injection-root.md) check as a directive's file reference, `--allow-outside-root` included. The read uses the path the check approved, so a symbolic link swapped in after the check can't redirect it.
+- Each path passes the same [injection root](../../guide/injection-root.md) check as a directive's file reference, `--allow-outside-root` included. The read uses the path the check approved, so a symbolic link swapped in after the check can't redirect it.
 - An entry that can't be read, isn't valid JSON, or has no usable prefix is a directive error. The other entries still load, and names from the bad entry are reported unresolved.
 
 Turned down:
