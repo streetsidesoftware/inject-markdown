@@ -48,5 +48,3 @@ A directive's own `rebase-links` overrides the command line, so `#rebase-links` 
 ## Migrating
 
 Before this feature, links in an injected file had to be written relative to the host file to work there. Such links now get rewritten and break. Either write them relative to the file they're in, which also makes them work when viewing that file on its own, or add `#rebase-links=false` to the directive.
-
-The design is recorded in [docs/ADRs/relative-links](../ADRs/relative-links/README.md).

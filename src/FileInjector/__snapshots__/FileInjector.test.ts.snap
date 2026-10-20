@@ -1096,13 +1096,13 @@ Bob,25,"Los Angeles, CA"
 
 <!--- @@inject: markdown.csv#markdown&values=name:*draft* --->
 
-| Option        | Description                                                                     | Default  |
-| ------------- | ------------------------------------------------------------------------------- | -------- |
-| **\`columns\`** | Pick columns, e.g. \`a\\|b\` or a \\| b                                             | _all_    |
-| \`#markdown\`   | See [ADR-0008](../../docs/ADRs/table-improvements/0008-table-markdown-cells.md) | ~~off~~  |
-| # Title       | - item stays literal                                                            | 1. first |
-| <sup>1</sup>  | line one<br />line two                                                          | > note   |
-| plain         | has _draft_                                                                     |          |
+| Option        | Description                                               | Default  |
+| ------------- | --------------------------------------------------------- | -------- |
+| **\`columns\`** | Pick columns, e.g. \`a\\|b\` or a \\| b                       | _all_    |
+| \`#markdown\`   | See [the README](../../README.md#markdown-in-table-cells) | ~~off~~  |
+| # Title       | - item stays literal                                      | 1. first |
+| <sup>1</sup>  | line one<br />line two                                    | > note   |
+| plain         | has _draft_                                               |          |
 
 <!--- @@inject-end: markdown.csv#markdown&values=name:*draft* --->
 
@@ -1110,13 +1110,13 @@ Bob,25,"Los Angeles, CA"
 
 <!--- @@inject: markdown.csv --->
 
-| Option              | Description                                                                       | Default     |
-| ------------------- | --------------------------------------------------------------------------------- | ----------- |
-| \\*\\*\\\`columns\\\`\\*\\* | Pick columns, e.g. \\\`a\\|b\\\` or a \\| b                                             | \\_all\\_     |
-| \\\`#markdown\\\`       | See \\[ADR-0008]\\(../../docs/ADRs/table-improvements/0008-table-markdown-cells.md) | \\~\\~off\\~\\~ |
-| # Title             | - item stays literal                                                              | 1. first    |
-| \\<sup>1\\</sup>      | line one&#xA;line two                                                             | > note      |
-| plain               | has {@ name @}                                                                    |             |
+| Option              | Description                                                 | Default     |
+| ------------------- | ----------------------------------------------------------- | ----------- |
+| \\*\\*\\\`columns\\\`\\*\\* | Pick columns, e.g. \\\`a\\|b\\\` or a \\| b                       | \\_all\\_     |
+| \\\`#markdown\\\`       | See \\[the README]\\(../../README.md#markdown-in-table-cells) | \\~\\~off\\~\\~ |
+| # Title             | - item stays literal                                        | 1. first    |
+| \\<sup>1\\</sup>      | line one&#xA;line two                                       | > note      |
+| plain               | has {@ name @}                                              |             |
 
 <!--- @@inject-end: markdown.csv --->
 
@@ -1216,7 +1216,7 @@ _all_
 </td>
 <td>
 
-See [ADR-0008](../../docs/ADRs/table-improvements/0008-table-markdown-cells.md)
+See [the README](../../README.md#markdown-in-table-cells)
 
 </td>
 <td>

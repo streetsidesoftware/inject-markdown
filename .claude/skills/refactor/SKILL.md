@@ -1,6 +1,6 @@
 ---
 name: refactor
-description: 'Restructure existing inject-markdown code without changing its observable behavior: extracting or splitting modules, moving code between files, renaming across the codebase, or changing internal abstractions (e.g. how FileInjector, Directive, or FileSystemAdapter are organized internally). Establishes a green baseline before touching anything, plans the target structure, executes in small verified steps, and proves behavior is unchanged at the end. Use when the user asks to restructure, reorganize, split up, extract, move, or rename something across multiple call sites — or when a change is large/risky enough that "just edit it" could silently change behavior. Do not use for: pure bug fixes (behavior is supposed to change), small single-spot cleanups with no behavior risk (see the simplify skill), or designing new behavior that does not exist yet (see the feature-adr skill).'
+description: 'Restructure existing inject-markdown code without changing its observable behavior: extracting or splitting modules, moving code between files, renaming across the codebase, or changing internal abstractions (e.g. how FileInjector, Directive, or FileSystemAdapter are organized internally). Establishes a green baseline before touching anything, plans the target structure, executes in small verified steps, and proves behavior is unchanged at the end. Use when the user asks to restructure, reorganize, split up, extract, move, or rename something across multiple call sites — or when a change is large/risky enough that "just edit it" could silently change behavior. Do not use for: pure bug fixes (behavior is supposed to change), small single-spot cleanups with no behavior risk (see the simplify skill), or designing new behavior that does not exist yet (see the feature-design skill).'
 ---
 
 # Refactor
@@ -12,7 +12,7 @@ Restructure code while keeping its behavior identical. The risk in a refactor is
 - **This skill**: the change spans multiple files or call sites, changes an internal abstraction, or is large enough that a single "just edit it" pass risks an unnoticed behavior change.
 - **`simplify`**: a small, local cleanup (dedupe, tighten, drop dead code) with no realistic behavior risk — no need for the baseline/checkpoint ceremony below.
 - **`code-review`**: reviewing someone else's diff, not producing one.
-- **`feature-adr`**: the target behavior doesn't exist yet and needs deciding. If a "refactor" request turns out to also want new behavior, stop and point the user at `feature-adr` for that part first — don't let new behavior sneak in under a refactor label.
+- **`feature-design`**: the target behavior doesn't exist yet and needs deciding. If a "refactor" request turns out to also want new behavior, stop and point the user at `feature-design` for that part first — don't let new behavior sneak in under a refactor label.
 
 ## Workflow
 
@@ -24,7 +24,7 @@ Also run `git status`: uncommitted changes sitting in the tree make it impossibl
 
 ### 2. Decide whether this needs a worktree
 
-For a refactor that will span many files or several commits, use `EnterWorktree` (named after the refactor, e.g. `split-file-injector`) so it doesn't tie up the user's current branch mid-flight — same reasoning as `feature-adr` step 1. Skip it for a refactor that's realistically one or two commits, or if the session is already in a worktree.
+For a refactor that will span many files or several commits, use `EnterWorktree` (named after the refactor, e.g. `split-file-injector`) so it doesn't tie up the user's current branch mid-flight. Skip it for a refactor that's realistically one or two commits, or if the session is already in a worktree.
 
 ### 3. Read the real code and state the target structure before moving anything
 
@@ -36,7 +36,7 @@ Cross-check the plan against `CONTRIBUTING.md`'s Architecture section and the mo
 
 ### 4. Execute in small, independently-verified steps
 
-Prefer a sequence of small commits over one large diff — each commit should be a coherent, reviewable step (e.g. "extract X into its own module" then "update call sites" then "remove the old location"), matching this repo's existing Conventional Commits style (`refactor: <short description>`). This mirrors why `feature-adr` commits incrementally: it lets the user watch the structure change happen in `git log` instead of receiving one opaque diff at the end.
+Prefer a sequence of small commits over one large diff — each commit should be a coherent, reviewable step (e.g. "extract X into its own module" then "update call sites" then "remove the old location"), matching this repo's existing Conventional Commits style (`refactor: <short description>`). This lets the user watch the structure change happen in `git log` instead of receiving one opaque diff at the end.
 
 After each step:
 
@@ -60,4 +60,4 @@ If you notice an actual bug while reading code for the refactor, don't fix it in
 
 ### 7. Before opening a PR
 
-Only push/open a PR when the user asks, confirming first via `AskUserQuestion` if it hasn't been explicit — same guardrail as `feature-adr` step 9. Note in the PR description what moved where, and point at the empty `fixtures-output/` diff (or `pnpm test:bin` result) as the behavior-preservation evidence. If step 2 put this session in a worktree, push and open the PR from there.
+Only push/open a PR when the user asks, confirming first via `AskUserQuestion` if it hasn't been explicit. Note in the PR description what moved where, and point at the empty `fixtures-output/` diff (or `pnpm test:bin` result) as the behavior-preservation evidence. If step 2 put this session in a worktree, push and open the PR from there.

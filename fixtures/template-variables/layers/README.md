@@ -1,4 +1,4 @@
-# Value layering (ADR-0008)
+# Value layering
 
 ## Two values-file entries sharing a prefix union per leaf
 
