@@ -32,6 +32,7 @@ words:
   - stringifying
   - strikethrough
   - syscall
+  - tinyglobby
   - unist
   - uppercasing
   - vfile

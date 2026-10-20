@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
-import { globby } from 'globby';
 import * as path from 'path';
+import { glob } from 'tinyglobby';
 import { visit } from 'unist-util-visit';
 import { fileURLToPath } from 'url';
 import { describe, expect, test } from 'vitest';
@@ -56,7 +56,7 @@ describe('removeDirectives', () => {
     });
 
     test('removes every directive from real injected output, without adding blank lines', async () => {
-        const files = await globby('fixtures-output/**/*.md', { cwd: __root__, absolute: true });
+        const files = await glob('fixtures-output/**/*.md', { cwd: __root__, absolute: true });
         expect(files.length).toBeGreaterThan(0);
         for (const file of files) {
             const md = await readFile(file, 'utf8');
