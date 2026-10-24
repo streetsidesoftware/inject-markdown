@@ -13,7 +13,7 @@ A directive only replaces placeholders if it has at least one of `values=`, `val
 - A mistyped option, such as `value-file=`, doesn't opt in. The directive isn't scanned, so there is no warning either.
 - `vars=false` doesn't opt in.
 
-To show the syntax literally in an opted-in directive, write `\{@ name @}`.
+To show the syntax literally in an opted-in directive, write `\{@ name @}`. This works in code spans, code blocks and non-Markdown files. In Markdown prose it doesn't yet: the Markdown parser drops the backslash first, so the placeholder is still replaced ([#887](https://github.com/streetsidesoftware/inject-markdown/issues/887)).
 
 ## Inline values: `values=`
 

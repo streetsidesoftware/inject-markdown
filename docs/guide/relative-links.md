@@ -19,8 +19,17 @@ Injected into `README.md`, this becomes:
 - Inline links `[a](x.md)`, images `![a](x.png)` and reference definitions `[a]: x.md`.
 - Only path-relative URLs: `x.md`, `./x.md`, `../x.md`.
 - Links in Markdown table cells (`#markdown`, `#html-table`), relative to the table's source file.
+- Links in content injected as a block quote (`#quote`).
 
 The new path is the shortest relative path from the host file, without a leading `./`. The one exception is a link to the host file's own directory, which becomes `./`. A query string and `#fragment` are kept. When the two files are in the same directory, links are left exactly as written.
+
+## How a link is resolved
+
+- A link resolves against the injected file's path as written in the directive. If that path goes through a symlink, the link is rewritten from the symlink's directory, not its target's.
+- The rest of the URL is kept as written. Percent-encoding such as `%20` stays encoded, and a trailing `/` stays.
+- A link to the host file itself keeps the file name. `[x](../README.md#x)` in `docs/part.md` becomes `README.md#x`, not `#x`.
+- A backslash is part of a file name, not a path separator. `sub\x.md` in `docs/part.md` becomes `docs/sub\x.md`.
+- A `{@ name @}` placeholder in a link URL isn't replaced. It's rewritten like any other path text.
 
 ## What is left alone
 
@@ -43,10 +52,10 @@ Links are rewritten relative to where the host file lives in the source tree, no
 - For one directive: `<!--- @@inject: docs/part.md#rebase-links=false --->`.
 - For a whole run: `--no-rebase-links`.
 
+`rebase-links=` also accepts `f`, `no` and `n` to turn it off, and `true`, `t`, `yes` and `y` to turn it on.
+
 A directive's own `rebase-links` overrides the command line, so `#rebase-links` turns it back on for one directive in a `--no-rebase-links` run.
 
 ## Migrating
 
 Before this feature, links in an injected file had to be written relative to the host file to work there. Such links now get rewritten and break. Either write them relative to the file they're in, which also makes them work when viewing that file on its own, or add `#rebase-links=false` to the directive.
-
-The design is recorded in [docs/ADRs/relative-links](../ADRs/relative-links/README.md).
