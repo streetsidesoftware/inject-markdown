@@ -121,32 +121,30 @@ export function describe(value: unknown): string {
 }
 
 /** A run of inline pieces that form one line, or a single block. */
-export type Run<Inline, Block> = { readonly inline: Inline[] } | { readonly block: Block };
+export type Run = { readonly inline: InlineContent[] } | { readonly block: BlockContent };
 
 /**
  * Pieces in order, as runs of inline pieces and the blocks between them.
  * Arrays are flattened.
- * The pieces are sorted at runtime by `isBlockContent`, so `Block` must be the pieces it accepts.
  */
-export function runs<Inline, Block>(content: Inline | Block | readonly (Inline | Block)[]): Run<Inline, Block>[] {
-    type Content = Inline | Block;
-    const result: Run<Inline, Block>[] = [];
-    let line: Inline[] = [];
+export function runs(content: ListItemContent | readonly ListItemContent[]): Run[] {
+    const result: Run[] = [];
+    let line: InlineContent[] = [];
     function endLine(): void {
         if (line.length) result.push({ inline: line });
         line = [];
     }
-    function add(piece: Content | readonly Content[]): void {
-        if (Array.isArray(piece)) {
-            (piece as readonly Content[]).forEach(add);
+    function add(piece: ListItemContent | readonly ListItemContent[]): void {
+        if (isArray<ListItemContent>(piece)) {
+            piece.forEach(add);
             return;
         }
         if (isBlockContent(piece)) {
             endLine();
-            result.push({ block: piece as Block });
+            result.push({ block: piece });
             return;
         }
-        line.push(piece as Inline);
+        line.push(piece);
     }
     add(content);
     endLine();
@@ -156,7 +154,7 @@ export function runs<Inline, Block>(content: Inline | Block | readonly (Inline |
 /** A list item from its pieces: each run of inline pieces forms a paragraph, and blocks follow. */
 export function listItemNode(content: readonly ListItemContent[]): ListItem {
     const where = 'list item content';
-    const children = runs<InlineContent, BlockContent>(content).flatMap((run): MdastBlockContent[] =>
+    const children = runs(content).flatMap((run): MdastBlockContent[] =>
         'inline' in run
             ? [{ type: 'paragraph', children: inlineNodes(run.inline, where) }]
             : (blockNodes(run.block, where) as MdastBlockContent[]),

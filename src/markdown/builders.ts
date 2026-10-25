@@ -294,9 +294,7 @@ function paragraphOf(content: readonly InlineContent[], where: string): MDParagr
  */
 export function toBlock(content: ListItemContent | readonly ListItemContent[]): BlockContent {
     if (isBlockContent(content)) return content;
-    const blocks = runs<InlineContent, BlockContent>(content).map((run) =>
-        'inline' in run ? paragraphOf(run.inline, 'block content') : run.block,
-    );
+    const blocks = runs(content).map((run) => ('inline' in run ? paragraphOf(run.inline, 'block content') : run.block));
     return blocks.length === 1 ? blocks[0] : blocks;
 }
 
