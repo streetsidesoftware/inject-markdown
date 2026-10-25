@@ -1,4 +1,5 @@
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
+import { isUnsafeSegment, isValidPlaceholderSegment } from '../markdown/placeholders.js';
 
 export type JsonScalar = string | number | boolean | null;
 export type JsonValue = JsonScalar | JsonValue[] | JsonObject;
@@ -77,8 +78,6 @@ export interface ValueAliasDeclaration {
  */
 export type ValueDeclaration = ValuePairDeclaration | ValuesFileDeclaration | ValueAliasDeclaration;
 
-const validPlaceholderSegment = /^[A-Za-z0-9_][A-Za-z0-9_-]*$/;
-
 /**
  * A values-file prefix: the placeholder-name grammar, at least two characters long.
  * The minimum keeps a one-character Windows drive letter from ever being read as a prefix.
@@ -89,26 +88,6 @@ const validValuesFilePrefix = /^(?=.{2,})[A-Za-z0-9_][A-Za-z0-9_-]*(?:\.[A-Za-z0
 const driveLetterPrefix = /^[A-Za-z]:/;
 
 /**
- * Segments that would reach `Object.prototype` if walked or written. They match the placeholder-name
- * grammar, so they have to be rejected by name rather than by the character class.
- */
-const unsafeSegments = new Set(['__proto__', 'constructor', 'prototype']);
-
-/**
- * A placeholder-name segment: `[A-Za-z0-9_][A-Za-z0-9_-]*`.
- * A hyphen may appear inside a segment but never at its start.
- * Prototype-reaching names are excluded.
- */
-export function isValidPlaceholderSegment(name: string): boolean {
-    return validPlaceholderSegment.test(name) && !unsafeSegments.has(name);
-}
-
-/** A dotted placeholder name: one or more valid segments separated by `.`. */
-export function isValidPlaceholderName(name: string): boolean {
-    return name.split('.').every(isValidPlaceholderSegment);
-}
-
-/**
  * A valid explicit prefix in `[prefix:]path` text:
  * - two characters or more;
  * - dot-separated segments, none empty, none starting with `-` or `.`;
@@ -116,7 +95,7 @@ export function isValidPlaceholderName(name: string): boolean {
  * So `C:`, `..`, `.env` and `-foo` are read as paths, not prefixes.
  */
 export function isValidValuesFilePrefix(name: string): boolean {
-    return validValuesFilePrefix.test(name) && !name.split('.').some((seg) => unsafeSegments.has(seg));
+    return validValuesFilePrefix.test(name) && !name.split('.').some((seg) => isUnsafeSegment(seg));
 }
 
 /** A value tree, with no prototype: a `__proto__` key can never reach `Object.prototype`. */
@@ -276,7 +255,7 @@ export function getPath(tree: JsonObject | undefined, name: string): JsonValue |
  */
 export function setPath(tree: JsonObject, name: string, value: JsonValue): void {
     const segments = name.split('.');
-    if (segments.some((seg) => unsafeSegments.has(seg))) return;
+    if (segments.some((seg) => isUnsafeSegment(seg))) return;
     let cur = tree;
     for (let i = 0; i < segments.length - 1; ++i) {
         const seg = segments[i];
