@@ -1,6 +1,6 @@
 import type { ListItem, PhrasingContent } from 'mdast';
 
-import { describe, inlineNodes, isKind, listItemNode, renderingOf, setNodes, textNodes } from './nodes.js';
+import { blockNodes, describe, inlineNodes, isKind, listItemNode, renderingOf, setNodes, textNodes } from './nodes.js';
 import { isValidPlaceholderName } from './placeholders.js';
 import { renderNodes } from './render.js';
 
@@ -133,6 +133,21 @@ export class MDList extends MDValue {
     }
 }
 
+/** A whole document. It renders with a trailing newline, as a file should end. */
+export class MDDocument extends MDValue {
+    readonly kind = 'block';
+    readonly description = 'a document';
+
+    constructor(content: readonly BlockContent[]) {
+        super();
+        setNodes(this, blockNodes(content, 'document content'));
+    }
+
+    override toString(): string {
+        return super.toString() + '\n';
+    }
+}
+
 /** A filled template: Markdown blocks, rendered in the template's own style. */
 export class MDTemplate extends MDValue {
     readonly kind = 'block';
@@ -151,7 +166,7 @@ export type HeadingDepth = 1 | 2 | 3 | 4 | 5 | 6;
 export type MDInline = MDText | MDLink | MDInlineCode | MDComment | MDInlineTemplate;
 
 /** A value that goes on its own lines. */
-export type MDBlock = MDHeading | MDParagraph | MDList | MDCodeBlock | MDComment | MDTemplate;
+export type MDBlock = MDHeading | MDParagraph | MDList | MDCodeBlock | MDComment | MDDocument | MDTemplate;
 
 /**
  * Content that goes inside a line:
@@ -233,6 +248,11 @@ export function codeBlock(code: string, lang?: string): MDCodeBlock {
 /** One list item from several pieces, for use in {@link list}. */
 export function listItem(...content: ListItemContent[]): MDListItem {
     return new MDListItem(content);
+}
+
+/** A whole document from blocks. Arrays of blocks are flattened. */
+export function document(...content: BlockContent[]): MDDocument {
+    return new MDDocument(content);
 }
 
 /** A bulleted list, one item per entry. */

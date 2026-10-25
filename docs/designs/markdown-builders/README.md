@@ -91,6 +91,16 @@ Turned down:
 
 - `codeBlock(lang, code)`: Markdown order, but the language becomes required.
 
+### Documents
+
+`document(...blocks)` makes a block value from several blocks, so a script can render a whole file: `document(heading(3, title), list(items)).toString()`. Arrays of blocks are flattened, so `document(sections, ...more)` works. A document is the one value that renders with a trailing newline, because it's meant to stand alone as a file. It's where a document's own style and frontmatter will go.
+
+Turned down:
+
+- An exported `render(blocks)`: a second way to render, next to `toString()`.
+- Joining blocks in the script with `'\n\n'`: every script would need to know the blank-line rule between blocks.
+- No trailing newline, like every other value: every script writing a file would add it.
+
 ### Sequences and lists
 
 An array is a sequence:
@@ -273,7 +283,7 @@ The user guide (`docs/guide/markdown-builders.md`, marked experimental) and a sh
 
 ## Open questions
 
-- An `MDDocument` that carries its own style (bullets, fences, emphasis) and uses it when rendering.
+- `MDDocument` options: its own style (bullets, fences, emphasis), and frontmatter.
 - The concrete API: names, how a template and its values are passed in, and how values are typed.
 - At injection time, a values file's top-level dotted keys aren't read as dotted names: `getPath` walks one segment at a time. Should values files follow the values-object rule?
 - The kind check fails when two copies of the package are loaded, for example the builders loaded both directly and through inject-markdown's pass-through after the move to toolbox. Each copy has its own `WeakMap`, just as `instanceof` would fail. A shared brand may be needed then.

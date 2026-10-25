@@ -7,6 +7,7 @@ export type {
     MDBlock,
     MDCodeBlock,
     MDComment,
+    MDDocument,
     MDHeading,
     MDInline,
     MDInlineCode,
@@ -22,6 +23,7 @@ export type {
 export {
     codeBlock,
     comment,
+    document,
     heading,
     inlineCode,
     isMarkdown,

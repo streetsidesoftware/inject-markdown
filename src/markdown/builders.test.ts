@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import {
     codeBlock,
     comment,
+    document,
     heading,
     inlineCode,
     isMarkdown,
@@ -101,6 +102,24 @@ describe('composing', () => {
     test('isMarkdown', () => {
         expect(isMarkdown(text('x'))).toBe(true);
         expect(isMarkdown('x')).toBe(false);
+    });
+});
+
+describe('document', () => {
+    test('blocks render as a file, ending with one newline', () => {
+        const md = document(heading(3, 'Languages'), list(['en', 'de']));
+        expect(md.toString()).toBe('### Languages\n\n- en\n- de\n');
+    });
+
+    test('arrays of blocks are flattened', () => {
+        const sections = [heading(3, 'A'), list(['a'])];
+        const md = document(sections, [heading(3, 'B'), [list(['b'])]]);
+        expect(md.toString()).toBe('### A\n\n- a\n\n### B\n\n- b\n');
+    });
+
+    test('inline content is not a block', () => {
+        // @ts-expect-error a string is not a block
+        expect(() => document('text')).toThrow(new TypeError('document content must be blocks, got a string'));
     });
 });
 
