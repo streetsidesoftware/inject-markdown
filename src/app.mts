@@ -36,12 +36,7 @@ interface CliOptions extends Options {
     summary?: boolean;
 }
 
-/**
- * Turn the collected command-line options into run options.
- * Throws an `OptionError` for:
- * - A value flag it can't parse.
- * - A misused `--directives` or `--no-directives`.
- */
+/** Turn the collected command-line options into run options. */
 function fixOptions(options: CliOptions, valueArgs: readonly ValueArg[]): Options {
     const { value: _value, valuesFile: _valuesFile, valueAlias: _valueAlias, ...opts } = options;
     opts.valueDeclarations = valueArgs.map((arg) => parseValueFlag(arg.flag, arg.raw));
