@@ -52,16 +52,17 @@ export function template(markdown: string, values: TemplateValues): MDTemplate {
  * @throws if the text isn't one paragraph, a placeholder has no value, or a value isn't inline.
  */
 export function inlineTemplate(markdown: string, values: TemplateValues): MDInlineTemplate {
-    const lead = /^\s*/.exec(markdown)?.[0] ?? '';
-    const body = markdown.slice(lead.length).trimEnd();
-    const trail = markdown.slice(lead.length + body.length);
+    const start = markdown.trimStart();
+    const lead = markdown.slice(0, markdown.length - start.length);
+    const body = start.trimEnd();
+    const tail = start.slice(body.length);
     const root = parse(body, true);
     if (root.children.length > 1 || (root.children[0] && root.children[0].type !== 'paragraph')) {
         throw new Error('inline template text must be one paragraph');
     }
     fill(root, values, false);
     const children = root.children[0]?.type === 'paragraph' ? root.children[0].children : [];
-    return new MarkdownValue('inline', 'an inline template', [...textNodes(lead), ...children, ...textNodes(trail)]);
+    return new MarkdownValue('inline', 'an inline template', [...textNodes(lead), ...children, ...textNodes(tail)]);
 }
 
 /**
