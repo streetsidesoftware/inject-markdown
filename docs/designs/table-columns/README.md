@@ -1,4 +1,4 @@
-# WIP: Table columns
+# Table columns
 
 ## Why
 

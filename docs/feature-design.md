@@ -21,7 +21,7 @@ A design is a folder, `docs/designs/<feature>/`, named by a short kebab-case slu
 
 The [designs index](designs/README.md) is generated from each design's folder name and title, so there's nothing to add there by hand.
 
-A design can merge to main before it's settled. Start its title with `WIP:` until it is. A settled design drops `WIP:`, even when its feature isn't built yet.
+A design can merge to main at any point. When its feature is finished, the PR that finishes it adds `FINISHED:` to the start of the title.
 
 Edit a design in place as it changes. Git history keeps the earlier versions, so the file doesn't have to.
 

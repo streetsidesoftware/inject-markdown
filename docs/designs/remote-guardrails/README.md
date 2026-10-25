@@ -1,4 +1,4 @@
-# WIP: Remote guardrails
+# Remote guardrails
 
 ## Why
 

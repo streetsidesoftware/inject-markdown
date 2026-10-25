@@ -1,4 +1,4 @@
-# Template variables
+# FINISHED: Template variables
 
 ## Why
 
