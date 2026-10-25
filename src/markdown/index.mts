@@ -1,30 +1,3 @@
-export type {
-    BlockContent,
-    HeadingDepth,
-    InlineContent,
-    ListEntry,
-    ListItemContent,
-    MDBlock,
-    MDBr,
-    MDCodeBlock,
-    MDComment,
-    MDDocument,
-    MDEmphasis,
-    MDHeading,
-    MDInline,
-    MDInlineCode,
-    MDInlineTemplate,
-    MDLineBreak,
-    MDLink,
-    MDList,
-    MDListItem,
-    MDParagraph,
-    MDStrikethrough,
-    MDStrong,
-    MDTemplate,
-    MDText,
-    MDValue,
-} from './builders.js';
 export {
     br,
     codeBlock,
@@ -43,15 +16,43 @@ export {
     strikethrough,
     strong,
     text,
+    toBlock,
 } from './builders.js';
+export { detectStyle } from './style.js';
+export type { TemplateValue, TemplateValues } from './template.js';
+export { blockTemplate, inlineTemplate, template } from './template.js';
 export type {
+    AnyContent,
+    BlockContent,
+    BlockOrInlineContent,
     BulletMarker,
     EmphasisMarker,
     FenceMarker,
+    HeadingDepth,
+    InlineContent,
+    ListEntry,
+    ListItemContent,
     MarkdownStyle,
+    MDBlock,
+    MDBlockTemplate,
+    MDBr,
+    MDCodeBlock,
+    MDComment,
+    MDDocument,
+    MDEmphasis,
+    MDHeading,
+    MDInline,
+    MDInlineCode,
+    MDInlineTemplate,
+    MDLineBreak,
+    MDLink,
+    MDList,
+    MDListItem,
+    MDParagraph,
+    MDStrikethrough,
+    MDStrong,
+    MDText,
+    MDValue,
     OrderedBulletMarker,
     RuleMarker,
-} from './style.js';
-export { detectStyle } from './style.js';
-export type { TemplateValue, TemplateValues } from './template.js';
-export { inlineTemplate, template } from './template.js';
+} from './types.js';

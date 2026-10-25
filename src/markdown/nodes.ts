@@ -1,8 +1,8 @@
-import type { BlockContent, ListItem, PhrasingContent, RootContent } from 'mdast';
+import type { BlockContent as MdastBlockContent, ListItem, PhrasingContent, RootContent } from 'mdast';
 
-import type { MDKind, MDValue } from './builders.js';
 import { placeholderRegExp } from './placeholders.js';
 import { renderNodes, type StyleOptions } from './render.js';
+import type { AnyContent, BlockContent, InlineContent, ListItemContent, MDKind, MDListItem, MDValue } from './types.js';
 
 /**
  * The key a value's rendering is stored under. Having it is what makes a value a Markdown value.
@@ -77,9 +77,9 @@ export function textNodes(text: string): PhrasingContent[] {
  * The nodes for inline content.
  * @param where - what the content is for, such as `heading content`, for error messages.
  */
-export function inlineNodes(content: unknown, where: string): PhrasingContent[] {
+export function inlineNodes(content: InlineContent, where: string): PhrasingContent[] {
     if (typeof content === 'string') return textNodes(content);
-    if (Array.isArray(content)) return content.flatMap((c: unknown) => inlineNodes(c, where));
+    if (isArray(content)) return content.flatMap((c) => inlineNodes(c, where));
     const rendering = renderingOf(content);
     if (rendering && isKind(content, 'inline', 'comment')) return rendering.nodes as PhrasingContent[];
     throw new TypeError(`${where} must be inline, got ${describe(content)}`);
@@ -89,17 +89,27 @@ export function inlineNodes(content: unknown, where: string): PhrasingContent[] 
  * The nodes for block content.
  * @param where - what the content is for, for error messages.
  */
-export function blockNodes(content: unknown, where: string): RootContent[] {
-    if (Array.isArray(content)) return content.flatMap((c: unknown) => blockNodes(c, where));
+export function blockNodes(content: BlockContent, where: string): RootContent[] {
+    if (isArray(content)) return content.flatMap((c) => blockNodes(c, where));
     const rendering = renderingOf(content);
     if (rendering && isKind(content, 'block', 'comment')) return rendering.nodes;
     throw new TypeError(`${where} must be blocks, got ${describe(content)}`);
 }
 
 /** Whether content is blocks: a block value, or a non-empty array of them. */
-export function isBlockContent(content: unknown): boolean {
+export function isBlockContent(content: unknown): content is BlockContent {
     if (Array.isArray(content)) return content.length > 0 && content.every(isBlockContent);
     return isKind(content, 'block');
+}
+
+/** Whether a value is a list item made by `listItem`. */
+export function isListItem(value: unknown): value is MDListItem {
+    return isKind(value, 'listItem');
+}
+
+/** `Array.isArray`, narrowing readonly arrays too. */
+export function isArray<T>(value: T | readonly T[]): value is readonly T[] {
+    return Array.isArray(value);
 }
 
 /** What a value is, for error messages. */
@@ -110,24 +120,44 @@ export function describe(value: unknown): string {
     return typeof value === 'object' ? 'an object' : `a ${typeof value}`;
 }
 
-/** A list item from its pieces: inline pieces in a row form a paragraph, and blocks follow. */
-export function listItemNode(content: readonly unknown[]): ListItem {
-    const children: BlockContent[] = [];
-    let line: PhrasingContent[] = [];
-    const endLine = () => {
-        if (line.length) children.push({ type: 'paragraph', children: line });
+/** A run of inline pieces that form one line, or a single block. */
+export type Run = { readonly inline: InlineContent[] } | { readonly block: BlockContent };
+
+/**
+ * Pieces in order, as runs of inline pieces and the blocks between them.
+ * Arrays are flattened.
+ */
+export function runs(content: AnyContent): Run[] {
+    const result: Run[] = [];
+    let line: InlineContent[] = [];
+    function endLine(): void {
+        if (line.length) result.push({ inline: line });
         line = [];
-    };
-    const add = (piece: unknown) => {
-        if (Array.isArray(piece)) return piece.forEach(add);
-        if (isBlockContent(piece)) {
-            endLine();
-            children.push(...(blockNodes(piece, 'list item content') as BlockContent[]));
+    }
+    function add(piece: AnyContent): void {
+        if (isArray(piece)) {
+            piece.forEach(add);
             return;
         }
-        line.push(...inlineNodes(piece, 'list item content'));
-    };
-    content.forEach(add);
+        if (isBlockContent(piece)) {
+            endLine();
+            result.push({ block: piece });
+            return;
+        }
+        line.push(piece);
+    }
+    add(content);
     endLine();
+    return result;
+}
+
+/** A list item from its pieces: each run of inline pieces forms a paragraph, and blocks follow. */
+export function listItemNode(content: readonly ListItemContent[]): ListItem {
+    const where = 'list item content';
+    const children = runs(content).flatMap((run): MdastBlockContent[] =>
+        'inline' in run
+            ? [{ type: 'paragraph', children: inlineNodes(run.inline, where) }]
+            : (blockNodes(run.block, where) as MdastBlockContent[]),
+    );
     return { type: 'listItem', spread: false, children };
 }

@@ -1,6 +1,19 @@
 import { describe, expect, test } from 'vitest';
 
-import { codeBlock, inlineCode, inlineTemplate, link, list, listItem, placeholder, template, text } from './index.mjs';
+import {
+    blockTemplate,
+    codeBlock,
+    document,
+    heading,
+    inlineCode,
+    inlineTemplate,
+    link,
+    list,
+    listItem,
+    placeholder,
+    template,
+    text,
+} from './index.mjs';
 import { resolveValue } from './template.js';
 
 describe('resolveValue', () => {
@@ -27,6 +40,36 @@ describe('resolveValue', () => {
     test('only own properties count', () => {
         expect(resolveValue({}, 'toString')).toBeUndefined();
         expect(resolveValue({ a: {} }, 'a.constructor')).toBeUndefined();
+    });
+});
+
+describe('template kinds', () => {
+    test('a single paragraph is inline', () => {
+        const md = template('Hello {@ name @}', { name: 'you' });
+        expect(md.kind).toBe('inline');
+        // The kind narrows the result to the inline template.
+        if (md.kind === 'inline') expect(heading(2, md).toString()).toBe('## Hello you');
+    });
+
+    test('a lone placeholder takes its kind from its value', () => {
+        expect(template('{@ x @}', { x: 'hi' }).kind).toBe('inline');
+        expect(template('{@ x @}', { x: list(['a']) }).kind).toBe('block');
+    });
+
+    test('anything else is blocks', () => {
+        expect(template('- a', {}).kind).toBe('block');
+        expect(template('a\n\nb', {}).kind).toBe('block');
+        expect(template('    code', {}).kind).toBe('block');
+    });
+
+    test('an inline result drops the surrounding whitespace', () => {
+        expect(template('\n  Hello  \n', {}).toString()).toBe('Hello');
+    });
+
+    test('blockTemplate keeps a single paragraph as a block', () => {
+        const md = blockTemplate('Hello {@ name @}', { name: 'you' });
+        expect(md.kind).toBe('block');
+        expect(document(md).toString()).toBe('Hello you\n');
     });
 });
 

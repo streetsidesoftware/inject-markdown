@@ -103,6 +103,8 @@ An array is a sequence:
 
 `paragraph(…)` turns inline content into a block explicitly.
 
+`toBlock(content)` makes content fit where only blocks can go. Blocks come back unchanged, and each run of inline pieces becomes a paragraph, as in a list item: `toBlock(['Intro ', link(…), list([…])])` is a paragraph followed by the list. It's how the result of `template()`, which can be either kind, goes into a document.
+
 `list(entries)` takes one entry per item:
 
 - A string, inline value, or block is a whole item.
@@ -151,7 +153,8 @@ Putting a block where only inline content can go, such as a list inside a headin
 - line breaks: `lineBreak()` and `br()`
 - comment
 - a placeholder builder
-- templates: `template` for blocks, `inlineTemplate` for inline fragments
+- templates: `template`, `blockTemplate`, and `inlineTemplate`
+- `toBlock`
 
 ### Line breaks
 
@@ -184,7 +187,13 @@ A template is Markdown with `{@ name @}` placeholders, in the same [placeholder]
 
 The renderer lengthens a code fence when the inserted content needs it.
 
-`template(markdown, values)` fills a template in one call and returns a block value. `values` is a plain object, and dotted names walk into it, as they do at injection time: `template(tpl, { pkg: { name: '@cspell/dict-grc' }, list: list(items) })`. A script that reuses a template keeps the string and calls `template` again.
+There are three template functions. Each fills a template in one call:
+
+- `template(markdown, values)` parses the text as Markdown. The filled result decides its kind: a single paragraph is inline, without the whitespace around it, and anything else is blocks. A lone `{@ list @}` is inline when its value is text, and a block when its value is a list. Checking `kind` narrows the result, and `toBlock()` puts it where blocks go.
+- `blockTemplate(markdown, values)` is the same, but always returns blocks. A single paragraph stays a paragraph.
+- `inlineTemplate(markdown, values)` is for a fragment, described below.
+
+`values` is a plain object, and dotted names walk into it, as they do at injection time: `template(tpl, { pkg: { name: '@cspell/dict-grc' }, list: list(items) })`. A script that reuses a template keeps the string and calls `template` again.
 
 `inlineTemplate(markdown, values)` fills a fragment the same way and returns an inline value, for use inside a sentence, list item, heading, or link text: `listItem(link(e.name, e.url), inlineTemplate(' - Adds {@ name @} spell checking', e))`.
 
