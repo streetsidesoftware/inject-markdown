@@ -4,6 +4,10 @@
         "Title": "Deny access"
     },
     {
+        "Design": "[`designs-index`](../designs-index/README.md)",
+        "Title": "Designs index"
+    },
+    {
         "Design": "[`markdown-builders`](../markdown-builders/README.md)",
         "Title": "WIP: Markdown builders"
     },
