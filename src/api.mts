@@ -1,7 +1,8 @@
 import { FileInjector, type InjectOptions, type ProcessFileResult } from './FileInjector/FileInjector.js';
 import { nodeFsa } from './FileSystemAdapter/fsa.js';
+import { isValidPlaceholderName } from './markdown/placeholders.js';
 import { OptionError } from './util/errors.js';
-import { isValidPlaceholderName, type ValueDeclaration } from './util/values.js';
+import type { ValueDeclaration } from './util/values.js';
 
 export type { InjectOptions } from './FileInjector/FileInjector.js';
 export { removeDirectives } from './FileInjector/removeDirectives.js';

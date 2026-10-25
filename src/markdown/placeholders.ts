@@ -7,6 +7,33 @@ import { visit } from 'unist-util-visit';
  */
 const placeholderRegExp = /(\\)?\{@\s*([A-Za-z0-9_][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_][A-Za-z0-9_-]*)*)\s*@\}/g;
 
+/**
+ * Segments that would reach `Object.prototype` if walked or written. They match the placeholder-name
+ * grammar, so they have to be rejected by name rather than by the character class.
+ */
+const unsafeSegments = new Set(['__proto__', 'constructor', 'prototype']);
+
+const validPlaceholderSegment = /^[A-Za-z0-9_][A-Za-z0-9_-]*$/;
+
+/** A segment that would reach `Object.prototype` if walked or written. */
+export function isUnsafeSegment(segment: string): boolean {
+    return unsafeSegments.has(segment);
+}
+
+/**
+ * A placeholder-name segment: `[A-Za-z0-9_][A-Za-z0-9_-]*`.
+ * A hyphen may appear inside a segment but never at its start.
+ * Prototype-reaching names are excluded.
+ */
+export function isValidPlaceholderSegment(name: string): boolean {
+    return validPlaceholderSegment.test(name) && !unsafeSegments.has(name);
+}
+
+/** A dotted placeholder name: one or more valid segments separated by `.`. */
+export function isValidPlaceholderName(name: string): boolean {
+    return name.split('.').every(isValidPlaceholderSegment);
+}
+
 export type PlaceholderResolver = (name: string) => string | undefined;
 
 /**
