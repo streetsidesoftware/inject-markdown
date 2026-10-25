@@ -12,6 +12,7 @@ import { OptionError } from '../util/errors.js';
 import { isURL, relativePath } from '../util/url_helper.js';
 import { deriveAutoPrefixFromPath, type ValueDeclaration } from '../util/values.js';
 import { FileInjector, type Logger } from './FileInjector.js';
+import { removeDirectives } from './removeDirectives.js';
 
 const __file__ = fileURLToPath(import.meta.url);
 const __dirname__ = path.dirname(__file__);
@@ -228,6 +229,63 @@ describe('injectOnly', () => {
         expect(written).not.toMatch(/(?<!\r)\n/); // no bare LF
         expect(written).not.toMatch(/\r(?!\n)/); // no stray CR
         expect(written).toContain('- Prices\r\n  <!--- @@inject: parts/prices.md --->\r\n  \r\n  ## Data\r\n');
+    });
+});
+
+describe('directives', () => {
+    const fixtureFile = 'fixtures/inject-only/README.md';
+    const sourcePath = path.join(__root__, fixtureFile);
+    const outputDir = path.join(__root__, '_out_');
+    const outputPath = path.join(outputDir, fixtureFile);
+
+    /** The content written to `file`. */
+    function writtenTo(fsa: FSA, file: string): unknown {
+        return fsa.writeFile.mock.calls.find(([p]) => p === file)?.[1];
+    }
+
+    async function inject(options: Record<string, unknown>) {
+        const fsa = createFSA();
+        const fi = new FileInjector(fsa, { cwd: __root__, silent: true, ...options });
+        const r = await fi.processFile(fixtureFile);
+        return { r, fsa };
+    }
+
+    test('false removes the directives from files written to outputDir', async () => {
+        const { r, fsa } = await inject({ outputDir, directives: false });
+        expect(r.written).toBe(true);
+        const written = writtenTo(fsa, outputPath);
+        expect(written).toBe(removeDirectives(r.file.value as string));
+        expect(written).not.toContain('@@inject');
+    });
+
+    test('true keeps the directives', async () => {
+        const { r, fsa } = await inject({ outputDir, directives: true });
+        expect(writtenTo(fsa, outputPath)).toBe(r.file.value);
+        expect(r.file.value).toContain('<!--- @@inject: snippet.md --->');
+    });
+
+    test('files written in place keep their directives', async () => {
+        const { r, fsa } = await inject({ directives: false });
+        expect(r.written).toBe(true);
+        expect(writtenTo(fsa, sourcePath)).toContain('<!--- @@inject: snippet.md --->');
+    });
+
+    test('with clean, neither the injected content nor the directives are written', async () => {
+        const { fsa: injected } = await inject({});
+        const fsa = createFSA();
+        fsa.store.set(pathToFileURL(sourcePath), writtenTo(injected, sourcePath) as string);
+        const fi = new FileInjector(fsa, {
+            cwd: __root__,
+            silent: true,
+            outputDir,
+            clean: true,
+            directives: false,
+        });
+        await fi.processFile(fixtureFile);
+        const written = writtenTo(fsa, outputPath);
+        expect(written).not.toContain('@@inject');
+        expect(written).not.toContain('Injected content.');
+        expect(written).toContain('There are two blank lines above this paragraph.');
     });
 });
 

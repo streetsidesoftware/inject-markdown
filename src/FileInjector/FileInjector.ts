@@ -38,6 +38,7 @@ import {
     type RunWideValueSources,
 } from './placeholderValues.js';
 import { rebaseLinks } from './rebaseLinks.js';
+import { removeDirectives } from './removeDirectives.js';
 import { applyRowWindow, resolveHeaderRows, resolveRowWindow, type RowWindow } from './rowWindow.js';
 import { type CellValue, type HeaderRowsOption, isJsonCell, rowsToHtmlTable, rowsToTable, widestRow } from './Table.js';
 import { toError, toString } from './utils.js';
@@ -130,6 +131,16 @@ export interface InjectOptions {
 export interface FileInjectorOptions extends InjectOptions {
     /** Write the results to this directory instead of in place. */
     outputDir?: string | undefined;
+
+    /**
+     * Whether files written to `outputDir` keep their `@@inject` directives:
+     * - `true`: keep them.
+     * - `false`: remove them, as `removeDirectives` does.
+     *
+     * Files written in place always keep them.
+     * @default true
+     */
+    directives?: boolean | undefined;
 
     /** Process the files, but don't write anything. */
     dryRun?: boolean | undefined;
@@ -350,7 +361,8 @@ async function processFileInjections(
     }
 
     async function writeResult(file: VFileEx): Promise<void> {
-        const content = extractContent(file);
+        const extracted = extractContent(file);
+        const content = options.outputDir && options.directives === false ? removeDirectives(extracted) : extracted;
         const filePath = fileURLToPath(determineTargetPath(file));
         const dir = path.dirname(filePath);
         await fs.mkdir(dir, { recursive: true });
