@@ -1,4 +1,4 @@
-import type { ListItem } from 'mdast';
+import type { ListItem, RootContent } from 'mdast';
 
 import {
     blockNodes,
@@ -11,6 +11,7 @@ import {
     textNodes,
 } from './nodes.js';
 import { isValidPlaceholderName } from './placeholders.js';
+import type { MarkdownStyle } from './style.js';
 
 /**
  * What a value is, which decides where it may go:
@@ -96,6 +97,11 @@ export interface MDList extends MDValue {
 export interface MDDocument extends MDValue {
     readonly kind: 'block';
     readonly description: 'a document';
+    /**
+     * A copy of the document that renders in the given style.
+     * The style replaces any style the document had. Everything inside the document renders in it.
+     */
+    withStyle(style: MarkdownStyle): MDDocument;
 }
 
 /** A filled template: Markdown blocks, rendered in the template's own style. */
@@ -117,8 +123,12 @@ class TextValue extends MarkdownValue<'inline', 'text'> implements MDText {
 }
 
 class DocumentValue extends MarkdownValue<'block', 'a document'> implements MDDocument {
-    constructor(content: readonly BlockContent[]) {
-        super('block', 'a document', blockNodes(content, 'document content'));
+    constructor(nodes: RootContent[], style?: MarkdownStyle) {
+        super('block', 'a document', nodes, style);
+    }
+
+    withStyle(style: MarkdownStyle): MDDocument {
+        return new DocumentValue(renderingOf(this)?.nodes ?? [], style);
     }
 
     override toString(): string {
@@ -250,7 +260,7 @@ export function listItem(...content: ListItemContent[]): MDListItem {
 
 /** A whole document from blocks. Arrays of blocks are flattened. */
 export function document(...content: BlockContent[]): MDDocument {
-    return new DocumentValue(content);
+    return new DocumentValue(blockNodes(content, 'document content'));
 }
 
 /** A bulleted list, one item per entry. */

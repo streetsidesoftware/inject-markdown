@@ -22,9 +22,11 @@ export const defaultStyle: StyleOptions = {
  */
 export function renderNodes(children: RootContent[], style: StyleOptions | undefined): string {
     const root: Root = { type: 'root', children };
+    // A field set to `undefined` keeps the default, rather than falling back to remark's own default.
+    const given = Object.entries(style ?? {}).filter(([, value]) => value !== undefined);
     const md = unified()
         .use(remarkGfm)
-        .use(remarkStringify, { ...defaultStyle, ...style })
+        .use(remarkStringify, { ...defaultStyle, ...Object.fromEntries(given) })
         .stringify(root);
     return md.replace(/\n$/, '');
 }

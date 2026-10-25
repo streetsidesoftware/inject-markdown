@@ -40,5 +40,14 @@ export {
     strong,
     text,
 } from './builders.js';
+export type {
+    BulletMarker,
+    EmphasisMarker,
+    FenceMarker,
+    MarkdownStyle,
+    OrderedBulletMarker,
+    RuleMarker,
+} from './style.js';
+export { detectStyle } from './style.js';
 export type { TemplateValue, TemplateValues } from './template.js';
 export { inlineTemplate, template } from './template.js';

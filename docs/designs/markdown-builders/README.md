@@ -98,10 +98,20 @@ Turned down:
 
 ### Documents
 
-`document(...blocks)` makes a block value from several blocks, so a script can render a whole file: `document(heading(3, title), list(items)).toString()`. Arrays of blocks are flattened, so `document(sections, ...more)` works. A document is the one value that renders with a trailing newline, because it's meant to stand alone as a file. It's where a document's own style and frontmatter will go.
+`document(...blocks)` makes a block value from several blocks, so a script can render a whole file: `document(heading(3, title), list(items)).toString()`. Arrays of blocks are flattened, so `document(sections, ...more)` works. A document is the one value that renders with a trailing newline, because it's meant to stand alone as a file. It's where a document's own frontmatter will go.
+
+A document can carry its own style:
+
+- `doc.withStyle(style)` returns a copy of the document that renders in that style. Fields the style leaves out keep the default.
+- `MarkdownStyle` is the builders' own interface, with the fields a style read from a file can have: `bullet`, `bulletOrdered`, `emphasis`, `strong`, `fence`, `fences`, `incrementListMarker`, and `rule`. Each takes a named literal type, such as `BulletMarker`. More fields are added when a script needs them.
+- `detectStyle(markdown)` reads the style an existing file uses, so a script can match it: `document(...).withStyle(detectStyle(existing))`. A construct the file doesn't use gets the default.
+- Everything inside a document renders in the document's style. A template's own detected style applies only when the template is rendered by itself.
 
 Turned down:
 
+- A style as the first argument, `document(style, ...blocks)`: the first argument would mean two things.
+- A style passed to `toString(style)`: a template literal calls `toString()` with no arguments.
+- remark-stringify's options, whole or picked: the public types would import remark and tie the API to its version.
 - An exported `render(blocks)`: a second way to render, next to `toString()`.
 - Joining blocks in the script with `'\n\n'`: every script would need to know the blank-line rule between blocks.
 - No trailing newline, like every other value: every script writing a file would add it.
@@ -142,7 +152,7 @@ Turned down:
 
 `toString()` renders a value and everything in it, without a trailing newline. There's no separate render function. A value also renders inside a template literal (`${value}`), so it drops into existing templates such as `unindent`.
 
-`toString()` takes no options, so a value renders in a fixed default style. The exception is a filled template, which renders in the style detected from its own text (`detectMarkdownStyle`, moved into the builders for this). When builder output is injected, inject-markdown already re-renders it in the target document's style, so the default only shows when a script writes a file directly.
+`toString()` takes no options, so a value renders in a fixed default style. The exceptions are a document given a style with `withStyle`, and a filled template, which renders in the style detected from its own text (`detectMarkdownStyle`, moved into the builders for this). When builder output is injected, inject-markdown already re-renders it in the target document's style, so the default only shows when a script writes a file directly.
 
 Converting a value to a string too early loses its kind. `text(`see ${link(…)}`)` makes the link plain text and escapes its brackets. Scripts compose values, not strings.
 
@@ -289,7 +299,7 @@ The user guide (`docs/guide/markdown-builders.md`, marked experimental) and a sh
 
 ## Open questions
 
-- `MDDocument` options: its own style (bullets, fences, emphasis), and frontmatter.
+- `MDDocument` frontmatter.
 - The concrete API: names, how a template and its values are passed in, and how values are typed.
 - At injection time, a values file's top-level dotted keys aren't read as dotted names: `getPath` walks one segment at a time. Should values files follow the values-object rule?
 - Tables, in a second round.

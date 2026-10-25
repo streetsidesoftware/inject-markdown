@@ -3,6 +3,7 @@ import { describe, expect, test, vi } from 'vitest';
 import {
     codeBlock,
     comment,
+    detectStyle,
     document,
     emphasis,
     heading,
@@ -15,6 +16,7 @@ import {
     placeholder,
     strikethrough,
     strong,
+    template,
     text,
 } from './index.mjs';
 
@@ -150,6 +152,41 @@ describe('document', () => {
         const sections = [heading(3, 'A'), list(['a'])];
         const md = document(sections, [heading(3, 'B'), [list(['b'])]]);
         expect(md.toString()).toBe('### A\n\n- a\n\n### B\n\n- b\n');
+    });
+
+    test('withStyle renders a copy in the given style', () => {
+        const md = document(list(['a', emphasis('b'), strong('c')]), codeBlock('x'));
+        const styled = md.withStyle({ bullet: '*', emphasis: '*', strong: '_', fence: '~' });
+        expect(styled.toString()).toBe('* a\n* *b*\n* __c__\n\n~~~\nx\n~~~\n');
+        expect(md.toString()).toBe('- a\n- _b_\n- **c**\n\n```\nx\n```\n');
+    });
+
+    test('a field left out keeps the default', () => {
+        const md = document(list([emphasis('b')])).withStyle({ bullet: undefined, emphasis: '*' });
+        expect(md.toString()).toBe('- *b*\n');
+    });
+
+    test('withStyle replaces the earlier style', () => {
+        const md = document(list([emphasis('b')]))
+            .withStyle({ bullet: '*', emphasis: '*' })
+            .withStyle({ bullet: '+' });
+        expect(md.toString()).toBe('+ _b_\n');
+    });
+
+    test('a template inside renders in the document style', () => {
+        const md = document(template('* a\n* b\n', {})).withStyle({ bullet: '+' });
+        expect(md.toString()).toBe('+ a\n+ b\n');
+    });
+
+    test('detectStyle reads the style an existing file uses', () => {
+        const existing = '# Title\n\n* one\n* two\n\nSome *em* and __strong__.\n\n~~~\ncode\n~~~\n';
+        const style = detectStyle(existing);
+        expect(style).toMatchObject({ bullet: '*', emphasis: '*', strong: '_', fence: '~' });
+        expect(
+            document(list([emphasis('x')]))
+                .withStyle(style)
+                .toString(),
+        ).toBe('* *x*\n');
     });
 
     test('inline content is not a block', () => {
