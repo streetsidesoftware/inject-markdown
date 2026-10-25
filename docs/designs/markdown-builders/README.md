@@ -190,12 +190,31 @@ A placeholder with no value is an error. `template` throws and lists the missing
 - `{ 'engines.cspell': placeholder('engines.cspell') }`: a key may be a dotted name.
 - `{ 'engines.cspell': '{@ engines.cspell @}' }`: escaping text leaves placeholder syntax alone.
 
-Lookup tries the whole name as a key first, then walks nested objects one segment at a time. So in `{ 'engines.cspell': '8.0', engines: { cspell: '9.0' } }`, the exact key wins. A mixed form such as `{ 'a.b': { c: 1 } }` doesn't resolve `{@ a.b.c @}`. Alias names at injection time are matched whole the same way.
+A values object resolves names the way injection resolves declarations:
+
+- Each top-level key acts as a declaration, in the object's key order. A top-level key may be a dotted name. Below the top level, a key is a single segment.
+- The newest declaration wins: keys are tried from last to first.
+- A key matches when it equals the name, or when it equals a leading part of it and the rest of the name resolves inside its value.
+- A key that doesn't hold the rest of the name doesn't stop the search. The next earlier key is tried.
+
+```ts
+{
+    'a.b': { c: 1, e: 5 },
+    a: { b: { c: 0, d: 1 } },
+}
+```
+
+- `a.b.c` is `0`: the later key `a` wins.
+- `a.b.d` is `1`, from `a`.
+- `a.b.e` is `5`: `a` has no `e`, so `'a.b'` is tried.
+
+JavaScript moves integer-like keys, such as `'2'`, to the front of the key order. That only matters for a name whose first segment is all digits.
 
 Turned down:
 
-- Defining a name both ways is an error: every lookup checks both forms, to catch a case scripts are unlikely to write.
-- The nested walk wins: no reason to prefer it.
+- The exact key first, then the nested walk: it ignores the order a reader sees, and mixed forms such as `{ 'a.b': { c: 1 } }` for `a.b.c` don't resolve.
+- The longest matching key first: a later key couldn't override an earlier, longer one.
+- Defining a name both ways is an error: it rejects objects that have a clear reading.
 
 `placeholder(…)` is a text value, so it's also accepted inside inline code and code blocks. That's the `requirements.md` case, where `` `{@ engines.cspell @}` `` is inline code.
 
@@ -226,6 +245,7 @@ Turned down:
 
 - An `MDDocument` that carries its own style (bullets, fences, emphasis) and uses it when rendering.
 - The concrete API: names, how a template and its values are passed in, and how values are typed.
+- At injection time, a values file's top-level dotted keys aren't read as dotted names: `getPath` walks one segment at a time. Should values files follow the values-object rule?
 - `instanceof` fails when two copies of the package are loaded, for example the builders loaded both directly and through inject-markdown's pass-through after the move to toolbox. A brand check may be needed then.
 - Tables, in a second round.
 - Bold and italic, images, and raw HTML, once a script needs them.
