@@ -37,12 +37,6 @@ Out of scope:
 - A backslash right before a placeholder (`\{@ name @}`) keeps it as literal text and drops the backslash. It escapes only that one placeholder.
 - Every directive type uses the same syntax. Only how the result is spliced in differs.
 
-Turned down:
-
-- Reusing the hash characters `&` and `=`: those configure the directive, while placeholders live in content.
-- Exactly one space inside the delimiters: hand-written Markdown varies.
-- No escape: this tool's own docs need to show the syntax.
-
 ### Opting a directive in
 
 A directive is scanned for placeholders only if it carries a trigger: `values=`, `value=`, `values-file=`, `value-alias=`, or the bare flag `#vars`.
@@ -54,11 +48,6 @@ A directive is scanned for placeholders only if it carries a trigger: `values=`,
 
 Scanning every directive would warn about content that only shows the syntax, including this tool's own docs. The cost is that a misspelled trigger, such as `#value-file=`, means no scanning and no warning.
 
-Turned down:
-
-- Always scanning: false warnings.
-- `#vars` as the only trigger: `values=` already says the author wants substitution.
-
 ### Inline values
 
 - `values=name:val,name2:val2` sets several values. Each pair splits at its first `:`. Name and value are trimmed, and the value may be empty.
@@ -68,21 +57,11 @@ Turned down:
 - A malformed `value=` is a directive error. With one pair per occurrence, a missing colon is always a typo.
 - Options are decoded by `URLSearchParams` first. A literal `&` is written `%26`, and `+` decodes to a space.
 
-Turned down:
-
-- One key per name, such as `#value:name=project`: a new key shape, unlike every other option.
-- `value=name=val`, to match `--value`: hard to read next to the hash's own `=`.
-
 ### Repeated keys
 
 `values=`, `value=`, `values-file=`, and `value-alias=` gather every occurrence in document order. `#values-file=a.json&values-file=b.json` is the same as `#values-file=a.json,b.json`. Every other option keeps its last occurrence, silently.
 
 If a repeated key kept only its last occurrence, a directive would silently lose a file that its text plainly declares.
-
-Turned down:
-
-- Warning on a repeated single-value key: it would fire on directives that work.
-- Gathering repeated line ranges: injecting several ranges is a separate feature.
 
 ### Values files
 
@@ -90,12 +69,6 @@ Turned down:
 - Paths are relative to the document that holds the directive.
 - Each path passes the same [injection root](../../guide/injection-root.md) check as a directive's file reference, `--allow-outside-root` included. The read uses the path the check approved, so a symbolic link swapped in after the check can't redirect it.
 - An entry that can't be read, isn't valid JSON, or has no usable prefix is a directive error. The other entries still load, and names from the bad entry are reported unresolved.
-
-Turned down:
-
-- Exempting values files from the injection root: it's the same exposure as any directive file read.
-- Aborting the run on a bad directive values file: other directive errors are collected per document.
-- Skipping a bad entry silently: the author would only see unresolved placeholders, not the cause.
 
 ### Prefixes
 
@@ -118,16 +91,6 @@ Only the first colon separates, so `ab:c.json` has to be written `:ab:c.json` or
 
 Namespacing is the default because root merging is the unsafe form: a second file added later would silently shadow the first one's keys. The two-character rule exists because Windows is in the test matrix, and `--values-file` is the option most likely to get an absolute path. Quoting alone is no fix, since from PowerShell it means typing `'"C:\data\values.json"'`.
 
-Turned down:
-
-- Prefixing as an opt-in: a later file could shadow an earlier one silently.
-- A keyword such as `auto:path`: it reserves a prefix name, where "no colon" needs no keyword.
-- Sanitizing an invalid file name: an implicit prefix is harder to predict than a clear error.
-- Dots in derived prefixes: `v1.2.json` would become a `v1` tree.
-- `=` as the separator: it's legal in file names, and `values-file==data.json` reads badly.
-- A one-character head is a drive only before `/` or `\`: a rule that has to be explained rather than stated.
-- An error for a one-character head: `v:data.json` is a legal file name.
-
 ### Run-wide values
 
 - `--value <name>=<val>` sets one value. It splits at the first `=`. The name is trimmed and must not be empty.
@@ -149,11 +112,6 @@ Anyone who can open a pull request that touches a processed file can add a direc
 - The name has exactly two segments. `{@ env @}` and `{@ env.A.B @}` never resolve.
 - No directive option allows a variable. An alias may target `env.NAME`, and the allow list still applies.
 
-Turned down:
-
-- A directive-level opt-in: anyone who can edit a processed file could request any variable.
-- A declared `env` key shadowing the namespace: `{@ env.X @}` would mean different things depending on which sources are combined.
-
 ### Precedence: the newest declaration wins
 
 A _declaration_ is one `values=` pair, one `value=`, one `values-file=` entry, one `value-alias=` pair, or the command-line equivalent. Declarations form one sequence, oldest to newest, and a newer one overrides an older one whatever option it came from.
@@ -163,13 +121,6 @@ A _declaration_ is one `values=` pair, one `value=`, one `values-file=` entry, o
 - A directive reads left to right. In `#values-file=:package.json&values=version:0.0.0-dev&values-file=:release.json`, `release.json` wins for `version`.
 
 A reader sees the order, so the order is the whole rule. Ranking by kind of source looked principled, but once options could repeat it contradicted the order on the page: the example above would give `0.0.0-dev`. A directive wins over the command line because a directive read alone should mean what it says. The cost is that CI can't override a value a directive hard-codes. To allow that, the directive leaves the value out.
-
-Turned down:
-
-- Ranking by kind (inline over file over command line): it contradicts reading order.
-- The command line newer than the directive: the directive's text would no longer say what it produces.
-- Aliases ranked above the values in their scope: an exception the text doesn't show.
-- An error for conflicting definitions: a new error class for a feature meant to stay simple.
 
 ### Per-leaf resolution
 
@@ -185,13 +136,6 @@ So `--value package.engines.node=26.0` overrides one leaf, and `package.version`
 
 Any other rule treats cases differently that look the same in directive text. Two files under one prefix, replaced wholesale, lose keys only the older file has. A non-scalar can't stop the search, because `--value pkg.a=1` creates an object at `pkg` that would hide a scalar `pkg` from a file.
 
-Turned down:
-
-- Deep-merging all layers into one tree: a newer scalar at `package` would erase every `package.*` leaf, and it needs its own object-versus-scalar rule.
-- One layer per option rather than per declaration: `--value a=1 --value a.b=2` would still lose `a`.
-- `null` blocking older layers: a third state with no use case.
-- `null` as an empty string: a likely typo would become silently empty output.
-
 ### Aliases
 
 An _alias_ makes one placeholder name stand for another. The motivating directive loads two files and wants one name from the second to win: `#values-file=:./package.json&values-file=release:releases.json&value-alias=version:release.latest.version`.
@@ -203,14 +147,6 @@ An _alias_ makes one placeholder name stand for another. The motivating directiv
 - Chains are followed. A cycle leaves the placeholder unresolved.
 - A target may be `env.NAME`, and the allow list still applies.
 - If the target doesn't resolve, the name is unresolved. Resolution doesn't fall back to older values for it, so a broken target is reported rather than masked.
-
-Turned down:
-
-- An alias that only fills a gap: the motivating case is a name that's already defined.
-- One hop, no chains: an alias over an aliased name would fail in a way that's hard to see.
-- A single-segment new name only: an exception to the name grammar, for no gain.
-- Plural `values-alias=`: each entry maps one name to one name.
-- Copying the value into `values=`: it goes stale.
 
 ### Unresolved placeholders
 
@@ -228,13 +164,6 @@ The message reads `Unresolved placeholder "{@ name @}": <reason>`, so the author
 - `aliased to "<target>": ` followed by one of the above
 - `alias cycle through "<target>"`
 
-Turned down:
-
-- Objects and arrays as JSON text: the start of a template engine.
-- One generic message: the fixes differ.
-- One message per occurrence: it floods the output without adding information.
-- `--strict-vars` aborting the run: every other injection error is collected per document.
-
 ### When substitution runs
 
 Substitution runs after extraction, on the content that will be injected. Line ranges, `heading=`, and table row windows are applied first, so placeholders in discarded parts are neither replaced nor reported.
@@ -244,11 +173,6 @@ Substitution runs after extraction, on the content that will be injected. Line r
 - **Tables:** parsed cells are substituted after the header rows and row window are cut. For a JSON source, that includes the header keys and every string inside a nested cell, but not the keys inside it. Markdown cells (`#markdown`, `#html-table`) are parsed after substitution, so a value like `*draft*` renders in italics.
 
 Substituting raw table text would let a value containing the delimiter add columns, or a `"` corrupt a JSON source. Working on nodes in place keeps the formatting that inject-only mode preserves. The cost is that a placeholder split across inline formatting, such as `{@ *ver*sion @}`, isn't recognized.
-
-Turned down:
-
-- Substituting the raw source before extraction: it warns about placeholders that are never injected.
-- Turning the tree back into text, substituting, and parsing again: an extra parse per injection, and it risks reformatting.
 
 ## Open questions
 
@@ -260,3 +184,14 @@ Turned down:
 - Should a root values file whose top level isn't an object warn? Today it contributes nothing, silently.
 - YAML values files, once there's a need.
 - An option that prints the resolved values. With layers, it would print them in order.
+
+## Alternatives
+
+- `value=name=val`, to match `--value`: hard to read next to the hash's own `=`.
+- Warning on a repeated single-value key: it would fire on directives that work.
+- Sanitizing a file name that isn't a valid prefix: an implicit prefix is harder to predict than a clear error.
+- `=` as the prefix separator: it's legal in file names, and `values-file==data.json` reads badly.
+- An error for conflicting definitions of a name: a new error class for a feature meant to stay simple.
+- `null` as an empty string: a likely typo would become silently empty output.
+- Plural `values-alias=`: each entry maps one name to one name.
+- `--strict-vars` aborting the run: every other injection error is collected per document.

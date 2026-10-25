@@ -38,14 +38,20 @@ A design can go in its own `docs:` PR, or in the PR that builds the feature.
 
 ## Design
 
-<The sketch: the shape of the solution in a few lines, with one example of a directive or command line and what inject-markdown does. Then each choice that could change the sketch or is hard to undo, with the alternatives turned down and why.>
+<The sketch: the shape of the solution in a few lines, with one example of a directive or command line and what inject-markdown does. Then each choice that could change the sketch or is hard to undo.>
 
 ## Open questions
 
 - <A side question or deferred point, in one line.>
+
+## Alternatives
+
+- <Only significant ones. One line each: the alternative, and why the design doesn't take it.>
 ```
 
 Record what's out of scope only when a reader would otherwise assume the feature covers it.
+
+List an alternative only when it's significant: a reader would likely propose it, and the design doesn't already say why it loses. The list supports the design. It isn't a record of the discussion. Leave the section out when nothing qualifies.
 
 Define a new term where it's first used. If it's used across the repo, add it to the [glossary](glossary.md).
 

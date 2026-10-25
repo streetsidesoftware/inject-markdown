@@ -34,13 +34,6 @@ A literal IP in the URL is checked directly. One rule covers cloud metadata endp
 
 The redirect loop is the largest piece to build. It's worth testing against a local server rather than a mocked `fetch`.
 
-Turned down:
-
-- Off by default, behind `--allow-remote`: the strongest posture, but it breaks a headline feature this project's own README uses.
-- Refusing only known metadata addresses: every internal service stays reachable, and the list needs upkeep as providers add endpoints.
-- A blanket `--allow-private-network`: it grants the whole network when the user needs one host.
-- Connecting to the verified address to close DNS rebinding: correct, but it needs a custom lookup, the `Host` header kept, and care with TLS SNI and the redirect loop.
-
 ### Limits
 
 A 30-second overall timeout and a 10 MB cap on the response body. Both are fixed constants, and both fail as an ordinary read failure. A flag for each would be more surface than the problem needs.
@@ -55,10 +48,6 @@ The injection root and [deny-access](../deny-access/README.md) denials stay expl
 
 The split needs a second reporting channel. Today a read failure is one `Error` whose message reaches both the console and the document.
 
-Turned down:
-
-- An explicit refusal in the document too: it hands the pull-request author an internal DNS oracle.
-
 ### DNS rebinding stays open
 
 The name is resolved once for the check and again by the connection. A name under attacker control with a very short TTL could answer public, then private. It needs attacker-controlled DNS, and only buys a request the tool would otherwise refuse.
@@ -66,3 +55,8 @@ The name is resolved once for the check and again by the connection. A name unde
 ## Open questions
 
 - The console-versus-document split only helps if the pull-request author doesn't read the build log. That's false wherever CI logs are public, which they often are. Then the honest choices are explicit everywhere (accepting the DNS oracle) or generic everywhere (losing the operator's diagnosis). This changes what the code does, so it has to be settled before building ([#865](https://github.com/streetsidesoftware/inject-markdown/issues/865)).
+
+## Alternatives
+
+- A blanket `--allow-private-network`: it grants the whole network when the user needs one host.
+- Connecting to the verified address to close DNS rebinding: correct, but it needs a custom lookup, the `Host` header kept, and care with TLS SNI and the redirect loop.

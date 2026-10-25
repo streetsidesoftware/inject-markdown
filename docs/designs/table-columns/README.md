@@ -48,15 +48,6 @@ These hold for every table option, and match the built ones.
 
 The cost is that a directive is coupled to its source's columns. A renamed or removed source column breaks it loudly, which catches drift on purpose.
 
-Turned down:
-
-- Repeated keys (`columns=Name&columns=Age`): a comma list is what authors type first.
-- Silently dropping a bad reference: it hides typos.
-- A letter suffix for alignment (`Price:R`): the colon form already reads like Markdown.
-- Matching against the `<br />`-joined display text: authors would have to type HTML in a directive.
-- Matching against the first header row only: it can't tell apart "Name" / "First" and "Name" / "Last".
-- Case-insensitive matching: less predictable, and typos fail fast elsewhere too.
-
 ### Auto-alignment
 
 A column with no explicit marker is right-aligned when at least 90% of its non-empty data cells look numeric. Header cells and cells outside the row window don't count.
@@ -72,14 +63,6 @@ Auto-alignment only ever produces right alignment. An explicit marker in `column
 
 The threshold tolerates a stray `N/A` or footnote. It also means a column can flip back to unaligned when enough non-numeric rows are added later. That should be documented so it isn't taken for a bug.
 
-Turned down:
-
-- Numbers only, no currency: the request named currency.
-- Any leading or trailing symbol as currency: a units column like `5kg` would match.
-- Requiring every cell to match: one `N/A` would flip the column.
-- Counting empty cells: sparse CSV columns would rarely qualify.
-- One number convention only: currency exports use both.
-
 ### `header-format`
 
 `header-format=none|title|upper|lower` changes the case of header display text. The default is `none`.
@@ -88,12 +71,6 @@ Turned down:
 - Each header row is formatted before the rows are joined with `<br />`.
 - It's display only. `columns` still matches the source text, so changing the format never breaks a reference.
 - With `header-rows=0`, the synthesized column numbers have no case, so it does nothing. That's not an error.
-
-Turned down:
-
-- Only adding capitals: `UNIT PRICE` would stay as is, and messy sources would stay messy.
-- `_` and `-` as word boundaries: more rules for a case the author can fix in the source.
-- Formatting the match string too: changing a display option would break `columns` references.
 
 ### `column-names`
 
@@ -106,13 +83,6 @@ Turned down:
 - It replaces whatever the header would show, including the synthesized numbers under `header-rows=0`.
 
 The cost is that reordering `columns` means reordering `column-names` too. A renamed header also no longer matches the `columns` reference that selected it.
-
-Turned down:
-
-- Positions in the source: after `columns` reorders, source positions don't match anything visible.
-- An empty entry blanks the header: partial renaming is the common case.
-- Passing labels through `header-format`: `iPhone Sales` would become `Iphone Sales` under `title`.
-- Requiring an exact length: a short or long list has one harmless meaning.
 
 ### Markdown cells
 
@@ -133,15 +103,6 @@ Raw HTML contributes nothing, except that `<br>`, `<br />`, and a hard break eac
 
 `title` casing has to track word boundaries across text nodes, since the start of a word can sit in an earlier node, as in `**un**it`.
 
-Turned down:
-
-- Matching raw source (`columns=**Price**`): `*` needs encoding, and toggling `#markdown` breaks references.
-- Auto-aligning on raw text: bold or code on a number would flip the column.
-- `header-format` on the raw string: converting `x.md` to upper case breaks the link.
-- Text nodes only: `` `42` `` would never be numeric, and a header written as code could never be named.
-- The first block only: text split across paragraphs would be lost for matching.
-- Including raw HTML text: references would have to spell out tags like `<sup>1</sup>`.
-
 ## Open questions
 
 - Renaming columns inside `columns=`, as [#899](https://github.com/streetsidesoftware/inject-markdown/issues/899) proposes for JSON tables with `columns=title:Command`. A trailing colon already means "right-align", so `title:` is ambiguous. It also overlaps `column-names`.
@@ -149,3 +110,12 @@ Turned down:
 - Auto-alignment changes the output of every existing table with a numeric column. Should it be opt-in, so existing documents keep working?
 - Does `columns` match a header before or after placeholder substitution? Template variables substitute header cells too.
 - Column names that contain a literal comma have no escape.
+
+## Alternatives
+
+- `columns` matching the `<br />`-joined display text: authors would have to type HTML in a directive.
+- Case-insensitive `columns` matching: less predictable, and typos fail fast elsewhere too.
+- Any leading or trailing symbol as currency in auto-alignment: a units column like `5kg` would match.
+- `_` and `-` as word boundaries in `header-format=title`: more rules for a case the author can fix in the source.
+- `column-names` by position in the source: after `columns` reorders, source positions don't match anything visible.
+- Passing `column-names` labels through `header-format`: `iPhone Sales` would become `Iphone Sales` under `title`.

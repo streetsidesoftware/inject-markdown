@@ -23,7 +23,7 @@ Aim for a good design quickly, not a perfect one. If the interview drifts into d
    - **The test.** A question whose answer could change the sketch, or would be hard to undo once it ships, gets discussed. For anything else, propose a default in one line and wait for a quick yes or a correction.
    - **How to ask.** Number each question, and keep each to one decision. Give options labeled (a), (b), …, each with what the user writes and what inject-markdown produces. Put your recommendation first. Check facts in the code first, and bring the result.
    - **Side remarks.** Note each in a line under Open questions and move on.
-   - **Record.** Update the Design section as each point is settled, with the alternatives turned down. Commit when it's useful, not per decision.
+   - **Record.** Update the Design section as each point is settled. Add a turned-down option to Alternatives only when it's significant, as the guide defines it. Commit when it's useful, not per decision.
 
 5. **Stop when the code is the easier answer.** Say so in a line, and stop. Don't start building unless asked.
 
