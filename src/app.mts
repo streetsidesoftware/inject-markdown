@@ -36,16 +36,33 @@ interface CliOptions extends Options {
     summary?: boolean;
 }
 
-/**
- * Turn the collected command-line options into run options.
- * Throws an `OptionError` for a value flag it can't parse.
- */
+/** Turn the collected command-line options into run options. */
 function fixOptions(options: CliOptions, valueArgs: readonly ValueArg[]): Options {
     const { value: _value, valuesFile: _valuesFile, valueAlias: _valueAlias, ...opts } = options;
     opts.valueDeclarations = valueArgs.map((arg) => parseValueFlag(arg.flag, arg.raw));
+    checkDirectives(options);
 
     opts.stopOnErrors = options.stopOnErrors ?? options.stopOnError ?? true;
     return opts;
+}
+
+/**
+ * Throws an `OptionError` when:
+ * - `--directives` or `--no-directives` is given without `--output-dir`.
+ * - Removing directives would overwrite the source files.
+ */
+function checkDirectives(options: CliOptions): void {
+    const { outputDir, directives } = options;
+    if (directives !== undefined && !outputDir) {
+        throw new OptionError(`${directives ? '--directives' : '--no-directives'} requires --output-dir.`);
+    }
+    if (!outputDir || directives !== false) return;
+    // Each output path is --output-dir plus the file's path relative to --cwd.
+    // So an output path is its source exactly when the two directories are the same.
+    const cwd = options.cwd instanceof URL ? fileURLToPath(options.cwd) : options.cwd || '.';
+    if (path.resolve(outputDir) === path.resolve(cwd)) {
+        throw new OptionError('--no-directives would overwrite the source files: --output-dir is the same as --cwd.');
+    }
 }
 
 type ValueFlag = 'value' | 'values-file' | 'value-alias';
@@ -124,6 +141,14 @@ export async function app(program = defaultCommand): Promise<Command> {
         )
         .option('--strict-vars', 'Treat an unresolved {@ name @} placeholder as a directive error.')
         .option('--no-rebase-links', 'Keep relative links in injected Markdown as written instead of rebasing them.')
+        // Next major: default to false (#916).
+        .addOption(
+            new CommanderOption(
+                '--directives',
+                'Keep the @@inject directives in files written to --output-dir.',
+            ).hideHelp(),
+        )
+        .option('--no-directives', 'Remove the @@inject directives from files written to --output-dir.')
         .option('--clean', 'Remove the injected content.')
         .addOption(new CommanderOption('--inject-only', 'Only update the injected content.').default(true).hideHelp())
         .option('--no-inject-only', 'Update the whole file.')

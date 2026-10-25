@@ -626,6 +626,8 @@ Options:
   --no-rebase-links              Keep relative links in injected
                                  Markdown as written instead of rebasing
                                  them.
+  --no-directives                Remove the @@inject directives from
+                                 files written to --output-dir.
   --clean                        Remove the injected content.
   --no-inject-only               Update the whole file.
   --verbose                      Verbose output.
