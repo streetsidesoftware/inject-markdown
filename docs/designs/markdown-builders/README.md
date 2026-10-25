@@ -258,6 +258,13 @@ Turned down:
 - Internal only until the move: the scripts couldn't use it while it's being shaped by them.
 - `experimental` in the subpath: every import would change once it settles.
 
+### Tests
+
+- Unit tests next to each builder, built from the escaping failures found in the repos: `]` in link text, a backtick in inline code, a fence inside a code block, `-->` in a comment, and inline versus block errors.
+- Template tests for the resolve order, missing names, kept placeholders, and placeholders inside code.
+- The existing placeholder and injection tests pass unchanged after the placeholder code moves, which shows injection behavior didn't change.
+- Fixtures are fine, kept with the builders' code rather than mixed into the injection fixtures under `fixtures/`, so they move to toolbox along with it.
+
 ### Release
 
 A `feat:` release. It isn't breaking: the subpath is new, and the placeholder code moving underneath doesn't change injection behavior.
