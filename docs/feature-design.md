@@ -21,11 +21,9 @@ A design is a folder, `docs/designs/<feature>/`, named by a short kebab-case slu
 
 The [designs index](designs/README.md) is generated from each design's folder name and title, so there's nothing to add there by hand.
 
-A design can merge to main before it's settled. Start its title with `WIP:` until it is. A settled design drops `WIP:`, even when its feature isn't built yet.
+A design can merge to main at any point. When its feature is finished, the PR that finishes it adds `FINISHED:` to the start of the title.
 
 Edit a design in place as it changes. Git history keeps the earlier versions, so the file doesn't have to.
-
-A design can go in its own `docs:` PR, or in the PR that builds the feature.
 
 ## The file
 
@@ -38,14 +36,20 @@ A design can go in its own `docs:` PR, or in the PR that builds the feature.
 
 ## Design
 
-<The sketch: the shape of the solution in a few lines, with one example of a directive or command line and what inject-markdown does. Then each choice that could change the sketch or is hard to undo, with the alternatives turned down and why.>
+<The sketch: the shape of the solution in a few lines, with one example of a directive or command line and what inject-markdown does. Then each choice that could change the sketch or is hard to undo.>
 
 ## Open questions
 
 - <A side question or deferred point, in one line.>
+
+## Alternatives
+
+- <Only significant ones. One line each: the alternative, and why the design doesn't take it.>
 ```
 
 Record what's out of scope only when a reader would otherwise assume the feature covers it.
+
+List an alternative only when it's significant: a reader would likely propose it, and the design doesn't already say why it loses. The list supports the design. It isn't a record of the discussion. Leave the section out when nothing qualifies.
 
 Don't state another feature's build status in a design. Link to its design or user docs instead, so the sentence can't go stale.
 
@@ -60,8 +64,6 @@ Work from the top down, and stop when the code is the easier way to answer the r
 3. **Work through the [design questions](#design-questions).** Spend time on a question when its answer could change the sketch, or would be hard to undo once it ships. Settle anything else with a sensible default. When a detail shows the sketch is wrong, change the sketch.
 4. **Note side questions** in a line under Open questions, and move on.
 5. **Let the code settle the rest.** When a question is easier to answer by building or trying something, stop designing and build.
-
-When the feature ships, update the design where building it changed the design. After that, leave it alone. When a later change makes it wrong, the code and the docs win.
 
 If a design sets a rule that holds beyond its feature, add it to the [design principles](design-principles.md).
 

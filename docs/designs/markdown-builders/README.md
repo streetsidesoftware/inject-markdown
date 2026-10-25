@@ -1,4 +1,4 @@
-# WIP: Markdown builders
+# Markdown builders
 
 ## Why
 

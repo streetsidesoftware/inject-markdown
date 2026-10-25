@@ -5,7 +5,7 @@
     },
     {
         "Design": "[`markdown-builders`](../markdown-builders/README.md)",
-        "Title": "WIP: Markdown builders"
+        "Title": "Markdown builders"
     },
     {
         "Design": "[`rebase-output-links`](../rebase-output-links/README.md)",
@@ -13,14 +13,14 @@
     },
     {
         "Design": "[`remote-guardrails`](../remote-guardrails/README.md)",
-        "Title": "WIP: Remote guardrails"
+        "Title": "Remote guardrails"
     },
     {
         "Design": "[`table-columns`](../table-columns/README.md)",
-        "Title": "WIP: Table columns"
+        "Title": "Table columns"
     },
     {
         "Design": "[`template-variables`](../template-variables/README.md)",
-        "Title": "Template variables"
+        "Title": "FINISHED: Template variables"
     }
 ]

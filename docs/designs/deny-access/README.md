@@ -20,27 +20,14 @@ With this, `<!--- @@inject: .npmrc --->` fails with an `Access denied` error tha
 
 The tool doesn't decide what's sensitive. The operator knows their own tree, and the tool doesn't. There are no patterns unless the operator supplies them.
 
-Turned down:
-
-- A denylist the tool ships, as a default or hard-coded: it's never complete, and it would break anyone legitimately injecting a dotfile.
-- Guidance only (`--cwd docs/`): it depends on a repository layout, and offers nothing for a secret inside the docs subtree.
-
 ### Scope
 
 - **Directive reads only.** The check runs where the injection root is enforced. A denied `.md` file can still be processed as a document. It just can't be injected into another one.
 - **Local files only.** A glob describes paths. Remote destinations are covered by [remote guardrails](../remote-guardrails/README.md).
 
-Turned down:
-
-- Also excluding files from discovery: one flag would grant two different things. An operator can narrow the glob of files they pass instead.
-
 ### Precedence
 
 A deny match always wins. It refuses regardless of `--allow-outside-root`, and regardless of argument order. So the deny patterns alone answer whether a path is reachable, which is what an audit needs.
-
-Turned down:
-
-- `.gitignore`-style ordered allow and deny, to re-open a subpath: reachability would depend on argument order. For a security control, that matters more than expressiveness.
 
 ### What a pattern matches
 
@@ -64,3 +51,7 @@ A denial is reported like an injection root denial: a fatal directive error word
 ## Open questions
 
 - Windows path normalization should share one answer with the template-variables handling of drive letters, rather than growing a second one.
+
+## Alternatives
+
+- Also excluding denied files from discovery: one flag would grant two different things. An operator can narrow the glob of files they pass instead.
