@@ -9,7 +9,6 @@ This table is generated from each design's folder name and title by `pnpm build:
 | Design                                                 | Title                  |
 | ------------------------------------------------------ | ---------------------- |
 | [`deny-access`](deny-access/README.md)                 | Deny access            |
-| [`designs-index`](designs-index/README.md)             | Designs index          |
 | [`markdown-builders`](markdown-builders/README.md)     | WIP: Markdown builders |
 | [`rebase-output-links`](rebase-output-links/README.md) | Rebase output links    |
 | [`remote-guardrails`](remote-guardrails/README.md)     | WIP: Remote guardrails |
