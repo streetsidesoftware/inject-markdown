@@ -77,6 +77,12 @@ Turned down:
 - `heading(content, depth)`: it breaks Markdown order, and an optional depth needs a default.
 - `h1(…)` through `h6(…)`: six functions, and a computed level needs a lookup.
 
+### Inline code and comments
+
+`inlineCode(code)` and `comment(text)` each take one string, because code and comment text aren't Markdown. The fence of inline code is longer than any run of backticks in the code.
+
+A placeholder fits in by converting to a string, since its string form is exactly `{@ name @}`: `inlineCode(`version: ${placeholder('engine.version')}`)`.
+
 ### Code blocks
 
 `codeBlock(code, lang?)` takes the language last, because it's optional: `codeBlock('npm install -D @cspell/dict-en', 'sh')`. The code is inserted as is. The fence is longer than any run of backticks in the code.
@@ -150,7 +156,7 @@ Turned down:
 - paragraph and list item, with arrays as sequences
 - comment
 - a placeholder builder
-- templates
+- templates: `template` for blocks, `inlineTemplate` for inline fragments
 
 ### Comments
 
@@ -183,6 +189,11 @@ The renderer lengthens a code fence when the inserted content needs it.
 Turned down:
 
 - `template(markdown).fill(values)`: a second kind of object, for a parse-once speed gain the scripts don't need. It can still be added later.
+
+`inlineTemplate(markdown, values)` fills a fragment the same way and returns an inline value, for use inside a sentence, list item, heading, or link text: `listItem(link(e.name, e.url), inlineTemplate(' - Adds {@ name @} spell checking', e))`.
+
+- Its text must be inline-able: one paragraph. A blank line, list, or heading throws.
+- Its placeholders take only inline values.
 
 A placeholder with no value is an error. `template` throws and lists the missing names. A script that keeps a placeholder for injection time passes it explicitly. So typos are caught, and every kept placeholder is visible in the script. Any of these work:
 
@@ -224,6 +235,12 @@ Turned down:
 - Leaving it as written, with a `strict` option: the safe behavior would be opt-in.
 
 The concerns that apply at injection time, such as untrusted values and link rebasing, don't apply here. The same script owns the template and the values.
+
+### Errors
+
+A value of the wrong kind throws a `TypeError`, such as a block where only inline content can go, or an array that mixes inline and block values. Other misuse throws an `Error`, such as a template placeholder with no value or a heading depth outside 1–6. Each message names what was wrong: `heading content must be inline, got a list`.
+
+A builders-specific error class waits until a caller needs to catch one specifically. inject-markdown's `OptionError` isn't used, because the builders import nothing from the rest of inject-markdown.
 
 ### Where it lives
 
