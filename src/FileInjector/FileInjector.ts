@@ -10,6 +10,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import type { VFile } from 'vfile';
 
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
+import { detectMarkdownStyle } from '../markdown/detectStyle.js';
 import { substituteInString, substituteInTree } from '../markdown/placeholders.js';
 import { delimiterForExtension, parseDelimitedText } from '../util/csv.js';
 import { fileType } from '../util/fileType.mjs';
@@ -17,7 +18,6 @@ import { type InjectInfo, parseHash } from '../util/hash.js';
 import { isDefined } from '../util/isDefined.js';
 import { dirToUrl, pathToUrl, relativePath, type RelURL } from '../util/url_helper.js';
 import type { ValueDeclaration } from '../util/values.js';
-import { detectMarkdownStyle } from './detectStyle.js';
 import { type Directive, directiveRegExp, type DirectiveType, parseDirective } from './Directive.js';
 import { jsonToRows, mapJsonStrings } from './jsonTable.js';
 import {

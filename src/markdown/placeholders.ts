@@ -5,7 +5,7 @@ import { visit } from 'unist-util-visit';
  * Matches `{​@ name @​}` placeholders, with an optional leading backslash escape.
  * Whitespace immediately inside the delimiters is optional and trimmed by the regex itself.
  */
-const placeholderRegExp = /(\\)?\{@\s*([A-Za-z0-9_][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_][A-Za-z0-9_-]*)*)\s*@\}/g;
+export const placeholderRegExp = /(\\)?\{@\s*([A-Za-z0-9_][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_][A-Za-z0-9_-]*)*)\s*@\}/g;
 
 /**
  * Segments that would reach `Object.prototype` if walked or written. They match the placeholder-name
