@@ -79,6 +79,20 @@ A document can carry its own style:
 - `detectStyle(markdown)` reads the style an existing file uses, so a script can match it: `document(...).withStyle(detectStyle(existing))`. A construct the file doesn't use gets the default.
 - Everything inside a document renders in the document's style. A template's own detected style applies only when the template is rendered by itself.
 
+### Flavors
+
+A document renders for a target flavor. It's built in round two, with tables, because its first user, vscode-spell-checker's Docusaurus site, mostly writes tables.
+
+- `'github'` is the default: GitHub's Markdown.
+- `doc.withFlavor('mdx')` returns a copy of the document that renders as valid MDX. Docusaurus 3 parses even `.md` files as MDX.
+- Flavor is separate from style. A style chooses between equivalent forms and can be detected from a file. A flavor decides what is valid, and only the script knows its target.
+- In `'mdx'`:
+  - `{` and `<` in text are escaped.
+  - A comment renders as `{/* … */}`. Docusaurus accepts `<!-- -->` today only through its MDX 1 compatibility setting, which its v4 defaults turn off.
+  - Raw HTML is valid JSX, as `<br/>` already is.
+  - A kept placeholder throws when rendering. `{@ name @}` is an invalid MDX expression, and an `'mdx'` document is final output.
+- Flavor-only constructs, such as GitHub alerts (`> [!NOTE]`) and Docusaurus admonitions (`:::note`), wait until a script needs them.
+
 ### Sequences and lists
 
 An array is a sequence:
@@ -240,7 +254,7 @@ The user guide (`docs/guide/markdown-builders.md`, marked experimental) and a sh
 - `MDDocument` frontmatter.
 - The concrete API: names, how a template and its values are passed in, and how values are typed.
 - At injection time, a values file's top-level dotted keys aren't read as dotted names: `getPath` walks one segment at a time. Should values files follow the values-object rule?
-- Tables, in a second round.
+- Tables and flavors, in a second round.
 - Images and raw HTML, once a script needs them.
 - Markdown-valued placeholders at injection time. The placeholder opts in. The syntax is open.
 
