@@ -3,7 +3,6 @@ import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 
-import type { InlineContent, MDBlockTemplate, MDInlineTemplate, MDText, MDValue } from './builders.js';
 import { detectMarkdownStyle } from './detectStyle.js';
 import {
     blockNodes,
@@ -16,6 +15,7 @@ import {
     textNodes,
 } from './nodes.js';
 import { placeholderRegExp } from './placeholders.js';
+import type { InlineContent, MDBlockTemplate, MDInlineTemplate, MDText, MDValue } from './types.js';
 
 /** A value a template placeholder can take. */
 export type TemplateValue = string | number | boolean | MDValue | readonly TemplateValue[];

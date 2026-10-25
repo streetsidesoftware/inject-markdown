@@ -1,7 +1,7 @@
 import type { Root } from 'mdast';
 import { visit } from 'unist-util-visit';
 
-import type { MarkdownStyle } from './style.js';
+import type { MarkdownStyle } from './types.js';
 
 /**
  * Detects the Markdown marker style (bullets, emphasis, fences, etc.) `root`

@@ -1,8 +1,8 @@
 import type { BlockContent as MdastBlockContent, ListItem, PhrasingContent, RootContent } from 'mdast';
 
-import type { BlockContent, InlineContent, ListItemContent, MDKind, MDListItem, MDValue } from './builders.js';
 import { placeholderRegExp } from './placeholders.js';
 import { renderNodes, type StyleOptions } from './render.js';
+import type { AnyContent, BlockContent, InlineContent, ListItemContent, MDKind, MDListItem, MDValue } from './types.js';
 
 /**
  * The key a value's rendering is stored under. Having it is what makes a value a Markdown value.
@@ -127,15 +127,15 @@ export type Run = { readonly inline: InlineContent[] } | { readonly block: Block
  * Pieces in order, as runs of inline pieces and the blocks between them.
  * Arrays are flattened.
  */
-export function runs(content: ListItemContent | readonly ListItemContent[]): Run[] {
+export function runs(content: AnyContent): Run[] {
     const result: Run[] = [];
     let line: InlineContent[] = [];
     function endLine(): void {
         if (line.length) result.push({ inline: line });
         line = [];
     }
-    function add(piece: ListItemContent | readonly ListItemContent[]): void {
-        if (isArray<ListItemContent>(piece)) {
+    function add(piece: AnyContent): void {
+        if (isArray(piece)) {
             piece.forEach(add);
             return;
         }
