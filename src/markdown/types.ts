@@ -154,8 +154,9 @@ export type ListItemContent = BlockOrInlineContent;
 
 /**
  * One item of a list:
- * - A string, inline value, or block is a whole item.
- * - An array is one item, not a nested list. Each run of inline pieces forms a line, and blocks go on their own lines.
+ * - A string, inline value, or block becomes one item.
+ * - An array also becomes one item, never a nested list. Its pieces are joined into that item:
+ *   `['See ', link('the docs', url)]` becomes `- See [the docs](url)`.
  */
 export type ListEntry = InlineContent | MDBlock | MDListItem | readonly ListItemContent[];
 
