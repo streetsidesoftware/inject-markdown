@@ -3,9 +3,18 @@ import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 
-import { MDInlineTemplate, MDTemplate, MDText, type MDValue } from './builders.js';
+import type { MDInlineTemplate, MDTemplate, MDText, MDValue } from './builders.js';
 import { detectMarkdownStyle } from './detectStyle.js';
-import { blockNodes, describe, inlineNodes, isBlockContent, renderingOf, setNodes, textNodes } from './nodes.js';
+import {
+    blockNodes,
+    describe,
+    inlineNodes,
+    isBlockContent,
+    isKind,
+    MarkdownValue,
+    renderingOf,
+    textNodes,
+} from './nodes.js';
 import { placeholderRegExp } from './placeholders.js';
 
 /** A value a template placeholder can take. */
@@ -34,9 +43,7 @@ export interface TemplateValues {
 export function template(markdown: string, values: TemplateValues): MDTemplate {
     const root = parse(markdown, false);
     fill(root, values, true);
-    const value = new MDTemplate();
-    setNodes(value, root.children, detectMarkdownStyle(root, markdown));
-    return value;
+    return new MarkdownValue('block', 'a template', root.children, detectMarkdownStyle(root, markdown));
 }
 
 /**
@@ -54,9 +61,7 @@ export function inlineTemplate(markdown: string, values: TemplateValues): MDInli
     }
     fill(root, values, false);
     const children = root.children[0]?.type === 'paragraph' ? root.children[0].children : [];
-    const value = new MDInlineTemplate();
-    setNodes(value, [...textNodes(lead), ...children, ...textNodes(trail)]);
-    return value;
+    return new MarkdownValue('inline', 'an inline template', [...textNodes(lead), ...children, ...textNodes(trail)]);
 }
 
 /**
@@ -223,6 +228,10 @@ function valueAsInline(value: TemplateValue, name: string): PhrasingContent[] {
 /** A value inside code: only a string or text, inserted as is. */
 function valueAsCode(value: TemplateValue, name: string): string {
     if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
-    if (value instanceof MDText) return value.text;
+    if (isText(value)) return value.text;
     throw new TypeError(`{@ ${name} @} is inside code and takes only a string or text, got ${describe(value)}`);
+}
+
+function isText(value: unknown): value is MDText {
+    return isKind(value, 'inline') && value.description === 'text';
 }

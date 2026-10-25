@@ -1,8 +1,16 @@
-import type { ListItem, PhrasingContent } from 'mdast';
+import type { ListItem } from 'mdast';
 
-import { blockNodes, describe, inlineNodes, isKind, listItemNode, renderingOf, setNodes, textNodes } from './nodes.js';
+import {
+    blockNodes,
+    describe,
+    inlineNodes,
+    isKind,
+    listItemNode,
+    MarkdownValue,
+    renderingOf,
+    textNodes,
+} from './nodes.js';
 import { isValidPlaceholderName } from './placeholders.js';
-import { renderNodes } from './render.js';
 
 /**
  * What a value is, which decides where it may go:
@@ -14,180 +22,108 @@ import { renderNodes } from './render.js';
 export type MDKind = 'inline' | 'block' | 'comment' | 'listItem';
 
 /** A Markdown value. Converting it to a string renders it. */
-export abstract class MDValue {
-    abstract readonly kind: MDKind;
+export interface MDValue {
+    readonly kind: MDKind;
     /** What the value is, for error messages, such as `a list`. */
-    abstract readonly description: string;
-
-    toString(): string {
-        const { nodes, style } = renderingOf(this) ?? { nodes: [], style: undefined };
-        if (this.kind === 'inline') {
-            return renderNodes([{ type: 'paragraph', children: nodes as PhrasingContent[] }], style);
-        }
-        if (this.kind === 'listItem') {
-            return renderNodes([{ type: 'list', ordered: false, spread: false, children: nodes as ListItem[] }], style);
-        }
-        return renderNodes(nodes, style);
-    }
+    readonly description: string;
+    toString(): string;
 }
 
 /** Text. A `{@ name @}` placeholder in it is kept as written. */
-export class MDText extends MDValue {
-    readonly kind = 'inline';
-    readonly description = 'text';
-
-    /** @param text - the text as written, unescaped. */
-    constructor(readonly text: string) {
-        super();
-        setNodes(this, textNodes(text));
-    }
+export interface MDText extends MDValue {
+    readonly kind: 'inline';
+    readonly description: 'text';
+    /** The text as written, unescaped. */
+    readonly text: string;
 }
 
-export class MDLink extends MDValue {
-    readonly kind = 'inline';
-    readonly description = 'a link';
-
-    constructor(content: InlineContent, url: string | URL) {
-        const href = typeof url === 'string' ? url : url.href;
-        super();
-        setNodes(this, [{ type: 'link', url: href, children: inlineNodes(content, 'link content') }]);
-    }
+export interface MDLink extends MDValue {
+    readonly kind: 'inline';
+    readonly description: 'a link';
 }
 
-export class MDStrong extends MDValue {
-    readonly kind = 'inline';
-    readonly description = 'strong text';
-
-    constructor(content: InlineContent) {
-        super();
-        setNodes(this, [{ type: 'strong', children: inlineNodes(content, 'strong content') }]);
-    }
+export interface MDStrong extends MDValue {
+    readonly kind: 'inline';
+    readonly description: 'strong text';
 }
 
-export class MDEmphasis extends MDValue {
-    readonly kind = 'inline';
-    readonly description = 'emphasized text';
-
-    constructor(content: InlineContent) {
-        super();
-        setNodes(this, [{ type: 'emphasis', children: inlineNodes(content, 'emphasis content') }]);
-    }
+export interface MDEmphasis extends MDValue {
+    readonly kind: 'inline';
+    readonly description: 'emphasized text';
 }
 
-export class MDStrikethrough extends MDValue {
-    readonly kind = 'inline';
-    readonly description = 'struck-through text';
-
-    constructor(content: InlineContent) {
-        super();
-        setNodes(this, [{ type: 'delete', children: inlineNodes(content, 'strikethrough content') }]);
-    }
+export interface MDStrikethrough extends MDValue {
+    readonly kind: 'inline';
+    readonly description: 'struck-through text';
 }
 
-export class MDInlineCode extends MDValue {
-    readonly kind = 'inline';
-    readonly description = 'inline code';
-
-    constructor(code: string) {
-        super();
-        setNodes(this, [{ type: 'inlineCode', value: code }]);
-    }
+export interface MDInlineCode extends MDValue {
+    readonly kind: 'inline';
+    readonly description: 'inline code';
 }
 
-export class MDComment extends MDValue {
-    readonly kind = 'comment';
-    readonly description = 'a comment';
-
-    constructor(text: string) {
-        super();
-        setNodes(this, [{ type: 'html', value: `<!-- ${commentSafe(text)} -->` }]);
-    }
+export interface MDComment extends MDValue {
+    readonly kind: 'comment';
+    readonly description: 'a comment';
 }
 
-export class MDHeading extends MDValue {
-    readonly kind = 'block';
-    readonly description = 'a heading';
-
-    constructor(depth: HeadingDepth, content: InlineContent) {
-        if (!Number.isInteger(depth) || depth < 1 || depth > 6) {
-            throw new Error(`heading depth must be 1 to 6, got ${String(depth)}`);
-        }
-        super();
-        setNodes(this, [{ type: 'heading', depth, children: inlineNodes(content, 'heading content') }]);
-    }
+export interface MDHeading extends MDValue {
+    readonly kind: 'block';
+    readonly description: 'a heading';
 }
 
-export class MDParagraph extends MDValue {
-    readonly kind = 'block';
-    readonly description = 'a paragraph';
-
-    constructor(content: InlineContent) {
-        super();
-        setNodes(this, [{ type: 'paragraph', children: inlineNodes(content, 'paragraph content') }]);
-    }
+export interface MDParagraph extends MDValue {
+    readonly kind: 'block';
+    readonly description: 'a paragraph';
 }
 
-export class MDCodeBlock extends MDValue {
-    readonly kind = 'block';
-    readonly description = 'a code block';
-
-    constructor(code: string, lang?: string) {
-        super();
-        setNodes(this, [{ type: 'code', lang: lang || null, value: code }]);
-    }
+export interface MDCodeBlock extends MDValue {
+    readonly kind: 'block';
+    readonly description: 'a code block';
 }
 
-export class MDListItem extends MDValue {
-    readonly kind = 'listItem';
-    readonly description = 'a list item';
-
-    constructor(content: readonly ListItemContent[]) {
-        super();
-        setNodes(this, [listItemNode(content)]);
-    }
+export interface MDListItem extends MDValue {
+    readonly kind: 'listItem';
+    readonly description: 'a list item';
 }
 
-export class MDList extends MDValue {
-    readonly kind = 'block';
-    readonly description = 'a list';
-
-    constructor(entries: readonly ListEntry[]) {
-        if (!Array.isArray(entries)) throw new TypeError(`list entries must be an array, got ${describe(entries)}`);
-        super();
-        const items = entries.map((entry) =>
-            isKind(entry, 'listItem')
-                ? (renderingOf(entry)?.nodes[0] as ListItem)
-                : listItemNode(Array.isArray(entry) ? entry : [entry]),
-        );
-        setNodes(this, [{ type: 'list', ordered: false, spread: false, children: items }]);
-    }
+export interface MDList extends MDValue {
+    readonly kind: 'block';
+    readonly description: 'a list';
 }
 
 /** A whole document. It renders with a trailing newline, as a file should end. */
-export class MDDocument extends MDValue {
-    readonly kind = 'block';
-    readonly description = 'a document';
+export interface MDDocument extends MDValue {
+    readonly kind: 'block';
+    readonly description: 'a document';
+}
 
+/** A filled template: Markdown blocks, rendered in the template's own style. */
+export interface MDTemplate extends MDValue {
+    readonly kind: 'block';
+    readonly description: 'a template';
+}
+
+/** A filled inline template. */
+export interface MDInlineTemplate extends MDValue {
+    readonly kind: 'inline';
+    readonly description: 'an inline template';
+}
+
+class TextValue extends MarkdownValue<'inline', 'text'> implements MDText {
+    constructor(readonly text: string) {
+        super('inline', 'text', textNodes(text));
+    }
+}
+
+class DocumentValue extends MarkdownValue<'block', 'a document'> implements MDDocument {
     constructor(content: readonly BlockContent[]) {
-        super();
-        setNodes(this, blockNodes(content, 'document content'));
+        super('block', 'a document', blockNodes(content, 'document content'));
     }
 
     override toString(): string {
         return super.toString() + '\n';
     }
-}
-
-/** A filled template: Markdown blocks, rendered in the template's own style. */
-export class MDTemplate extends MDValue {
-    readonly kind = 'block';
-    readonly description = 'a template';
-}
-
-/** A filled inline template. */
-export class MDInlineTemplate extends MDValue {
-    readonly kind = 'inline';
-    readonly description = 'an inline template';
 }
 
 export type HeadingDepth = 1 | 2 | 3 | 4 | 5 | 6;
@@ -234,7 +170,7 @@ function commentSafe(text: string): string {
 
 /** Text. A string `{@ name @}` placeholder in it is kept as written. */
 export function text(value: string): MDText {
-    return new MDText(value);
+    return new TextValue(value);
 }
 
 /**
@@ -243,65 +179,87 @@ export function text(value: string): MDText {
  */
 export function placeholder(name: string): MDText {
     if (!isValidPlaceholderName(name)) throw new Error(`invalid placeholder name: "${name}"`);
-    return new MDText(`{@ ${name} @}`);
+    return new TextValue(`{@ ${name} @}`);
 }
 
 /** A link, `[content](url)`. */
 export function link(content: InlineContent, url: string | URL): MDLink {
-    return new MDLink(content, url);
+    const href = typeof url === 'string' ? url : url.href;
+    return new MarkdownValue('inline', 'a link', [
+        { type: 'link', url: href, children: inlineNodes(content, 'link content') },
+    ]);
 }
 
 /** Strong text, `**content**`. */
 export function strong(content: InlineContent): MDStrong {
-    return new MDStrong(content);
+    return new MarkdownValue('inline', 'strong text', [
+        { type: 'strong', children: inlineNodes(content, 'strong content') },
+    ]);
 }
 
 /** Emphasized text, `_content_`. */
 export function emphasis(content: InlineContent): MDEmphasis {
-    return new MDEmphasis(content);
+    return new MarkdownValue('inline', 'emphasized text', [
+        { type: 'emphasis', children: inlineNodes(content, 'emphasis content') },
+    ]);
 }
 
 /** Struck-through text, `~~content~~`. */
 export function strikethrough(content: InlineContent): MDStrikethrough {
-    return new MDStrikethrough(content);
+    return new MarkdownValue('inline', 'struck-through text', [
+        { type: 'delete', children: inlineNodes(content, 'strikethrough content') },
+    ]);
 }
 
 /** Inline code. The code is inserted as is. */
 export function inlineCode(code: string): MDInlineCode {
-    return new MDInlineCode(code);
+    return new MarkdownValue('inline', 'inline code', [{ type: 'inlineCode', value: code }]);
 }
 
 /** An HTML comment, `<!-- text -->`. It goes inside a line or on its own. */
 export function comment(text: string): MDComment {
-    return new MDComment(text);
+    return new MarkdownValue('comment', 'a comment', [{ type: 'html', value: `<!-- ${commentSafe(text)} -->` }]);
 }
 
 /** A heading, `## content`. */
 export function heading(depth: HeadingDepth, content: InlineContent): MDHeading {
-    return new MDHeading(depth, content);
+    if (!Number.isInteger(depth) || depth < 1 || depth > 6) {
+        throw new Error(`heading depth must be 1 to 6, got ${String(depth)}`);
+    }
+    return new MarkdownValue('block', 'a heading', [
+        { type: 'heading', depth, children: inlineNodes(content, 'heading content') },
+    ]);
 }
 
 /** A paragraph: inline content as a block. */
 export function paragraph(...content: InlineContent[]): MDParagraph {
-    return new MDParagraph(content);
+    return new MarkdownValue('block', 'a paragraph', [
+        { type: 'paragraph', children: inlineNodes(content, 'paragraph content') },
+    ]);
 }
 
 /** A fenced code block. The code is inserted as is. */
 export function codeBlock(code: string, lang?: string): MDCodeBlock {
-    return new MDCodeBlock(code, lang);
+    return new MarkdownValue('block', 'a code block', [{ type: 'code', lang: lang || null, value: code }]);
 }
 
 /** One list item from several pieces, for use in {@link list}. */
 export function listItem(...content: ListItemContent[]): MDListItem {
-    return new MDListItem(content);
+    return new MarkdownValue('listItem', 'a list item', [listItemNode(content)]);
 }
 
 /** A whole document from blocks. Arrays of blocks are flattened. */
 export function document(...content: BlockContent[]): MDDocument {
-    return new MDDocument(content);
+    return new DocumentValue(content);
 }
 
 /** A bulleted list, one item per entry. */
 export function list(entries: readonly ListEntry[]): MDList {
-    return new MDList(entries);
+    if (!Array.isArray(entries)) throw new TypeError(`list entries must be an array, got ${describe(entries)}`);
+    const items = entries.map((entry) =>
+        isKind(entry, 'listItem')
+            ? (renderingOf(entry)?.nodes[0] as ListItem)
+            : listItemNode(Array.isArray(entry) ? entry : [entry]),
+    );
+    return new MarkdownValue('block', 'a list', [{ type: 'list', ordered: false, spread: false, children: items }]);
 }

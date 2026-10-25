@@ -1,28 +1,54 @@
 import type { BlockContent, ListItem, PhrasingContent, RootContent } from 'mdast';
 
-import type { MDValue } from './builders.js';
+import type { MDKind, MDValue } from './builders.js';
 import { placeholderRegExp } from './placeholders.js';
-import type { StyleOptions } from './render.js';
+import { renderNodes, type StyleOptions } from './render.js';
 
 /**
- * The nodes a value renders as, kept out of the value itself.
- * The public types then never mention the node tree.
+ * The key a value's rendering is stored under. Having it is what makes a value a Markdown value.
+ * It comes from the global symbol registry, so another loaded copy of this module recognizes the value too.
  */
+const renderingKey = Symbol.for('@streetsidesoftware/markdown-builders.value');
+
+/** The nodes a value renders as, and the style to render them in. */
 interface Rendering {
     nodes: RootContent[];
     style: StyleOptions | undefined;
 }
 
-const renderings = new WeakMap<object, Rendering>();
+/**
+ * A Markdown value. The public types are interfaces, so the node tree never appears in them.
+ * The literal kind and description types tell the public types apart.
+ */
+export class MarkdownValue<K extends MDKind = MDKind, D extends string = string> {
+    readonly [renderingKey]: Rendering;
 
-/** Record the nodes a value renders as. A value is a Markdown value once it has them. */
-export function setNodes(value: MDValue, nodes: RootContent[], style?: StyleOptions): void {
-    renderings.set(value, { nodes, style });
+    constructor(
+        readonly kind: K,
+        readonly description: D,
+        nodes: RootContent[],
+        style?: StyleOptions,
+    ) {
+        this[renderingKey] = { nodes, style };
+    }
+
+    toString(): string {
+        const { nodes, style } = this[renderingKey];
+        if (this.kind === 'inline') {
+            return renderNodes([{ type: 'paragraph', children: nodes as PhrasingContent[] }], style);
+        }
+        if (this.kind === 'listItem') {
+            return renderNodes([{ type: 'list', ordered: false, spread: false, children: nodes as ListItem[] }], style);
+        }
+        return renderNodes(nodes, style);
+    }
 }
 
 /** How a Markdown value renders, or `undefined` for anything else. */
 export function renderingOf(value: unknown): Rendering | undefined {
-    return typeof value === 'object' && value !== null ? renderings.get(value) : undefined;
+    return typeof value === 'object' && value !== null
+        ? (value as Partial<Record<typeof renderingKey, Rendering>>)[renderingKey]
+        : undefined;
 }
 
 /** Whether a value is a Markdown value, and of one of the given kinds. */

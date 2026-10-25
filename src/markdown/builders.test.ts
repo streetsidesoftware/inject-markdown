@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import {
     codeBlock,
@@ -105,6 +105,16 @@ describe('composing', () => {
     test('isMarkdown', () => {
         expect(isMarkdown(text('x'))).toBe(true);
         expect(isMarkdown('x')).toBe(false);
+        expect(isMarkdown({ kind: 'inline', description: 'text', text: 'x' })).toBe(false);
+    });
+
+    test('a value from another loaded copy is recognized', async () => {
+        vi.resetModules();
+        const other = await import('./index.mjs');
+        expect(other.link).not.toBe(link);
+        const item = other.listItem(other.link('docs', 'https://example.com'));
+        expect(isMarkdown(item)).toBe(true);
+        expect(list([item, strong('x')]).toString()).toBe('- [docs](https://example.com)\n- **x**');
     });
 });
 

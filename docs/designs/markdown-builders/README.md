@@ -44,9 +44,14 @@ Turned down:
 
 ### Creating values
 
-A value is created by a factory function, such as `link(…)` or `list(…)`. Each kind is a class underneath. The nodes a value renders as are kept in a module-private `WeakMap`, not on the value, so the public types never mention mdast. The runtime kind check looks a value up there.
+A value is created by a factory function, such as `link(…)` or `list(…)`. The public types (`MDLink`, `MDList`, and so on) are interfaces: a kind, a description, and `toString()`. Underneath, one internal class carries the nodes a value renders as, under the key `Symbol.for('@streetsidesoftware/markdown-builders.value')`. Having that key is what the runtime kind check looks for.
 
-The API exports the factories and the types (`MDLink`, `MDList`, and so on), not the classes. Factories are the only way to create a value, so the classes can change while the API settles. If a script needs to tell kinds apart, an exported check such as `isMarkdown(x)` can be added then.
+- The interfaces never mention mdast.
+- The key comes from the global symbol registry, so a value made by another loaded copy of the builders is recognized. That happens after the move to toolbox, when a script loads the builders both directly and through inject-markdown's pass-through.
+- The key names the package the builders move to, `@streetsidesoftware/markdown-builders`. If what's stored under it ever changes incompatibly, a new key such as `….value.1` can be used.
+- The key is a brand, not privacy: anyone can read it.
+
+Factories are the only way to create a value, so the internal class can change while the API settles. If a script needs to tell kinds apart, an exported check such as `isMarkdown(x)` can be added then.
 
 Turned down:
 
@@ -255,7 +260,7 @@ A builders-specific error class waits until a caller needs to catch one specific
 
 ### Where it lives
 
-The builders are built inside inject-markdown first, for rapid development against the scripts that need them, and move to toolbox later.
+The builders are built inside inject-markdown first, for rapid development against the scripts that need them, and move to toolbox later, as `@streetsidesoftware/markdown-builders`.
 
 - inject-markdown depends on the builders, never the other way around. The code lives in its own folder and imports nothing from the rest of inject-markdown.
 - The placeholder grammar and substitution move into the builders, so injection and templates share one implementation.
@@ -287,7 +292,6 @@ The user guide (`docs/guide/markdown-builders.md`, marked experimental) and a sh
 - `MDDocument` options: its own style (bullets, fences, emphasis), and frontmatter.
 - The concrete API: names, how a template and its values are passed in, and how values are typed.
 - At injection time, a values file's top-level dotted keys aren't read as dotted names: `getPath` walks one segment at a time. Should values files follow the values-object rule?
-- The kind check fails when two copies of the package are loaded, for example the builders loaded both directly and through inject-markdown's pass-through after the move to toolbox. Each copy has its own `WeakMap`, just as `instanceof` would fail. A shared brand may be needed then.
 - Tables, in a second round.
 - Images and raw HTML, once a script needs them.
 - Markdown-valued placeholders at injection time. The placeholder opts in. The syntax is open.
