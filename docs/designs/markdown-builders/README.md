@@ -37,11 +37,6 @@ A builder returns a Markdown value, not a string. The value keeps its structure 
 
 The node tree (mdast) stays internal. It's too raw for callers, and most don't care.
 
-Turned down:
-
-- Plain strings: a string can't know where it ends up, so a link with `|` in its text would still break a table.
-- Raw mdast nodes: they make mdast's types part of the public API and tie it to the remark version.
-
 ### Creating values
 
 A value is created by a factory function, such as `link(…)` or `list(…)`. The public types (`MDLink`, `MDList`, and so on) are interfaces: a kind, a description, and `toString()`. Underneath, one internal class carries the nodes a value renders as, under the key `Symbol.for('@streetsidesoftware/markdown-builders.value')`. Having that key is what the runtime kind check looks for.
@@ -51,36 +46,17 @@ A value is created by a factory function, such as `link(…)` or `list(…)`. Th
 - The key names the package the builders move to, `@streetsidesoftware/markdown-builders`. If what's stored under it ever changes incompatibly, a new key such as `….value.1` can be used.
 - The key is a brand, not privacy: anyone can read it.
 
-Factories are the only way to create a value, so the internal class can change while the API settles. If a script needs to tell kinds apart, an exported check such as `isMarkdown(x)` can be added then.
-
-Turned down:
-
-- Classes only (`new MDLink(…)`): nested values get verbose.
-- Classes and factories both: two ways to create a value, and twice the surface to keep stable.
-- Exporting the classes as values: the constructors and hierarchy become public API, a script could bypass a factory or subclass a kind the renderer doesn't know.
+Factories are the only way to create a value, so the internal class can change while the API settles. `isMarkdown(x)` tells a Markdown value from anything else.
 
 Wherever inline content is accepted, a plain string means text and is escaped. `inlineCode('…')` and `codeBlock('…')` take their string as code, inserted as is. `text()` stays available for a script that wants to be explicit.
-
-Turned down:
-
-- Text only through `text()`: every call gets longer, for no gain in safety.
 
 ### Links
 
 `link(content, url)` follows Markdown's `[content](url)` order. The content is a string, an inline value, or an array of them, because link text is often inline code: `link(inlineCode(name), dir)`. The URL is a string or a `URL`. An optional title, if one is ever needed, fits as a third argument.
 
-Turned down:
-
-- `link(url, ...content)`: a title would need an options object, since nothing can follow variadic content.
-
 ### Headings
 
 `heading(depth, content)` follows Markdown order, as in `## Title`. The types limit `depth` to 1–6. The content is inline: `heading(2, ['Using ', inlineCode('cspell')])`.
-
-Turned down:
-
-- `heading(content, depth)`: it breaks Markdown order, and an optional depth needs a default.
-- `h1(…)` through `h6(…)`: six functions, and a computed level needs a lookup.
 
 ### Inline code and comments
 
@@ -92,10 +68,6 @@ A placeholder fits in by converting to a string, since its string form is exactl
 
 `codeBlock(code, lang?)` takes the language last, because it's optional: `codeBlock('npm install -D @cspell/dict-en', 'sh')`. The code is inserted as is. The fence is longer than any run of backticks in the code.
 
-Turned down:
-
-- `codeBlock(lang, code)`: Markdown order, but the language becomes required.
-
 ### Documents
 
 `document(...blocks)` makes a block value from several blocks, so a script can render a whole file: `document(heading(3, title), list(items)).toString()`. Arrays of blocks are flattened, so `document(sections, ...more)` works. A document is the one value that renders with a trailing newline, because it's meant to stand alone as a file. It's where a document's own frontmatter will go.
@@ -106,15 +78,6 @@ A document can carry its own style:
 - `MarkdownStyle` is the builders' own interface, with the fields a style read from a file can have: `bullet`, `bulletOrdered`, `emphasis`, `strong`, `fence`, `fences`, `incrementListMarker`, and `rule`. Each takes a named literal type, such as `BulletMarker`. More fields are added when a script needs them.
 - `detectStyle(markdown)` reads the style an existing file uses, so a script can match it: `document(...).withStyle(detectStyle(existing))`. A construct the file doesn't use gets the default.
 - Everything inside a document renders in the document's style. A template's own detected style applies only when the template is rendered by itself.
-
-Turned down:
-
-- A style as the first argument, `document(style, ...blocks)`: the first argument would mean two things.
-- A style passed to `toString(style)`: a template literal calls `toString()` with no arguments.
-- remark-stringify's options, whole or picked: the public types would import remark and tie the API to its version.
-- An exported `render(blocks)`: a second way to render, next to `toString()`.
-- Joining blocks in the script with `'\n\n'`: every script would need to know the blank-line rule between blocks.
-- No trailing newline, like every other value: every script writing a file would add it.
 
 ### Sequences and lists
 
@@ -143,11 +106,6 @@ list([listItem('Languages'), ['Ref: ', link('German', '../g.md')], 'Other']);
 - Other
 ```
 
-Turned down:
-
-- An explicit container for every sequence: every list item would need a wrapper.
-- Joining inline pieces with a space: a comma, or pieces that must touch such as `` `x`s ``, would need a way to suppress it.
-
 ### Rendering
 
 `toString()` renders a value and everything in it, without a trailing newline. There's no separate render function. A value also renders inside a template literal (`${value}`), so it drops into existing templates such as `unindent`.
@@ -170,10 +128,6 @@ Putting a block where only inline content can go, such as a list inside a headin
 - At compile time, because the builder types separate inline from block.
 - At runtime too, for JavaScript callers and `any` values.
 
-Turned down:
-
-- Runtime only: the scripts are TypeScript, so the types catch most mistakes before the script runs.
-
 ### First round
 
 - text, link, inline code
@@ -194,20 +148,11 @@ There are two line-break values, both inline:
 
 Both write `<br/>`, never `<br>`: MDX reads HTML as JSX, where an unclosed `<br>` is a syntax error.
 
-Turned down:
-
-- `lineBreak()` only: a script that wants `<br/>` everywhere would need raw HTML.
-- `br()` only: it puts HTML in ordinary paragraphs, where Markdown has its own break.
-
 ### Comments
 
 A comment is inline, and it also fits anywhere a block does. That covers block notices such as `cspell:disable` and an inline `cspell:ignore`.
 
 It renders as `<!-- … -->`. The renderer keeps the text from ending the comment early.
-
-Turned down:
-
-- Three dashes (`<!--- … --->`): it was a workaround from when GitHub rendered two-dash comments. Third-party bots (Renovate, Dependabot, CodeRabbit) write two dashes.
 
 ### Placeholders
 
@@ -226,10 +171,6 @@ A template is Markdown with `{@ name @}` placeholders, in the same [placeholder]
 The renderer lengthens a code fence when the inserted content needs it.
 
 `template(markdown, values)` fills a template in one call and returns a block value. `values` is a plain object, and dotted names walk into it, as they do at injection time: `template(tpl, { pkg: { name: '@cspell/dict-grc' }, list: list(items) })`. A script that reuses a template keeps the string and calls `template` again.
-
-Turned down:
-
-- `template(markdown).fill(values)`: a second kind of object, for a parse-once speed gain the scripts don't need. It can still be added later.
 
 `inlineTemplate(markdown, values)` fills a fragment the same way and returns an inline value, for use inside a sentence, list item, heading, or link text: `listItem(link(e.name, e.url), inlineTemplate(' - Adds {@ name @} spell checking', e))`.
 
@@ -262,18 +203,7 @@ A values object resolves names the way injection resolves declarations:
 
 JavaScript moves integer-like keys, such as `'2'`, to the front of the key order. That only matters for a name whose first segment is all digits.
 
-Turned down:
-
-- The exact key first, then the nested walk: it ignores the order a reader sees, and mixed forms such as `{ 'a.b': { c: 1 } }` for `a.b.c` don't resolve.
-- The longest matching key first: a later key couldn't override an earlier, longer one.
-- Defining a name both ways is an error: it rejects objects that have a clear reading.
-
 `placeholder(…)` is a text value, so it's also accepted inside inline code and code blocks. That's the `requirements.md` case, where `` `{@ engines.cspell @}` `` is inline code.
-
-Turned down:
-
-- Leaving it as written, silently: a typo reaches the generated file.
-- Leaving it as written, with a `strict` option: the safe behavior would be opt-in.
 
 The concerns that apply at injection time, such as untrusted values and link rebasing, don't apply here. The same script owns the template and the values.
 
@@ -291,13 +221,6 @@ The builders are built inside inject-markdown first, for rapid development again
 - The placeholder grammar and substitution move into the builders, so injection and templates share one implementation.
 - They're exported as `inject-markdown/markdown`. After the move, inject-markdown keeps exporting them as a pass-through.
 - While the API settles, it's documented as experimental. Breaking changes ship as minor releases, called out in the release notes.
-
-Turned down:
-
-- A second package in this repo: it means converting the repo to a monorepo, with its release and CI setup.
-- Toolbox from the start: every grammar change would need a toolbox release before inject-markdown could use it.
-- Internal only until the move: the scripts couldn't use it while it's being shaped by them.
-- `experimental` in the subpath: every import would change once it settles.
 
 ### Tests
 
@@ -320,3 +243,20 @@ The user guide (`docs/guide/markdown-builders.md`, marked experimental) and a sh
 - Tables, in a second round.
 - Images and raw HTML, once a script needs them.
 - Markdown-valued placeholders at injection time. The placeholder opts in. The syntax is open.
+
+## Alternatives
+
+- Exported classes, checked with `instanceof`, or nodes kept in a module-private `WeakMap`: a value made by another loaded copy of the builders wouldn't be recognized.
+- remark-stringify's options as the style type: the public types would import remark and tie the API to its version.
+- `h1(…)` through `h6(…)`: six functions, and a computed level needs a lookup.
+- A style passed to `toString(style)`: a template literal calls `toString()` with no arguments.
+- A separate `render(value)`: a second way to render, next to `toString()`.
+- Joining inline pieces with a space: a comma, or pieces that must touch such as `` `x`s ``, would need a way to suppress it.
+- Three-dash comments (`<!--- … --->`), as in inject-markdown's own directives: a workaround from when GitHub rendered two-dash comments. Third-party bots (Renovate, Dependabot, CodeRabbit) write two dashes.
+- `template(markdown).fill(values)`: a second kind of object, for a parse-once speed gain the scripts don't need. It can still be added later.
+- Trying the exact key first, then the nested walk: it ignores the order a reader sees, and mixed forms such as `{ 'a.b': { c: 1 } }` for `a.b.c` don't resolve.
+- Trying the longest matching key first: a later key couldn't override an earlier, longer one.
+- Leaving a placeholder with no value as written, as injection does: a typo reaches the generated file. A `strict` option would make the safe behavior opt-in.
+- A second package in this repo: it means converting the repo to a monorepo, with its release and CI setup.
+- Toolbox from the start: every grammar change would need a toolbox release before inject-markdown could use it.
+- `experimental` in the subpath: every import would change once it settles.
