@@ -111,30 +111,32 @@ export function describe(value: unknown): string {
 }
 
 /** A run of inline pieces that form one line, or a single block. */
-export type Run = { readonly inline: unknown[] } | { readonly block: unknown };
+export type Run<Inline, Block> = { readonly inline: Inline[] } | { readonly block: Block };
 
 /**
  * Pieces in order, as runs of inline pieces and the blocks between them.
  * Arrays are flattened.
+ * The pieces are sorted at runtime by `isBlockContent`, so `Block` must be the pieces it accepts.
  */
-export function runs(content: unknown): Run[] {
-    const result: Run[] = [];
-    let line: unknown[] = [];
+export function runs<Inline, Block>(content: Inline | Block | readonly (Inline | Block)[]): Run<Inline, Block>[] {
+    type Content = Inline | Block;
+    const result: Run<Inline, Block>[] = [];
+    let line: Inline[] = [];
     function endLine(): void {
         if (line.length) result.push({ inline: line });
         line = [];
     }
-    function add(piece: unknown): void {
+    function add(piece: Content | readonly Content[]): void {
         if (Array.isArray(piece)) {
-            piece.forEach(add);
+            (piece as readonly Content[]).forEach(add);
             return;
         }
         if (isBlockContent(piece)) {
             endLine();
-            result.push({ block: piece });
+            result.push({ block: piece as Block });
             return;
         }
-        line.push(piece);
+        line.push(piece as Inline);
     }
     add(content);
     endLine();
@@ -144,7 +146,7 @@ export function runs(content: unknown): Run[] {
 /** A list item from its pieces: each run of inline pieces forms a paragraph, and blocks follow. */
 export function listItemNode(content: readonly unknown[]): ListItem {
     const where = 'list item content';
-    const children = runs(content).flatMap((run): BlockContent[] =>
+    const children = runs<unknown, unknown>(content).flatMap((run): BlockContent[] =>
         'inline' in run
             ? [{ type: 'paragraph', children: inlineNodes(run.inline, where) }]
             : (blockNodes(run.block, where) as BlockContent[]),
