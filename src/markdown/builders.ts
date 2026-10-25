@@ -54,6 +54,36 @@ export class MDLink extends MDValue {
     }
 }
 
+export class MDStrong extends MDValue {
+    readonly kind = 'inline';
+    readonly description = 'strong text';
+
+    constructor(content: InlineContent) {
+        super();
+        setNodes(this, [{ type: 'strong', children: inlineNodes(content, 'strong content') }]);
+    }
+}
+
+export class MDEmphasis extends MDValue {
+    readonly kind = 'inline';
+    readonly description = 'emphasized text';
+
+    constructor(content: InlineContent) {
+        super();
+        setNodes(this, [{ type: 'emphasis', children: inlineNodes(content, 'emphasis content') }]);
+    }
+}
+
+export class MDStrikethrough extends MDValue {
+    readonly kind = 'inline';
+    readonly description = 'struck-through text';
+
+    constructor(content: InlineContent) {
+        super();
+        setNodes(this, [{ type: 'delete', children: inlineNodes(content, 'strikethrough content') }]);
+    }
+}
+
 export class MDInlineCode extends MDValue {
     readonly kind = 'inline';
     readonly description = 'inline code';
@@ -163,7 +193,8 @@ export class MDInlineTemplate extends MDValue {
 export type HeadingDepth = 1 | 2 | 3 | 4 | 5 | 6;
 
 /** A value that goes inside a line. A comment goes either inside a line or on its own. */
-export type MDInline = MDText | MDLink | MDInlineCode | MDComment | MDInlineTemplate;
+export type MDInline =
+    MDText | MDLink | MDStrong | MDEmphasis | MDStrikethrough | MDInlineCode | MDComment | MDInlineTemplate;
 
 /** A value that goes on its own lines. */
 export type MDBlock = MDHeading | MDParagraph | MDList | MDCodeBlock | MDComment | MDDocument | MDTemplate;
@@ -218,6 +249,21 @@ export function placeholder(name: string): MDText {
 /** A link, `[content](url)`. */
 export function link(content: InlineContent, url: string | URL): MDLink {
     return new MDLink(content, url);
+}
+
+/** Strong text, `**content**`. */
+export function strong(content: InlineContent): MDStrong {
+    return new MDStrong(content);
+}
+
+/** Emphasized text, `_content_`. */
+export function emphasis(content: InlineContent): MDEmphasis {
+    return new MDEmphasis(content);
+}
+
+/** Struck-through text, `~~content~~`. */
+export function strikethrough(content: InlineContent): MDStrikethrough {
+    return new MDStrikethrough(content);
 }
 
 /** Inline code. The code is inserted as is. */

@@ -4,6 +4,7 @@ import {
     codeBlock,
     comment,
     document,
+    emphasis,
     heading,
     inlineCode,
     isMarkdown,
@@ -12,6 +13,8 @@ import {
     listItem,
     paragraph,
     placeholder,
+    strikethrough,
+    strong,
     text,
 } from './index.mjs';
 
@@ -102,6 +105,28 @@ describe('composing', () => {
     test('isMarkdown', () => {
         expect(isMarkdown(text('x'))).toBe(true);
         expect(isMarkdown('x')).toBe(false);
+    });
+});
+
+describe('strong, emphasis, strikethrough', () => {
+    test.each`
+        value                                             | expected
+        ${strong('pre-release')}                          | ${'**pre-release**'}
+        ${emphasis('note')}                               | ${'_note_'}
+        ${strikethrough(inlineCode('cSpell.oldSetting'))} | ${'~~`cSpell.oldSetting`~~'}
+        ${strong(['When: ', emphasis('always')])}         | ${'**When: _always_**'}
+    `('$expected', ({ value, expected }) => {
+        expect(value.toString()).toBe(expected);
+    });
+
+    test('in a list item', () => {
+        const md = list([listItem(link('Danish', '../da.md'), ' ', strong('pre-release'), ' - Adds Danish')]);
+        expect(md.toString()).toBe('- [Danish](../da.md) **pre-release** - Adds Danish');
+    });
+
+    test('block content throws', () => {
+        // @ts-expect-error a list is not inline
+        expect(() => strong(list(['a']))).toThrow(new TypeError('strong content must be inline, got a list'));
     });
 });
 

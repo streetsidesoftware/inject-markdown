@@ -145,7 +145,7 @@ Converting a value to a string too early loses its kind. `text(`see ${link(…)}
 
 Every value is inline or block, as in Markdown:
 
-- **Inline:** text, link, inline code, comment.
+- **Inline:** text, link, strong, emphasis, strikethrough, inline code, comment.
 - **Block:** heading, list, list item, code block, paragraph, comment.
 
 A heading and a paragraph are blocks that hold inline content.
@@ -162,6 +162,7 @@ Turned down:
 ### First round
 
 - text, link, inline code
+- strong, emphasis, and strikethrough: `strong(content)`, `emphasis(content)`, `strikethrough(content)`
 - heading, list, code block
 - paragraph and list item, with arrays as sequences
 - comment
@@ -288,5 +289,5 @@ The user guide (`docs/guide/markdown-builders.md`, marked experimental) and a sh
 - At injection time, a values file's top-level dotted keys aren't read as dotted names: `getPath` walks one segment at a time. Should values files follow the values-object rule?
 - The kind check fails when two copies of the package are loaded, for example the builders loaded both directly and through inject-markdown's pass-through after the move to toolbox. Each copy has its own `WeakMap`, just as `instanceof` would fail. A shared brand may be needed then.
 - Tables, in a second round.
-- Bold and italic, images, and raw HTML, once a script needs them.
+- Images and raw HTML, once a script needs them.
 - Markdown-valued placeholders at injection time. The placeholder opts in. The syntax is open.

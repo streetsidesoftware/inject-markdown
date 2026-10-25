@@ -8,6 +8,7 @@ export type {
     MDCodeBlock,
     MDComment,
     MDDocument,
+    MDEmphasis,
     MDHeading,
     MDInline,
     MDInlineCode,
@@ -16,6 +17,8 @@ export type {
     MDList,
     MDListItem,
     MDParagraph,
+    MDStrikethrough,
+    MDStrong,
     MDTemplate,
     MDText,
     MDValue,
@@ -24,6 +27,7 @@ export {
     codeBlock,
     comment,
     document,
+    emphasis,
     heading,
     inlineCode,
     isMarkdown,
@@ -32,6 +36,8 @@ export {
     listItem,
     paragraph,
     placeholder,
+    strikethrough,
+    strong,
     text,
 } from './builders.js';
 export type { TemplateValue, TemplateValues } from './template.js';
