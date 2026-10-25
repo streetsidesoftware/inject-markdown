@@ -258,6 +258,12 @@ Turned down:
 - Internal only until the move: the scripts couldn't use it while it's being shaped by them.
 - `experimental` in the subpath: every import would change once it settles.
 
+### Release
+
+A `feat:` release. It isn't breaking: the subpath is new, and the placeholder code moving underneath doesn't change injection behavior.
+
+The user guide (`docs/guide/markdown-builders.md`, marked experimental) and a short README section linking to it are written once the feature is built, not during development.
+
 ## Open questions
 
 - An `MDDocument` that carries its own style (bullets, fences, emphasis) and uses it when rendering.
