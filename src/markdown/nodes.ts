@@ -120,19 +120,22 @@ export type Run = { readonly inline: unknown[] } | { readonly block: unknown };
 export function runs(content: unknown): Run[] {
     const result: Run[] = [];
     let line: unknown[] = [];
-    const endLine = () => {
+    function endLine(): void {
         if (line.length) result.push({ inline: line });
         line = [];
-    };
-    const add = (piece: unknown) => {
-        if (Array.isArray(piece)) return piece.forEach(add);
+    }
+    function add(piece: unknown): void {
+        if (Array.isArray(piece)) {
+            piece.forEach(add);
+            return;
+        }
         if (isBlockContent(piece)) {
             endLine();
             result.push({ block: piece });
             return;
         }
         line.push(piece);
-    };
+    }
     add(content);
     endLine();
     return result;
