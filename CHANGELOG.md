@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.3.0](https://github.com/streetsidesoftware/inject-markdown/compare/v6.2.1...v6.3.0) (2026-10-25)
+
+
+### Features
+
+* add --no-directives for files written to --output-dir ([#915](https://github.com/streetsidesoftware/inject-markdown/issues/915)) ([db2256a](https://github.com/streetsidesoftware/inject-markdown/commit/db2256a0cebb422511e173cffcde13718252a9c7))
+* experimental Markdown builders in inject-markdown/markdown ([#911](https://github.com/streetsidesoftware/inject-markdown/issues/911)) ([482dee7](https://github.com/streetsidesoftware/inject-markdown/commit/482dee7910e3b49238ea0343335be70b4550e19e))
+
 ## [6.2.1](https://github.com/streetsidesoftware/inject-markdown/compare/v6.2.0...v6.2.1) (2026-10-20)
 
 
