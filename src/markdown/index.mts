@@ -20,7 +20,7 @@ export {
 } from './builders.js';
 export { detectStyle } from './style.js';
 export type { TemplateValue, TemplateValues } from './template.js';
-export { blockTemplate, inlineTemplate, template } from './template.js';
+export { blockTemplate, inlineTemplate, parse, template } from './template.js';
 export type {
     AnyContent,
     BlockContent,
@@ -34,16 +34,16 @@ export type {
     ListItemContent,
     MarkdownStyle,
     MDBlock,
-    MDBlockTemplate,
     MDBr,
     MDCodeBlock,
     MDComment,
     MDDocument,
     MDEmphasis,
+    MDFragment,
     MDHeading,
     MDInline,
     MDInlineCode,
-    MDInlineTemplate,
+    MDInlineFragment,
     MDLineBreak,
     MDLink,
     MDList,

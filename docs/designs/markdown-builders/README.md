@@ -103,7 +103,7 @@ An array is a sequence:
 
 `paragraph(…)` turns inline content into a block explicitly.
 
-`toBlock(content)` makes content fit where only blocks can go. Blocks come back unchanged, and each run of inline pieces becomes a paragraph, as in a list item: `toBlock(['Intro ', link(…), list([…])])` is a paragraph followed by the list. It's how the result of `template()`, which can be either kind, goes into a document.
+`toBlock(content)` makes content fit where only blocks can go. Blocks come back unchanged, and each run of inline pieces becomes a paragraph, as in a list item: `toBlock(['Intro ', link(…), list([…])])` is a paragraph followed by the list. It's how the result of `template()` or `parse()`, which can be either kind, goes into a document.
 
 `list(entries)` takes one entry per item:
 
@@ -126,7 +126,7 @@ list([listItem('Languages'), ['Ref: ', link('German', '../g.md')], 'Other']);
 
 `toString()` renders a value and everything in it, without a trailing newline. There's no separate render function. A value also renders inside a template literal (`${value}`), so it drops into existing templates such as `unindent`.
 
-`toString()` takes no options, so a value renders in a fixed default style. The exceptions are a document given a style with `withStyle`, and a filled template, which renders in the style detected from its own text (`detectMarkdownStyle`, moved into the builders for this). When builder output is injected, inject-markdown already re-renders it in the target document's style, so the default only shows when a script writes a file directly.
+`toString()` takes no options, so a value renders in a fixed default style. The exceptions are a document given a style with `withStyle`, and a fragment from `template()` or `parse()`, which renders in the style detected from its own text (`detectMarkdownStyle`, moved into the builders for this). When builder output is injected, inject-markdown already re-renders it in the target document's style, so the default only shows when a script writes a file directly.
 
 Converting a value to a string too early loses its kind. `text(`see ${link(…)}`)` makes the link plain text and escapes its brackets. Scripts compose values, not strings.
 
@@ -154,6 +154,7 @@ Putting a block where only inline content can go, such as a list inside a headin
 - comment
 - a placeholder builder
 - templates: `template`, `blockTemplate`, and `inlineTemplate`
+- `parse`, for Markdown made elsewhere
 - `toBlock`
 
 ### Line breaks
@@ -229,6 +230,18 @@ JavaScript moves integer-like keys, such as `'2'`, to the front of the key order
 `placeholder(…)` is a text value, so it's also accepted inside inline code and code blocks. That's the `requirements.md` case, where `` `{@ engines.cspell @}` `` is inline code.
 
 The concerns that apply at injection time, such as untrusted values and link rebasing, don't apply here. The same script owns the template and the values.
+
+### Markdown made elsewhere
+
+`parse(markdown)` brings in Markdown text that is already written, such as a `markdownDescription` from a `package.json`. It's `template()` without the filling:
+
+- A single paragraph is inline, without the whitespace around it. Anything else is blocks.
+- A `{@ name @}` placeholder is kept as written, the same as in `text()`, so injection can fill it later. Rendering never escapes it.
+- The result renders in the style detected from its own text. Inside a document, the document's style applies.
+
+`template()` and `parse()` return the same types: `MDFragment` for blocks and `MDInlineFragment` for inline content. Callers narrow on `kind`, so the types don't record which function made the value. There are no forced forms like `blockTemplate()` yet. `toBlock(parse(markdown))` gives blocks.
+
+In prose, the Markdown parser reads `\{` as an escape and drops the backslash, so `\{@ name @}` comes out as a kept placeholder. Templates and injection have the same problem ([#887](https://github.com/streetsidesoftware/inject-markdown/issues/887)).
 
 ### Errors
 
