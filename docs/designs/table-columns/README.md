@@ -10,7 +10,7 @@ A [table injection](../../glossary.md#table-injection) shows every column of the
 
 Today the only way is to edit the source file, or generate a second one just to feed the table.
 
-`header-rows`, the row window options, `#markdown`, `#html-table`, and JSON sources are built and documented in the README. This design builds on them.
+This design builds on `header-rows`, the row window options, `#markdown`, `#html-table`, and JSON sources, described in the [tables guide](../../guide/tables.md).
 
 ## Design
 
