@@ -146,7 +146,7 @@ export async function app(program = defaultCommand): Promise<Command> {
         )
         .option('--strict-vars', 'Treat an unresolved {@ name @} placeholder as a directive error.')
         .option('--no-rebase-links', 'Keep relative links in injected Markdown as written instead of rebasing them.')
-        // Next major: default to false (#ISSUE).
+        // Next major: default to false (#916).
         .addOption(
             new CommanderOption(
                 '--directives',
