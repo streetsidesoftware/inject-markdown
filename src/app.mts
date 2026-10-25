@@ -42,10 +42,10 @@ interface CliOptions extends Options {
  * - A value flag it can't parse.
  * - A misused `--directives` or `--no-directives`.
  */
-function fixOptions(options: CliOptions, valueArgs: readonly ValueArg[], directivesGiven: boolean): Options {
+function fixOptions(options: CliOptions, valueArgs: readonly ValueArg[]): Options {
     const { value: _value, valuesFile: _valuesFile, valueAlias: _valueAlias, ...opts } = options;
     opts.valueDeclarations = valueArgs.map((arg) => parseValueFlag(arg.flag, arg.raw));
-    checkDirectives(options, directivesGiven);
+    checkDirectives(options);
 
     opts.stopOnErrors = options.stopOnErrors ?? options.stopOnError ?? true;
     return opts;
@@ -56,9 +56,9 @@ function fixOptions(options: CliOptions, valueArgs: readonly ValueArg[], directi
  * - `--directives` or `--no-directives` is given without `--output-dir`.
  * - Removing directives would overwrite the source files.
  */
-function checkDirectives(options: CliOptions, given: boolean): void {
+function checkDirectives(options: CliOptions): void {
     const { outputDir, directives } = options;
-    if (given && !outputDir) {
+    if (directives !== undefined && !outputDir) {
         throw new OptionError(`${directives ? '--directives' : '--no-directives'} requires --output-dir.`);
     }
     if (!outputDir || directives !== false) return;
@@ -151,7 +151,7 @@ export async function app(program = defaultCommand): Promise<Command> {
             new CommanderOption(
                 '--directives',
                 'Keep the @@inject directives in files written to --output-dir.',
-            ).default(true),
+            ).hideHelp(),
         )
         .option('--no-directives', 'Remove the @@inject directives from files written to --output-dir.')
         .option('--clean', 'Remove the injected content.')
@@ -174,8 +174,7 @@ export async function app(program = defaultCommand): Promise<Command> {
             program.showHelpAfterError(false);
             // A bad value flag or values file is operator input, not a document error.
             // Report it as a CLI message rather than letting it escape as an uncaught exception.
-            const directivesGiven = program.getOptionValueSource('directives') === 'cli';
-            const run = async () => processGlobs(files, fixOptions(optionsCli, valueArgs, directivesGiven));
+            const run = async () => processGlobs(files, fixOptions(optionsCli, valueArgs));
             const result = await run().catch((e) => {
                 if (e instanceof OptionError) program.error(chalk.red(e.message));
                 throw e;
