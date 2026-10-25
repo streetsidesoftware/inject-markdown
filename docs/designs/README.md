@@ -12,9 +12,10 @@ The code and the user docs describe a built feature. Its design explains why it'
 
 ## Planned
 
-| Design                                               | Description                                                                                 |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| [Deny access](deny-access/README.md)                 | `--deny-access <glob>`: refuse directive reads of matching paths inside the injection root. |
-| [Rebase output links](rebase-output-links/README.md) | `--rebase-output-links`: rebase relative links onto the `--output-dir` location.            |
-| [Remote guardrails](remote-guardrails/README.md)     | WIP. Refuse private and loopback addresses for remote references, with time and size caps.  |
-| [Table columns](table-columns/README.md)             | WIP. `columns`, `column-names`, `header-format`, and auto-alignment for tables.             |
+| Design                                               | Description                                                                                  |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| [Deny access](deny-access/README.md)                 | `--deny-access <glob>`: refuse directive reads of matching paths inside the injection root.  |
+| [Markdown builders](markdown-builders/README.md)     | WIP. `inject-markdown/markdown`: build Markdown values that escape themselves when rendered. |
+| [Rebase output links](rebase-output-links/README.md) | `--rebase-output-links`: rebase relative links onto the `--output-dir` location.             |
+| [Remote guardrails](remote-guardrails/README.md)     | WIP. Refuse private and loopback addresses for remote references, with time and size caps.   |
+| [Table columns](table-columns/README.md)             | WIP. `columns`, `column-names`, `header-format`, and auto-alignment for tables.              |
