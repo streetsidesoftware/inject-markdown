@@ -1,4 +1,4 @@
-# WIP: Designs index
+# Designs index
 
 ## Why
 
