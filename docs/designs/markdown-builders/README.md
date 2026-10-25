@@ -160,7 +160,7 @@ Converting a value to a string too early loses its kind. `text(`see ${link(…)}
 
 Every value is inline or block, as in Markdown:
 
-- **Inline:** text, link, strong, emphasis, strikethrough, inline code, comment.
+- **Inline:** text, link, strong, emphasis, strikethrough, inline code, line break, comment.
 - **Block:** heading, list, list item, code block, paragraph, comment.
 
 A heading and a paragraph are blocks that hold inline content.
@@ -180,9 +180,24 @@ Turned down:
 - strong, emphasis, and strikethrough: `strong(content)`, `emphasis(content)`, `strikethrough(content)`
 - heading, list, code block
 - paragraph and list item, with arrays as sequences
+- line breaks: `lineBreak()` and `br()`
 - comment
 - a placeholder builder
 - templates: `template` for blocks, `inlineTemplate` for inline fragments
+
+### Line breaks
+
+There are two line-break values, both inline:
+
+- `lineBreak()` breaks the line in the form that works where it ends up. In a paragraph or list item that's a Markdown hard break (`\` and a newline). In a table cell, where a Markdown break can't go, it's `<br/>`.
+- `br()` is always `<br/>`, for a script that wants the HTML form everywhere.
+
+Both write `<br/>`, never `<br>`: MDX reads HTML as JSX, where an unclosed `<br>` is a syntax error.
+
+Turned down:
+
+- `lineBreak()` only: a script that wants `<br/>` everywhere would need raw HTML.
+- `br()` only: it puts HTML in ordinary paragraphs, where Markdown has its own break.
 
 ### Comments
 

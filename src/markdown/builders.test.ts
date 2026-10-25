@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 
 import {
+    br,
     codeBlock,
     comment,
     detectStyle,
@@ -9,6 +10,7 @@ import {
     heading,
     inlineCode,
     isMarkdown,
+    lineBreak,
     link,
     list,
     listItem,
@@ -139,6 +141,21 @@ describe('strong, emphasis, strikethrough', () => {
     test('block content throws', () => {
         // @ts-expect-error a list is not inline
         expect(() => strong(list(['a']))).toThrow(new TypeError('strong content must be inline, got a list'));
+    });
+});
+
+describe('line breaks', () => {
+    test('lineBreak is a Markdown hard break in a paragraph', () => {
+        expect(paragraph('one', lineBreak(), 'two').toString()).toBe('one\\\ntwo');
+    });
+
+    test('lineBreak in a list item', () => {
+        expect(list([['one', lineBreak(), 'two']]).toString()).toBe('- one\\\n  two');
+    });
+
+    test('br is always <br/>', () => {
+        expect(paragraph('one', br(), 'two').toString()).toBe('one<br/>two');
+        expect(heading(2, ['A', br(), 'B']).toString()).toBe('## A<br/>B');
     });
 });
 

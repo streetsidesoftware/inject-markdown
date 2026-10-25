@@ -63,6 +63,18 @@ export interface MDInlineCode extends MDValue {
     readonly description: 'inline code';
 }
 
+/** A line break in the form that works where it ends up. */
+export interface MDLineBreak extends MDValue {
+    readonly kind: 'inline';
+    readonly description: 'a line break';
+}
+
+/** An HTML line break, `<br/>`. */
+export interface MDBr extends MDValue {
+    readonly kind: 'inline';
+    readonly description: 'a <br/>';
+}
+
 export interface MDComment extends MDValue {
     readonly kind: 'comment';
     readonly description: 'a comment';
@@ -140,7 +152,16 @@ export type HeadingDepth = 1 | 2 | 3 | 4 | 5 | 6;
 
 /** A value that goes inside a line. A comment goes either inside a line or on its own. */
 export type MDInline =
-    MDText | MDLink | MDStrong | MDEmphasis | MDStrikethrough | MDInlineCode | MDComment | MDInlineTemplate;
+    | MDText
+    | MDLink
+    | MDStrong
+    | MDEmphasis
+    | MDStrikethrough
+    | MDInlineCode
+    | MDLineBreak
+    | MDBr
+    | MDComment
+    | MDInlineTemplate;
 
 /** A value that goes on its own lines. */
 export type MDBlock = MDHeading | MDParagraph | MDList | MDCodeBlock | MDComment | MDDocument | MDTemplate;
@@ -224,6 +245,19 @@ export function strikethrough(content: InlineContent): MDStrikethrough {
 /** Inline code. The code is inserted as is. */
 export function inlineCode(code: string): MDInlineCode {
     return new MarkdownValue('inline', 'inline code', [{ type: 'inlineCode', value: code }]);
+}
+
+/**
+ * A line break in the form that works where it ends up.
+ * In a paragraph or list item it's a Markdown hard break, a `\` at the end of the line.
+ */
+export function lineBreak(): MDLineBreak {
+    return new MarkdownValue('inline', 'a line break', [{ type: 'break' }]);
+}
+
+/** An HTML line break, always `<br/>`. It's self-closed, so it also works in MDX. */
+export function br(): MDBr {
+    return new MarkdownValue('inline', 'a <br/>', [{ type: 'html', value: '<br/>' }]);
 }
 
 /** An HTML comment, `<!-- text -->`. It goes inside a line or on its own. */

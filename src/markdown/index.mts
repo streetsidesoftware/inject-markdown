@@ -5,6 +5,7 @@ export type {
     ListEntry,
     ListItemContent,
     MDBlock,
+    MDBr,
     MDCodeBlock,
     MDComment,
     MDDocument,
@@ -13,6 +14,7 @@ export type {
     MDInline,
     MDInlineCode,
     MDInlineTemplate,
+    MDLineBreak,
     MDLink,
     MDList,
     MDListItem,
@@ -24,6 +26,7 @@ export type {
     MDValue,
 } from './builders.js';
 export {
+    br,
     codeBlock,
     comment,
     document,
@@ -31,6 +34,7 @@ export {
     heading,
     inlineCode,
     isMarkdown,
+    lineBreak,
     link,
     list,
     listItem,
