@@ -110,24 +110,41 @@ export function describe(value: unknown): string {
     return typeof value === 'object' ? 'an object' : `a ${typeof value}`;
 }
 
-/** A list item from its pieces: inline pieces in a row form a paragraph, and blocks follow. */
-export function listItemNode(content: readonly unknown[]): ListItem {
-    const children: BlockContent[] = [];
-    let line: PhrasingContent[] = [];
+/** A run of inline pieces that form one line, or a single block. */
+export type Run = { readonly inline: unknown[] } | { readonly block: unknown };
+
+/**
+ * Pieces in order, as runs of inline pieces and the blocks between them.
+ * Arrays are flattened.
+ */
+export function runs(content: unknown): Run[] {
+    const result: Run[] = [];
+    let line: unknown[] = [];
     const endLine = () => {
-        if (line.length) children.push({ type: 'paragraph', children: line });
+        if (line.length) result.push({ inline: line });
         line = [];
     };
     const add = (piece: unknown) => {
         if (Array.isArray(piece)) return piece.forEach(add);
         if (isBlockContent(piece)) {
             endLine();
-            children.push(...(blockNodes(piece, 'list item content') as BlockContent[]));
+            result.push({ block: piece });
             return;
         }
-        line.push(...inlineNodes(piece, 'list item content'));
+        line.push(piece);
     };
-    content.forEach(add);
+    add(content);
     endLine();
+    return result;
+}
+
+/** A list item from its pieces: each run of inline pieces forms a paragraph, and blocks follow. */
+export function listItemNode(content: readonly unknown[]): ListItem {
+    const where = 'list item content';
+    const children = runs(content).flatMap((run): BlockContent[] =>
+        'inline' in run
+            ? [{ type: 'paragraph', children: inlineNodes(run.inline, where) }]
+            : (blockNodes(run.block, where) as BlockContent[]),
+    );
     return { type: 'listItem', spread: false, children };
 }
