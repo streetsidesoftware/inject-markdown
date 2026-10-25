@@ -5,6 +5,7 @@ export type {
     ListEntry,
     ListItemContent,
     MDBlock,
+    MDBlockTemplate,
     MDBr,
     MDCodeBlock,
     MDComment,
@@ -21,7 +22,6 @@ export type {
     MDParagraph,
     MDStrikethrough,
     MDStrong,
-    MDTemplate,
     MDText,
     MDValue,
 } from './builders.js';
@@ -43,6 +43,7 @@ export {
     strikethrough,
     strong,
     text,
+    toBlock,
 } from './builders.js';
 export type {
     BulletMarker,
@@ -54,4 +55,4 @@ export type {
 } from './style.js';
 export { detectStyle } from './style.js';
 export type { TemplateValue, TemplateValues } from './template.js';
-export { inlineTemplate, template } from './template.js';
+export { blockTemplate, inlineTemplate, template } from './template.js';

@@ -3,7 +3,7 @@ import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 
-import type { MDInlineTemplate, MDTemplate, MDText, MDValue } from './builders.js';
+import type { MDBlockTemplate, MDInlineTemplate, MDText, MDValue } from './builders.js';
 import { detectMarkdownStyle } from './detectStyle.js';
 import {
     blockNodes,
@@ -37,13 +37,30 @@ export interface TemplateValues {
  * - A placeholder that stands alone as its own paragraph also takes blocks.
  * - A placeholder inside inline code or a code block takes only a string or text, inserted as is.
  *
- * The result renders in the template's own style.
+ * The filled result decides its kind:
+ * - A single paragraph is inline, without the whitespace around it.
+ * - Anything else is blocks, rendered in the template's own style.
  * @throws if a placeholder has no value, or a value doesn't fit where its placeholder is.
  */
-export function template(markdown: string, values: TemplateValues): MDTemplate {
+export function template(markdown: string, values: TemplateValues): MDBlockTemplate | MDInlineTemplate {
     const root = parse(markdown, false);
     fill(root, values, true);
-    return new MarkdownValue('block', 'a template', root.children, detectMarkdownStyle(root, markdown));
+    const style = detectMarkdownStyle(root, markdown);
+    const [only, ...rest] = root.children;
+    if (only?.type === 'paragraph' && !rest.length) {
+        return new MarkdownValue('inline', 'an inline template', only.children, style);
+    }
+    return new MarkdownValue('block', 'a block template', root.children, style);
+}
+
+/**
+ * Fill a Markdown template as blocks, the same way as {@link template}.
+ * A single paragraph stays a paragraph.
+ */
+export function blockTemplate(markdown: string, values: TemplateValues): MDBlockTemplate {
+    const root = parse(markdown, false);
+    fill(root, values, true);
+    return new MarkdownValue('block', 'a block template', root.children, detectMarkdownStyle(root, markdown));
 }
 
 /**

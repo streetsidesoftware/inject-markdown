@@ -20,6 +20,7 @@ import {
     strong,
     template,
     text,
+    toBlock,
 } from './index.mjs';
 
 describe('escaping', () => {
@@ -159,6 +160,25 @@ describe('line breaks', () => {
     });
 });
 
+describe('toBlock', () => {
+    test('a block is returned unchanged', () => {
+        const block = list(['a']);
+        expect(toBlock(block)).toBe(block);
+        const blocks = [heading(2, 'A'), list(['a'])];
+        expect(toBlock(blocks)).toBe(blocks);
+    });
+
+    test('inline content becomes a paragraph', () => {
+        expect(document(toBlock('Hello')).toString()).toBe('Hello\n');
+        expect(document(toBlock(['See ', link('docs', 'u')])).toString()).toBe('See [docs](u)\n');
+    });
+
+    test('each inline run becomes a paragraph, and blocks stay', () => {
+        const md = document(toBlock(['Intro ', strong('x'), list(['a']), 'Outro']));
+        expect(md.toString()).toBe('Intro **x**\n\n- a\n\nOutro\n');
+    });
+});
+
 describe('document', () => {
     test('blocks render as a file, ending with one newline', () => {
         const md = document(heading(3, 'Languages'), list(['en', 'de']));
@@ -191,7 +211,7 @@ describe('document', () => {
     });
 
     test('a template inside renders in the document style', () => {
-        const md = document(template('* a\n* b\n', {})).withStyle({ bullet: '+' });
+        const md = document(toBlock(template('* a\n* b\n', {}))).withStyle({ bullet: '+' });
         expect(md.toString()).toBe('+ a\n+ b\n');
     });
 

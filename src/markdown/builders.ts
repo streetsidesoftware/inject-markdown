@@ -4,6 +4,7 @@ import {
     blockNodes,
     describe,
     inlineNodes,
+    isBlockContent,
     isKind,
     listItemNode,
     MarkdownValue,
@@ -116,10 +117,10 @@ export interface MDDocument extends MDValue {
     withStyle(style: MarkdownStyle): MDDocument;
 }
 
-/** A filled template: Markdown blocks, rendered in the template's own style. */
-export interface MDTemplate extends MDValue {
+/** A filled block template: Markdown blocks, rendered in the template's own style. */
+export interface MDBlockTemplate extends MDValue {
     readonly kind: 'block';
-    readonly description: 'a template';
+    readonly description: 'a block template';
 }
 
 /** A filled inline template. */
@@ -164,7 +165,7 @@ export type MDInline =
     | MDInlineTemplate;
 
 /** A value that goes on its own lines. */
-export type MDBlock = MDHeading | MDParagraph | MDList | MDCodeBlock | MDComment | MDDocument | MDTemplate;
+export type MDBlock = MDHeading | MDParagraph | MDList | MDCodeBlock | MDComment | MDDocument | MDBlockTemplate;
 
 /**
  * Content that goes inside a line:
@@ -277,9 +278,38 @@ export function heading(depth: HeadingDepth, content: InlineContent): MDHeading 
 
 /** A paragraph: inline content as a block. */
 export function paragraph(...content: InlineContent[]): MDParagraph {
-    return new MarkdownValue('block', 'a paragraph', [
-        { type: 'paragraph', children: inlineNodes(content, 'paragraph content') },
-    ]);
+    return paragraphOf(content, 'paragraph content');
+}
+
+function paragraphOf(content: readonly InlineContent[], where: string): MDParagraph {
+    return new MarkdownValue('block', 'a paragraph', [{ type: 'paragraph', children: inlineNodes(content, where) }]);
+}
+
+/**
+ * Content as blocks, for where only blocks can go.
+ * - Blocks are returned unchanged.
+ * - Each run of inline pieces becomes a paragraph, as in a list item.
+ */
+export function toBlock(content: ListItemContent | readonly ListItemContent[]): BlockContent {
+    if (isBlockContent(content)) return content as BlockContent;
+    const blocks: BlockContent[] = [];
+    let line: InlineContent[] = [];
+    const endLine = () => {
+        if (line.length) blocks.push(paragraphOf(line, 'block content'));
+        line = [];
+    };
+    const add = (piece: unknown) => {
+        if (Array.isArray(piece)) return piece.forEach(add);
+        if (isBlockContent(piece)) {
+            endLine();
+            blocks.push(piece as BlockContent);
+            return;
+        }
+        line.push(piece as InlineContent);
+    };
+    add(content);
+    endLine();
+    return blocks.length === 1 ? blocks[0] : blocks;
 }
 
 /** A fenced code block. The code is inserted as is. */
