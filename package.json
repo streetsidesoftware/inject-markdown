@@ -91,6 +91,10 @@
       "types": "./dist/app.d.mts",
       "import": "./dist/app.mjs"
     },
+    "./markdown": {
+      "types": "./dist/markdown/index.d.mts",
+      "import": "./dist/markdown/index.mjs"
+    },
     "./bin": {
       "import": "./bin.mjs"
     },

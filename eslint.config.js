@@ -60,6 +60,16 @@ export default defineConfig(
         },
     },
     {
+        // The Markdown builders are built to move to their own package, so they import nothing from the rest of inject-markdown.
+        files: ['src/markdown/**'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                { patterns: [{ group: ['../*'], message: 'src/markdown imports nothing outside its folder.' }] },
+            ],
+        },
+    },
+    {
         files: ['**/*.{ts,mts,cts,tsx}'],
         rules: {
             'no-unused-vars': 'off',

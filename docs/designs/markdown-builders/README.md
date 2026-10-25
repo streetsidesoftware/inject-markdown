@@ -44,7 +44,7 @@ Turned down:
 
 ### Creating values
 
-A value is created by a factory function, such as `link(…)` or `list(…)`. Each kind is a class underneath, and the runtime kind check uses `instanceof`.
+A value is created by a factory function, such as `link(…)` or `list(…)`. Each kind is a class underneath. The nodes a value renders as are kept in a module-private `WeakMap`, not on the value, so the public types never mention mdast. The runtime kind check looks a value up there.
 
 The API exports the factories and the types (`MDLink`, `MDList`, and so on), not the classes. Factories are the only way to create a value, so the classes can change while the API settles. If a script needs to tell kinds apart, an exported check such as `isMarkdown(x)` can be added then.
 
@@ -125,9 +125,9 @@ Turned down:
 
 ### Rendering
 
-`toString()` renders a value and everything in it. There's no separate render function. A value also renders inside a template literal (`${value}`), so it drops into existing templates such as `unindent`.
+`toString()` renders a value and everything in it, without a trailing newline. There's no separate render function. A value also renders inside a template literal (`${value}`), so it drops into existing templates such as `unindent`.
 
-`toString()` takes no options, so a value renders in a fixed default style. When builder output is injected, inject-markdown already re-renders it in the target document's style, so the default only shows when a script writes a file directly.
+`toString()` takes no options, so a value renders in a fixed default style. The exception is a filled template, which renders in the style detected from its own text (`detectMarkdownStyle`, moved into the builders for this). When builder output is injected, inject-markdown already re-renders it in the target document's style, so the default only shows when a script writes a file directly.
 
 Converting a value to a string too early loses its kind. `text(`see ${link(…)}`)` makes the link plain text and escapes its brackets. Scripts compose values, not strings.
 
@@ -192,7 +192,7 @@ Turned down:
 
 `inlineTemplate(markdown, values)` fills a fragment the same way and returns an inline value, for use inside a sentence, list item, heading, or link text: `listItem(link(e.name, e.url), inlineTemplate(' - Adds {@ name @} spell checking', e))`.
 
-- Its text must be inline-able: one paragraph. A blank line, list, or heading throws.
+- Its text must be inline-able: one paragraph. A blank line throws. Block syntax is parsed as text, so `' - Adds …'` is a fragment, not a list. Leading and trailing whitespace is kept.
 - Its placeholders take only inline values.
 
 A placeholder with no value is an error. `template` throws and lists the missing names. A script that keeps a placeholder for injection time passes it explicitly. So typos are caught, and every kept placeholder is visible in the script. Any of these work:
@@ -276,7 +276,7 @@ The user guide (`docs/guide/markdown-builders.md`, marked experimental) and a sh
 - An `MDDocument` that carries its own style (bullets, fences, emphasis) and uses it when rendering.
 - The concrete API: names, how a template and its values are passed in, and how values are typed.
 - At injection time, a values file's top-level dotted keys aren't read as dotted names: `getPath` walks one segment at a time. Should values files follow the values-object rule?
-- `instanceof` fails when two copies of the package are loaded, for example the builders loaded both directly and through inject-markdown's pass-through after the move to toolbox. A brand check may be needed then.
+- The kind check fails when two copies of the package are loaded, for example the builders loaded both directly and through inject-markdown's pass-through after the move to toolbox. Each copy has its own `WeakMap`, just as `instanceof` would fail. A shared brand may be needed then.
 - Tables, in a second round.
 - Bold and italic, images, and raw HTML, once a script needs them.
 - Markdown-valued placeholders at injection time. The placeholder opts in. The syntax is open.

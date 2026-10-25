@@ -1,0 +1,119 @@
+import { describe, expect, test } from 'vitest';
+
+import { codeBlock, inlineCode, inlineTemplate, link, list, listItem, placeholder, template, text } from './index.mjs';
+import { resolveValue } from './template.js';
+
+describe('resolveValue', () => {
+    const laterNested = { 'a.b': { c: 1, e: 5 }, a: { b: { c: 0, d: 1 } } };
+    const laterDotted = { a: { b: { c: 0, d: 1 } }, 'a.b': { c: 1 } };
+
+    test.each`
+        values         | name       | expected
+        ${laterNested} | ${'a.b.c'} | ${0}
+        ${laterNested} | ${'a.b.d'} | ${1}
+        ${laterNested} | ${'a.b.e'} | ${5}
+        ${laterDotted} | ${'a.b.c'} | ${1}
+        ${laterDotted} | ${'a.b.d'} | ${1}
+        ${laterDotted} | ${'a.b.e'} | ${undefined}
+        ${laterDotted} | ${'a.b'}   | ${undefined}
+    `('$name in $values is $expected', ({ values, name, expected }) => {
+        expect(resolveValue(values, name)).toBe(expected);
+    });
+
+    test('a nested key with a dot never matches', () => {
+        expect(resolveValue({ a: { 'b.c': 1 } }, 'a.b.c')).toBeUndefined();
+    });
+
+    test('only own properties count', () => {
+        expect(resolveValue({}, 'toString')).toBeUndefined();
+        expect(resolveValue({ a: {} }, 'a.constructor')).toBeUndefined();
+    });
+});
+
+describe('template', () => {
+    test('a string is inserted as text and escaped', () => {
+        expect(template('Hello {@ name @}!', { name: '*you*' }).toString()).toBe('Hello \\*you\\*!');
+    });
+
+    test('an inline value goes inside a line', () => {
+        const md = template('See {@ docs @}.', { docs: link('the docs', 'https://example.com') });
+        expect(md.toString()).toBe('See [the docs](https://example.com).');
+    });
+
+    test('a placeholder alone in its paragraph takes blocks', () => {
+        const md = template('## Dictionaries\n\n{@ list @}\n\nEnd.\n', { list: list(['en', 'de']) });
+        expect(md.toString()).toBe('## Dictionaries\n\n- en\n- de\n\nEnd.');
+    });
+
+    test('a block inside a line throws', () => {
+        expect(() => template('See {@ list @}.', { list: list(['en']) })).toThrow(
+            new TypeError('{@ list @} must be inline, got a list'),
+        );
+    });
+
+    test('a placeholder inside code is replaced as is', () => {
+        const tpl = '```sh\nnpm install -D {@ pkg @}\n```\n\nVersion `{@ engines.cspell @}`\n';
+        const md = template(tpl, { pkg: '@cspell/dict-*', 'engines.cspell': '>=8' });
+        expect(md.toString()).toBe('```sh\nnpm install -D @cspell/dict-*\n```\n\nVersion `>=8`');
+    });
+
+    test('code takes only a string or text', () => {
+        expect(() => template('`{@ x @}`', { x: link('a', 'b') })).toThrow(
+            new TypeError('{@ x @} is inside code and takes only a string or text, got a link'),
+        );
+        expect(template('`{@ x @}`', { x: text('a*b') }).toString()).toBe('`a*b`');
+    });
+
+    test.each`
+        values
+        ${{ engines: { cspell: placeholder('engines.cspell') } }}
+        ${{ 'engines.cspell': placeholder('engines.cspell') }}
+        ${{ 'engines.cspell': '{@ engines.cspell @}' }}
+    `('a placeholder kept for injection time: $values', ({ values }) => {
+        const md = template('cspell `{@ engines.cspell @}`, needs {@ engines.cspell @}', values);
+        expect(md.toString()).toBe('cspell `{@ engines.cspell @}`, needs {@ engines.cspell @}');
+    });
+
+    test('a placeholder with no value throws, naming every missing one', () => {
+        expect(() => template('{@ a @} {@ b.c @} {@ a @} {@ d @}', { d: 'x' })).toThrow(
+            'template has no value for {@ a @}, {@ b.c @}',
+        );
+    });
+
+    test('an escaped placeholder in code stays literal', () => {
+        expect(template('`\\{@ x @}`', {}).toString()).toBe('`{@ x @}`');
+    });
+
+    test('the template keeps its own style', () => {
+        const md = template('* {@ a @}\n* *b*\n', { a: 'one' });
+        expect(md.toString()).toBe('* one\n* *b*');
+    });
+
+    test('numbers and booleans are text', () => {
+        expect(template('{@ n @} {@ b @}', { n: 1, b: true }).toString()).toBe('1 true');
+    });
+});
+
+describe('inlineTemplate', () => {
+    test('a fragment inside a list item', () => {
+        const e = { name: 'German', url: '../de.md' };
+        const md = list([listItem(link(e.name, e.url), inlineTemplate(' - Adds {@ name @} spell checking', e))]);
+        expect(md.toString()).toBe('- [German](../de.md) - Adds German spell checking');
+    });
+
+    test('block syntax is read as text', () => {
+        expect(inlineTemplate('# not a heading', {}).toString()).toBe('\\# not a heading');
+    });
+
+    test('more than one paragraph throws', () => {
+        expect(() => inlineTemplate('a\n\nb', {})).toThrow('inline template text must be one paragraph');
+    });
+
+    test('a block value throws', () => {
+        expect(() => inlineTemplate('{@ x @}', { x: codeBlock('x') })).toThrow(TypeError);
+    });
+
+    test('inline values fit', () => {
+        expect(inlineTemplate('use {@ x @}', { x: inlineCode('cspell') }).toString()).toBe('use `cspell`');
+    });
+});
