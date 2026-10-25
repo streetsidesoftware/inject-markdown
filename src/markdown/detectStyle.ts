@@ -1,13 +1,14 @@
 import type { Root } from 'mdast';
-import type { Options } from 'remark-stringify';
 import { visit } from 'unist-util-visit';
+
+import type { MarkdownStyle } from './types.js';
 
 /**
  * Detects the Markdown marker style (bullets, emphasis, fences, etc.) `root`
  * actually uses, by majority vote over its nodes, so re-stringifying can
  * preserve it instead of falling back to remark-stringify's defaults.
  */
-export function detectMarkdownStyle(root: Root, content: string): Options {
+export function detectMarkdownStyle(root: Root, content: string): MarkdownStyle {
     const rule = new Tally<'-' | '_' | '*'>();
     const bullet = new Tally<'-' | '+' | '*'>();
     const bulletOrdered = new Tally<'.' | ')'>();
@@ -49,7 +50,7 @@ export function detectMarkdownStyle(root: Root, content: string): Options {
         }
     });
 
-    const options: Options = {
+    const options: MarkdownStyle = {
         bullet: bullet.winner() ?? '-',
         emphasis: emphasis.winner() ?? '_',
         fence: fence.winner() ?? '`',

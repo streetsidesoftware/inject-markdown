@@ -19,7 +19,7 @@ Skip it for bug fixes, refactors, dependency updates, and changes that are alrea
 
 A design is a folder, `docs/designs/<feature>/`, named by a short kebab-case slug, for example `deny-access`. The design itself is its `README.md`. Research notes or a prototype can go next to it, so the design never has to move and links to it keep working.
 
-Add a line for it under Planned in [`docs/designs/README.md`](designs/README.md). The PR that ships the feature moves the line to Built and links to the feature's user docs.
+The [designs index](designs/README.md) is generated from each design's folder name and title, so there's nothing to add there by hand.
 
 A design can merge to main before it's settled. Start its title with `WIP:` until it is. A settled design drops `WIP:`, even when its feature isn't built yet.
 
@@ -53,6 +53,8 @@ Record what's out of scope only when a reader would otherwise assume the feature
 
 List an alternative only when it's significant: a reader would likely propose it, and the design doesn't already say why it loses. The list supports the design. It isn't a record of the discussion. Leave the section out when nothing qualifies.
 
+Don't state another feature's build status in a design. Link to its design or user docs instead, so the sentence can't go stale.
+
 Define a new term where it's first used. If it's used across the repo, add it to the [glossary](glossary.md).
 
 ## How to design
@@ -65,7 +67,7 @@ Work from the top down, and stop when the code is the easier way to answer the r
 4. **Note side questions** in a line under Open questions, and move on.
 5. **Let the code settle the rest.** When a question is easier to answer by building or trying something, stop designing and build.
 
-When the feature ships, update the design where building it changed the design, and move its line in the designs list to Built. After that, leave it alone. When a later change makes it wrong, the code and the docs win.
+When the feature ships, update the design where building it changed the design. After that, leave it alone. When a later change makes it wrong, the code and the docs win.
 
 If a design sets a rule that holds beyond its feature, add it to the [design principles](design-principles.md).
 

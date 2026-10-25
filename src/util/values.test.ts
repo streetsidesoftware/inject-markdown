@@ -1,12 +1,11 @@
 import { describe, expect, test, vi } from 'vitest';
 
 import type { FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
+import { isValidPlaceholderName, isValidPlaceholderSegment } from '../markdown/placeholders.js';
 import {
     deriveAutoPrefixFromPath,
     getPath,
     isScalar,
-    isValidPlaceholderName,
-    isValidPlaceholderSegment,
     isValidValuesFilePrefix,
     type JsonObject,
     layerFromPair,

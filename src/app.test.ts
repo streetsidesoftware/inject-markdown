@@ -108,6 +108,41 @@ describe('app', () => {
         command.configureOutput({ writeErr: () => undefined });
         await expect(app.run(command, argv)).rejects.toThrow(message);
     });
+
+    test.each`
+        args                                                               | message
+        ${['--no-directives']}                                             | ${'--no-directives requires --output-dir.'}
+        ${['--directives']}                                                | ${'--directives requires --output-dir.'}
+        ${['--no-directives', '--output-dir=.']}                           | ${'--no-directives would overwrite the source files'}
+        ${['--no-directives', '--cwd=fixtures', '--output-dir=fixtures/']} | ${'--no-directives would overwrite the source files'}
+    `('$args is a usage error', async ({ args, message }) => {
+        const command = new Command();
+        const argv = createArgv('README.md', args, '--dry-run');
+        command.exitOverride(errorHandler);
+        command.configureOutput({ writeErr: () => undefined });
+        await expect(app.run(command, argv)).rejects.toThrow(message);
+    });
+
+    test.each`
+        flags                  | hasDirectives
+        ${[]}                  | ${true}
+        ${['--directives']}    | ${true}
+        ${['--no-directives']} | ${false}
+    `('--output-dir with $flags', async ({ flags, hasDirectives }) => {
+        const outDir = await mkdtemp(path.join(tmpdir(), 'inject-markdown-'));
+        try {
+            const command = new Command();
+            const cwd = path.join(__root__, 'fixtures/inject-only');
+            const argv = createArgv('README.md', `--cwd=${cwd}`, `--output-dir=${outDir}`, '--silent', flags);
+            command.exitOverride(errorHandler);
+            await app.run(command, argv);
+            const written = await readFile(path.join(outDir, 'README.md'), 'utf8');
+            expect(written).toContain('Injected content.');
+            expect(written.includes('@@inject')).toBe(hasDirectives);
+        } finally {
+            await rm(outDir, { recursive: true, force: true });
+        }
+    });
 });
 
 function createArgv(...args: (string | string[])[]): string[] {

@@ -2,19 +2,17 @@
 
 Each folder here holds the design of one feature. A title that starts with `WIP:` means the design isn't settled yet. To write one, see [Designing a feature](../feature-design.md).
 
-## Built
+This table is generated from each design's folder name and title by `pnpm build:designs`. Don't edit it by hand.
 
-The code and the user docs describe a built feature. Its design explains why it's shaped the way it is.
+<!--- @@inject-table: static/designs.json#markdown --->
 
-| Design                                             | Description                                                                      | User docs                                                  |
-| -------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| [Template variables](template-variables/README.md) | `{@ name @}` placeholders in injected content, and where their values come from. | [Template variables guide](../guide/template-variables.md) |
+| Design                                                 | Title                  |
+| ------------------------------------------------------ | ---------------------- |
+| [`deny-access`](deny-access/README.md)                 | Deny access            |
+| [`markdown-builders`](markdown-builders/README.md)     | WIP: Markdown builders |
+| [`rebase-output-links`](rebase-output-links/README.md) | Rebase output links    |
+| [`remote-guardrails`](remote-guardrails/README.md)     | WIP: Remote guardrails |
+| [`table-columns`](table-columns/README.md)             | WIP: Table columns     |
+| [`template-variables`](template-variables/README.md)   | Template variables     |
 
-## Planned
-
-| Design                                               | Description                                                                                 |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| [Deny access](deny-access/README.md)                 | `--deny-access <glob>`: refuse directive reads of matching paths inside the injection root. |
-| [Rebase output links](rebase-output-links/README.md) | `--rebase-output-links`: rebase relative links onto the `--output-dir` location.            |
-| [Remote guardrails](remote-guardrails/README.md)     | WIP. Refuse private and loopback addresses for remote references, with time and size caps.  |
-| [Table columns](table-columns/README.md)             | WIP. `columns`, `column-names`, `header-format`, and auto-alignment for tables.             |
+<!--- @@inject-end: static/designs.json#markdown --->

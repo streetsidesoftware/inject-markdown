@@ -19,10 +19,12 @@
     "build": "tsc -p .",
     "watch": "tsc -p . --watch",
     "build:readme": "./scripts/update_readme.sh",
+    "build:designs": "node scripts/build-designs.mts && ./bin.mjs docs/designs/README.md && prettier -w docs/designs/README.md docs/designs/static/designs.json",
     "coverage": "vitest run --coverage",
     "clean": "rm -rf coverage dist",
-    "lint": "pnpm eslint && pnpm prettier",
+    "lint": "pnpm eslint && pnpm prettier && pnpm lint:types",
     "lint:fix": "pnpm eslint:fix && pnpm prettier:fix",
+    "lint:types": "tsc -p scripts",
     "prettier": "prettier -c .",
     "prettier:fix": "prettier -w .",
     "eslint": "eslint .",
@@ -31,7 +33,9 @@
     "sample:clean": "./bin.mjs --clean \"sample-clean/**/*.md\"",
     "sample:hydrate": "./bin.mjs \"*.md\" --cwd=sample-clean --output-dir=sample-hydrated",
     "test": "vitest run --pool=forks",
-    "test:bin": "./bin.mjs \"**\" \"!injection-root-boundary/**\" --cwd=fixtures --output-dir=fixtures-output --no-stop-on-error --write-on-error || echo done.",
+    "test:bin": "pnpm test:bin:fixtures && pnpm test:bin:no-directives",
+    "test:bin:fixtures": "./bin.mjs \"**\" \"!injection-root-boundary/**\" --cwd=fixtures --output-dir=fixtures-output --no-stop-on-error --write-on-error || echo done.",
+    "test:bin:no-directives": "./bin.mjs \"vacations/**\" --cwd=fixtures --output-dir=fixtures-output/no-directives --no-directives",
     "test:watch": "vitest",
     "prepareOnly": "pnpm build"
   },
@@ -90,6 +94,10 @@
     "./app": {
       "types": "./dist/app.d.mts",
       "import": "./dist/app.mjs"
+    },
+    "./markdown": {
+      "types": "./dist/markdown/index.d.mts",
+      "import": "./dist/markdown/index.mjs"
     },
     "./bin": {
       "import": "./bin.mjs"

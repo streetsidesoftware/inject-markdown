@@ -28,4 +28,5 @@ jobs:
         run: |
           pnpm build
           pnpm lint:fix
+          pnpm lint:types
           pnpm spell
