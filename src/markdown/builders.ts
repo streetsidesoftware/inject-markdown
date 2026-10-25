@@ -4,8 +4,9 @@ import {
     blockNodes,
     describe,
     inlineNodes,
+    isArray,
     isBlockContent,
-    isKind,
+    isListItem,
     listItemNode,
     MarkdownValue,
     renderingOf,
@@ -292,7 +293,7 @@ function paragraphOf(content: readonly InlineContent[], where: string): MDParagr
  * - Each run of inline pieces becomes a paragraph, as in a list item.
  */
 export function toBlock(content: ListItemContent | readonly ListItemContent[]): BlockContent {
-    if (isBlockContent(content)) return content as BlockContent;
+    if (isBlockContent(content)) return content;
     const blocks = runs<InlineContent, BlockContent>(content).map((run) =>
         'inline' in run ? paragraphOf(run.inline, 'block content') : run.block,
     );
@@ -318,9 +319,7 @@ export function document(...content: BlockContent[]): MDDocument {
 export function list(entries: readonly ListEntry[]): MDList {
     if (!Array.isArray(entries)) throw new TypeError(`list entries must be an array, got ${describe(entries)}`);
     const items = entries.map((entry) =>
-        isKind(entry, 'listItem')
-            ? (renderingOf(entry)?.nodes[0] as ListItem)
-            : listItemNode(Array.isArray(entry) ? entry : [entry]),
+        isListItem(entry) ? (renderingOf(entry)?.nodes[0] as ListItem) : listItemNode(isArray(entry) ? entry : [entry]),
     );
     return new MarkdownValue('block', 'a list', [{ type: 'list', ordered: false, spread: false, children: items }]);
 }

@@ -3,7 +3,7 @@ import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 
-import type { MDBlockTemplate, MDInlineTemplate, MDText, MDValue } from './builders.js';
+import type { InlineContent, MDBlockTemplate, MDInlineTemplate, MDText, MDValue } from './builders.js';
 import { detectMarkdownStyle } from './detectStyle.js';
 import {
     blockNodes,
@@ -240,7 +240,8 @@ function fill(root: Root, values: TemplateValues, allowBlocks: boolean): void {
 
 function valueAsInline(value: TemplateValue, name: string): PhrasingContent[] {
     if (typeof value === 'number' || typeof value === 'boolean') return textNodes(String(value));
-    return inlineNodes(value, `{@ ${name} @}`);
+    // A template value can be any kind. inlineNodes throws when it isn't inline.
+    return inlineNodes(value as InlineContent, `{@ ${name} @}`);
 }
 
 /** A value inside code: only a string or text, inserted as is. */
