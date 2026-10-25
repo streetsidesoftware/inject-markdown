@@ -16,9 +16,10 @@
     "url": "https://github.com/streetsidesoftware/inject-markdown"
   },
   "scripts": {
-    "build": "tsc -p .",
+    "build": "tsc -p . && tsc -p scripts",
     "watch": "tsc -p . --watch",
     "build:readme": "./scripts/update_readme.sh",
+    "build:designs": "node scripts/build-designs.mts && ./bin.mjs docs/designs/README.md && prettier -w docs/designs/README.md docs/designs/static/designs.json",
     "coverage": "vitest run --coverage",
     "clean": "rm -rf coverage dist",
     "lint": "pnpm eslint && pnpm prettier",

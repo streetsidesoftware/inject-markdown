@@ -17,9 +17,14 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Build
+        run: pnpm build
+
+      - name: Designs index
+        run: pnpm build:designs
+
       - name: Lint
         run: |
-          pnpm build
           pnpm lint:fix
           pnpm test:bin
 

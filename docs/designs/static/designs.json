@@ -1,0 +1,30 @@
+[
+    {
+        "Design": "[`deny-access`](../deny-access/README.md)",
+        "Title": "Deny access"
+    },
+    {
+        "Design": "[`designs-index`](../designs-index/README.md)",
+        "Title": "WIP: Designs index"
+    },
+    {
+        "Design": "[`markdown-builders`](../markdown-builders/README.md)",
+        "Title": "WIP: Markdown builders"
+    },
+    {
+        "Design": "[`rebase-output-links`](../rebase-output-links/README.md)",
+        "Title": "Rebase output links"
+    },
+    {
+        "Design": "[`remote-guardrails`](../remote-guardrails/README.md)",
+        "Title": "WIP: Remote guardrails"
+    },
+    {
+        "Design": "[`table-columns`](../table-columns/README.md)",
+        "Title": "WIP: Table columns"
+    },
+    {
+        "Design": "[`template-variables`](../template-variables/README.md)",
+        "Title": "Template variables"
+    }
+]
