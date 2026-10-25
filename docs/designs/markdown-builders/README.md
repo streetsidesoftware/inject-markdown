@@ -19,9 +19,9 @@ Success: the scripts replace their hand-written Markdown with the builders. The 
 A script builds Markdown values, composes them, and calls `toString()` on the outermost one. Escaping happens there, based on where each value ends up, so the script never needs to know the escaping rules.
 
 ```ts
-import { link, list, paragraph } from 'inject-markdown/markdown';
+import { link, list } from 'inject-markdown/markdown';
 
-const md = list(extensions.map((e) => paragraph(link(e.name, e.url), ` - ${e.description}`))).toString();
+const md = list(extensions.map((e) => [link(e.name, e.url), ` - ${e.description}`])).toString();
 ```
 
 ```markdown
