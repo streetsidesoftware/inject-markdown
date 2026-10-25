@@ -29,8 +29,6 @@ Aim for a good design quickly, not a perfect one. If the interview drifts into d
 
 6. **Settle it** when the user says the design is done. Settle or drop each open question with the user, and remove `WIP:` from the title. Run `pnpm run spell`. If the user asks for a fresh-reader check, start a subagent given only the design's path, told not to read the code. Ask it to say what the feature does, how it behaves, and why, and to list anything it had to guess or found contradictory. Show the user its report.
 
-When the feature is built, update the design where building it changed the design.
-
 ## Check a change
 
 For a small feature or fix, when the user asks to check it before or while building. No design file, and a few minutes of the user's time.

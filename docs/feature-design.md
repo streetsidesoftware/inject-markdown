@@ -25,8 +25,6 @@ A design can merge to main before it's settled. Start its title with `WIP:` unti
 
 Edit a design in place as it changes. Git history keeps the earlier versions, so the file doesn't have to.
 
-A design can go in its own `docs:` PR, or in the PR that builds the feature.
-
 ## The file
 
 ```markdown
@@ -66,8 +64,6 @@ Work from the top down, and stop when the code is the easier way to answer the r
 3. **Work through the [design questions](#design-questions).** Spend time on a question when its answer could change the sketch, or would be hard to undo once it ships. Settle anything else with a sensible default. When a detail shows the sketch is wrong, change the sketch.
 4. **Note side questions** in a line under Open questions, and move on.
 5. **Let the code settle the rest.** When a question is easier to answer by building or trying something, stop designing and build.
-
-When the feature ships, update the design where building it changed the design. After that, leave it alone. When a later change makes it wrong, the code and the docs win.
 
 If a design sets a rule that holds beyond its feature, add it to the [design principles](design-principles.md).
 
