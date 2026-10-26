@@ -127,14 +127,14 @@ export type Run = { readonly inline: InlineContent[] } | { readonly block: Block
  * Pieces in order, as runs of inline pieces and the blocks between them.
  * Arrays are flattened.
  */
-export function runs(content: AnyContent): Run[] {
+export function runs(content: AnyContent | readonly AnyContent[]): Run[] {
     const result: Run[] = [];
     let line: InlineContent[] = [];
     function endLine(): void {
         if (line.length) result.push({ inline: line });
         line = [];
     }
-    function add(piece: AnyContent): void {
+    function add(piece: AnyContent | readonly AnyContent[]): void {
         if (isArray(piece)) {
             piece.forEach(add);
             return;
@@ -151,13 +151,19 @@ export function runs(content: AnyContent): Run[] {
     return result;
 }
 
-/** A list item from its pieces: each run of inline pieces forms a paragraph, and blocks follow. */
-export function listItemNode(content: readonly ListItemContent[]): ListItem {
-    const where = 'list item content';
-    const children = runs(content).flatMap((run): MdastBlockContent[] =>
+/**
+ * The blocks for mixed content: each run of inline pieces forms a paragraph, and blocks follow.
+ * @param where - what the content is for, for error messages.
+ */
+export function groupedNodes(content: AnyContent | readonly AnyContent[], where: string): MdastBlockContent[] {
+    return runs(content).flatMap((run): MdastBlockContent[] =>
         'inline' in run
             ? [{ type: 'paragraph', children: inlineNodes(run.inline, where) }]
             : (blockNodes(run.block, where) as MdastBlockContent[]),
     );
-    return { type: 'listItem', spread: false, children };
+}
+
+/** A list item from its pieces, grouped as in {@link groupedNodes}. */
+export function listItemNode(content: readonly ListItemContent[]): ListItem {
+    return { type: 'listItem', spread: false, children: groupedNodes(content, 'list item content') };
 }

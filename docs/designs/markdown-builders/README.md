@@ -48,7 +48,32 @@ A value is created by a factory function, such as `link(…)` or `list(…)`. Th
 
 Factories are the only way to create a value, so the internal class can change while the API settles. `isMarkdown(x)` tells a Markdown value from anything else.
 
-Wherever inline content is accepted, a plain string means text and is escaped. `inlineCode('…')` and `codeBlock('…')` take their string as code, inserted as is. `text()` stays available for a script that wants to be explicit.
+Wherever inline content is accepted, a plain string means text and is escaped. `inlineCode('…')` and `codeBlock('…')` take their string as code, inserted as is. `inlineText()`, or its short name `text()`, stays available for a script that wants to be explicit.
+
+### Plain text
+
+A string is inline text everywhere, even where blocks can go. A newline in it stays in the text and displays as a space. A string never splits into paragraphs by itself, because going from inline to block depends on what the caller means.
+
+`blockText(text)` says it: plain text becomes paragraphs, as if each line were escaped text and the result were read as Markdown.
+
+- A blank line, or a line of only spaces and tabs, ends a paragraph.
+- A newline between other lines is a soft break, so text wrapped at 80 columns reads as normal paragraphs.
+- Each line is escaped, so a line such as `- b` or `# c` stays text.
+- Blank lines at the start and end are dropped.
+- The result is always blocks, an `MDFragment`, even for one paragraph.
+
+```ts
+document(heading(2, 'Notice'), blockText('Line one\nline two.\n\nNext paragraph.\n'));
+```
+
+```markdown
+## Notice
+
+Line one
+line two.
+
+Next paragraph.
+```
 
 ### Links
 
@@ -70,7 +95,7 @@ A placeholder fits in by converting to a string, since its string form is exactl
 
 ### Documents
 
-`document(...blocks)` makes a block value from several blocks, so a script can render a whole file: `document(heading(3, title), list(items)).toString()`. Arrays of blocks are flattened, so `document(sections, ...more)` works. A document is the one value that renders with a trailing newline, because it's meant to stand alone as a file. It's where a document's own frontmatter will go.
+`document(...content)` makes a block value from its content, so a script can render a whole file: `document(heading(3, title), list(items)).toString()`. Arrays are flattened, so `document(sections, ...more)` works. Inline pieces in a row form a paragraph, and blocks follow, as in a list item: `document('See ', link(…), '.')` is one paragraph. A document is the one value that renders with a trailing newline, because it's meant to stand alone as a file. It's where a document's own frontmatter will go.
 
 A document can carry its own style:
 
@@ -103,7 +128,7 @@ An array is a sequence:
 
 `paragraph(…)` turns inline content into a block explicitly.
 
-`toBlock(content)` makes content fit where only blocks can go. Blocks come back unchanged, and each run of inline pieces becomes a paragraph, as in a list item: `toBlock(['Intro ', link(…), list([…])])` is a paragraph followed by the list. It's how the result of `template()` or `parse()`, which can be either kind, goes into a document.
+`toBlock(content)` makes content fit where only blocks can go. Blocks come back unchanged, and each run of inline pieces becomes a paragraph, as in a list item: `toBlock(['Intro ', link(…), list([…])])` is a paragraph followed by the list. It's how the result of `template()` or `parse()`, which can be either kind, goes where only blocks can go.
 
 `list(entries)` takes one entry per item:
 
@@ -155,6 +180,8 @@ Putting a block where only inline content can go, such as a list inside a headin
 - a placeholder builder
 - templates: `template`, `blockTemplate`, and `inlineTemplate`
 - `parse`, for Markdown made elsewhere
+- `inlineText` and `blockText`, for plain text
+- `substitutePlaceholders`, for content built in steps
 - `toBlock`
 
 ### Line breaks
@@ -243,6 +270,22 @@ The concerns that apply at injection time, such as untrusted values and link reb
 
 In prose, the Markdown parser reads `\{` as an escape and drops the backslash, so `\{@ name @}` comes out as a kept placeholder. Templates and injection have the same problem ([#887](https://github.com/streetsidesoftware/inject-markdown/issues/887)).
 
+### Substituting placeholders
+
+`substitutePlaceholders(value, values)` puts values in place of the placeholders of a value already made, such as one from `parse()`:
+
+- It takes any Markdown value and returns the same type. A document comes back as a document, in its style, and a fragment keeps its text's style.
+- Only the names that `values` has are substituted. The others stay as written, so content can be built in steps, and injection can fill what's left.
+- Values go in as in templates, and `values` resolves names the same way. A lone placeholder in a block value takes blocks. In an inline value, such as a heading or an inline fragment, a block throws a `TypeError`.
+- In text, a placeholder takes only a string or text, because the result is still text.
+- The value given is left unchanged.
+
+```ts
+const notice = parse('Requires {@ engines.vscode @}.\n\n{@ list @}\n');
+const step = substitutePlaceholders(notice, { list: list(items) });
+document(step).toString(); // `{@ engines.vscode @}` is kept, for injection.
+```
+
 ### Errors
 
 A value of the wrong kind throws a `TypeError`, such as a block where only inline content can go, or an array that mixes inline and block values. Other misuse throws an `Error`, such as a template placeholder with no value or a heading depth outside 1–6. Each message names what was wrong: `heading content must be inline, got a list`.
@@ -296,3 +339,7 @@ The user guide (`docs/guide/markdown-builders.md`, marked experimental) and a sh
 - A second package in this repo: it means converting the repo to a monorepo, with its release and CI setup.
 - Toolbox from the start: every grammar change would need a toolbox release before inject-markdown could use it.
 - `experimental` in the subpath: every import would change once it settles.
+- `text()` deciding its kind by its content, as `parse()` does: its type would become `MDText | MDFragment`, and `heading(2, text(s))` would stop type-checking.
+- Splitting a string into paragraphs wherever blocks can go: the same string would mean something different in a list item than in a paragraph.
+- A newline in `blockText()` as a line break: text wrapped at a fixed width would break in the middle of sentences.
+- `fill(value, values)` or `replacePlaceholders(value, values)`: the function puts a value in place of each placeholder that has one, which is substitution.

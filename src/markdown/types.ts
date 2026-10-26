@@ -103,7 +103,7 @@ export interface MDDocument extends MDValue {
     withStyle(style: MarkdownStyle): MDDocument;
 }
 
-/** Markdown blocks from Markdown text, rendered in the text's own style. */
+/** Blocks made from a string. Markdown text renders in its own style. */
 export interface MDFragment extends MDValue {
     readonly kind: 'block';
     readonly description: 'a Markdown fragment';

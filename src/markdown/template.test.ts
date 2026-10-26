@@ -10,8 +10,10 @@ import {
     link,
     list,
     listItem,
+    paragraph,
     parse,
     placeholder,
+    substitutePlaceholders,
     template,
     text,
     toBlock,
@@ -197,4 +199,68 @@ describe('parse', () => {
             expect(parse(markdown).toString()).toBe(expected);
         },
     );
+});
+
+describe('substitutePlaceholders', () => {
+    test('a placeholder with no value is kept, so content can be built in steps', () => {
+        const md = paragraph(placeholder('a'), ' and ', placeholder('_b_'));
+        const step = substitutePlaceholders(md, { a: '*x*' });
+        expect(step.toString()).toBe('\\*x\\* and {@ _b_ @}');
+        expect(substitutePlaceholders(step, { _b_: 'y' }).toString()).toBe('\\*x\\* and y');
+    });
+
+    test('the value given is not changed', () => {
+        const md = paragraph(placeholder('a'));
+        substitutePlaceholders(md, { a: 'x' });
+        expect(md.toString()).toBe('{@ a @}');
+    });
+
+    test('a document stays a document, in its style', () => {
+        const md = document(list(['{@ a @}'])).withStyle({ bullet: '*' });
+        const result = substitutePlaceholders(md, { a: link('x', 'u') });
+        expect(result.toString()).toBe('* [x](u)\n');
+        expect(result.withStyle({ bullet: '+' }).toString()).toBe('+ [x](u)\n');
+    });
+
+    test('a fragment keeps the style of its text', () => {
+        const md = parse('* a\n* {@ b @}\n');
+        expect(substitutePlaceholders(md, { b: 'B' }).toString()).toBe('* a\n* B');
+    });
+
+    test('a placeholder alone in its paragraph takes blocks, in a block value', () => {
+        const md = parse('Intro\n\n{@ items @}\n');
+        expect(substitutePlaceholders(md, { items: list(['a', 'b']) }).toString()).toBe('Intro\n\n- a\n- b');
+        const item = listItem(placeholder('items'));
+        expect(substitutePlaceholders(list([item]), { items: list(['a']) }).toString()).toBe('- - a');
+    });
+
+    test('a block in an inline value throws', () => {
+        expect(() => substitutePlaceholders(parse('{@ items @}'), { items: list(['a']) })).toThrow(
+            new TypeError('{@ items @} must be inline, got a list'),
+        );
+        expect(() => substitutePlaceholders(heading(2, placeholder('x')), { x: list(['a']) })).toThrow(
+            new TypeError('{@ x @} must be inline, got a list'),
+        );
+    });
+
+    test('in code, a placeholder takes a string or text, inserted as is', () => {
+        const md = document(codeBlock('npm i {@ pkg @}'), paragraph(inlineCode('{@ pkg @}')));
+        expect(substitutePlaceholders(md, { pkg: '*a*' }).toString()).toBe('```\nnpm i *a*\n```\n\n`*a*`\n');
+        expect(() => substitutePlaceholders(codeBlock('{@ x @}'), { x: link('a', 'u') })).toThrow(
+            new TypeError('{@ x @} is inside code and takes only a string or text, got a link'),
+        );
+    });
+
+    test('text stays text, so it takes only a string or text', () => {
+        const md = substitutePlaceholders(text('v{@ v @} {@ w @}'), { v: '1.0' });
+        expect(md.text).toBe('v1.0 {@ w @}');
+        expect(() => substitutePlaceholders(text('{@ x @}'), { x: link('a', 'u') })).toThrow(
+            new TypeError('{@ x @} is in text and takes only a string or text, got a link'),
+        );
+    });
+
+    test('names resolve as in template', () => {
+        const md = paragraph(placeholder('engines.cspell'));
+        expect(substitutePlaceholders(md, { engines: { cspell: '9.x' } }).toString()).toBe('9.x');
+    });
 });

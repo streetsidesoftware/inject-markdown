@@ -3,6 +3,7 @@ import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 
+import { DocumentValue, inlineText } from './builders.js';
 import { detectMarkdownStyle } from './detectStyle.js';
 import {
     blockNodes,
@@ -44,7 +45,7 @@ export interface TemplateValues {
  */
 export function template(markdown: string, values: TemplateValues): MDFragment | MDInlineFragment {
     const root = parseTree(markdown, false);
-    fill(root, values, true);
+    throwIfMissing(fill(root, values, true));
     return fragment(root, markdown);
 }
 
@@ -54,7 +55,7 @@ export function template(markdown: string, values: TemplateValues): MDFragment |
  */
 export function blockTemplate(markdown: string, values: TemplateValues): MDFragment {
     const root = parseTree(markdown, false);
-    fill(root, values, true);
+    throwIfMissing(fill(root, values, true));
     return new MarkdownValue('block', 'a Markdown fragment', root.children, detectMarkdownStyle(root, markdown));
 }
 
@@ -72,7 +73,7 @@ export function inlineTemplate(markdown: string, values: TemplateValues): MDInli
     if (root.children.length > 1 || (root.children[0] && root.children[0].type !== 'paragraph')) {
         throw new Error('inline template text must be one paragraph');
     }
-    fill(root, values, false);
+    throwIfMissing(fill(root, values, false));
     const children = root.children[0]?.type === 'paragraph' ? root.children[0].children : [];
     return new MarkdownValue('inline', 'an inline Markdown fragment', [
         ...textNodes(lead),
@@ -92,6 +93,38 @@ export function parse(markdown: string): MDFragment | MDInlineFragment {
     const root = parseTree(markdown, false);
     keepPlaceholders(root);
     return fragment(root, markdown);
+}
+
+/**
+ * Substitute values for the placeholders in a Markdown value.
+ * - Values go in as in {@link template}.
+ * - A placeholder with no value is kept as written, so it can be substituted later.
+ * - The result is the same kind of value, in the same style.
+ * - In text, a placeholder takes only a string or text, because the result is still text.
+ * @throws if a value doesn't fit where its placeholder is.
+ */
+export function substitutePlaceholders<T extends MDValue>(value: T, values: TemplateValues): T {
+    const rendering = renderingOf(value);
+    if (!rendering) throw new TypeError(`expected a Markdown value, got ${describe(value)}`);
+    if (isText(value)) return inlineText(substituteInText(value.text, values)) as MDValue as T;
+    const root: Root = { type: 'root', children: structuredClone(rendering.nodes) };
+    fill(root, values, value.kind !== 'inline');
+    const result =
+        value.description === 'a document'
+            ? new DocumentValue(root.children, rendering.style)
+            : new MarkdownValue(value.kind, value.description, root.children, rendering.style);
+    return result as MDValue as T;
+}
+
+/** Text with its placeholders substituted. An escaped placeholder, or one with no value, is kept as written. */
+function substituteInText(text: string, values: TemplateValues): string {
+    return text.replace(placeholderRegExp, (whole, escape: string | undefined, name: string) => {
+        const value = escape ? undefined : resolveValue(values, name);
+        if (value === undefined) return whole;
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+        if (isText(value)) return value.text;
+        throw new TypeError(`{@ ${name} @} is in text and takes only a string or text, got ${describe(value)}`);
+    });
 }
 
 /** A parsed tree as a value. A single paragraph is inline, and anything else is blocks. */
@@ -186,10 +219,12 @@ function isTemplateValue(value: unknown): value is TemplateValue {
 }
 
 /**
- * Replace the placeholders in a parsed template, in place.
+ * Replace the placeholders that have values, in place.
+ * A placeholder is in text, in code or HTML, or kept raw as an HTML node of its own.
  * @param allowBlocks - a placeholder alone in its paragraph may take blocks.
+ * @returns the names that have no value.
  */
-function fill(root: Root, values: TemplateValues, allowBlocks: boolean): void {
+function fill(root: Root, values: TemplateValues, allowBlocks: boolean): Set<string> {
     const missing = new Set<string>();
 
     const lookup = (name: string): TemplateValue | undefined => {
@@ -227,11 +262,9 @@ function fill(root: Root, values: TemplateValues, allowBlocks: boolean): void {
     const standaloneBlocks = (node: RootContent): RootContent[] | undefined => {
         if (!allowBlocks || node.type !== 'paragraph' || node.children.length !== 1) return undefined;
         const only = node.children[0];
-        if (only.type !== 'text') return undefined;
-        const trimmed = only.value.trim();
-        const matches = [...trimmed.matchAll(placeholderRegExp)];
-        const [whole, escape, name] = matches[0] ?? [];
-        if (matches.length !== 1 || escape || whole !== trimmed || !name) return undefined;
+        if (only.type !== 'text' && only.type !== 'html') return undefined;
+        const name = wholePlaceholder(only.value);
+        if (!name) return undefined;
         const value = resolveValue(values, name);
         return isBlockContent(value) ? blockNodes(value, `{@ ${name} @}`) : undefined;
     };
@@ -248,9 +281,18 @@ function fill(root: Root, values: TemplateValues, allowBlocks: boolean): void {
                 case 'text':
                     children.push(...fillText(child.value));
                     continue;
+                case 'html': {
+                    const name = wholePlaceholder(child.value);
+                    const value = name && lookup(name);
+                    if (name && value !== undefined) {
+                        children.push(...valueAsInline(value, name));
+                        continue;
+                    }
+                    if (!name) child.value = fillCode(child.value);
+                    break;
+                }
                 case 'inlineCode':
                 case 'code':
-                case 'html':
                     child.value = fillCode(child.value);
                     break;
                 default:
@@ -262,11 +304,21 @@ function fill(root: Root, values: TemplateValues, allowBlocks: boolean): void {
     };
 
     fillParent(root);
+    return missing;
+}
 
-    if (missing.size) {
-        const names = [...missing].map((name) => `{@ ${name} @}`).join(', ');
-        throw new Error(`template has no value for ${names}`);
-    }
+function throwIfMissing(missing: Set<string>): void {
+    if (!missing.size) return;
+    const names = [...missing].map((name) => `{@ ${name} @}`).join(', ');
+    throw new Error(`template has no value for ${names}`);
+}
+
+/** The name of a placeholder that is the whole string, apart from whitespace around it. */
+function wholePlaceholder(value: string): string | undefined {
+    const trimmed = value.trim();
+    const matches = [...trimmed.matchAll(placeholderRegExp)];
+    const [whole, escape, name] = matches[0] ?? [];
+    return matches.length === 1 && !escape && whole === trimmed ? name : undefined;
 }
 
 function valueAsInline(value: TemplateValue, name: string): PhrasingContent[] {

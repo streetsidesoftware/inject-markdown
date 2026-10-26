@@ -1,8 +1,8 @@
-import type { ListItem, RootContent } from 'mdast';
+import type { ListItem, Paragraph, RootContent } from 'mdast';
 
 import {
-    blockNodes,
     describe,
+    groupedNodes,
     inlineNodes,
     isArray,
     isBlockContent,
@@ -14,6 +14,7 @@ import {
     textNodes,
 } from './nodes.js';
 import { isValidPlaceholderName } from './placeholders.js';
+import type { StyleOptions } from './render.js';
 import type {
     AnyContent,
     BlockContent,
@@ -27,6 +28,7 @@ import type {
     MDComment,
     MDDocument,
     MDEmphasis,
+    MDFragment,
     MDHeading,
     MDInlineCode,
     MDLineBreak,
@@ -40,14 +42,14 @@ import type {
     MDValue,
 } from './types.js';
 
-class TextValue extends MarkdownValue<'inline', 'text'> implements MDText {
+export class TextValue extends MarkdownValue<'inline', 'text'> implements MDText {
     constructor(readonly text: string) {
         super('inline', 'text', textNodes(text));
     }
 }
 
-class DocumentValue extends MarkdownValue<'block', 'a document'> implements MDDocument {
-    constructor(nodes: RootContent[], style?: MarkdownStyle) {
+export class DocumentValue extends MarkdownValue<'block', 'a document'> implements MDDocument {
+    constructor(nodes: RootContent[], style?: StyleOptions) {
         super('block', 'a document', nodes, style);
     }
 
@@ -73,9 +75,39 @@ function commentSafe(text: string): string {
     return text.replace(/--(!?)>/g, '-- $1>');
 }
 
-/** Text. A string `{@ name @}` placeholder in it is kept as written. */
-export function text(value: string): MDText {
+/**
+ * Text, for use inside a line. A `{​@ name @​}` placeholder in it is kept as written.
+ * A newline stays in the text, and displays as a space.
+ */
+export function inlineText(value: string): MDText {
     return new TextValue(value);
+}
+
+/** The same as {@link inlineText}. */
+export const text = inlineText;
+
+/**
+ * Plain text as paragraphs.
+ * - A blank line, or a line of only spaces and tabs, ends a paragraph.
+ * - Other lines are escaped, as in {@link inlineText}, and a newline between them displays as a space.
+ * - Blank lines at the start and end are dropped.
+ */
+export function blockText(value: string): MDFragment {
+    const paragraphs: Paragraph[] = [];
+    let lines: string[] = [];
+    const endParagraph = (): void => {
+        if (lines.length) paragraphs.push({ type: 'paragraph', children: textNodes(lines.join('\n')) });
+        lines = [];
+    };
+    for (const line of value.split(/\r\n?|\n/)) {
+        if (/^[ \t]*$/.test(line)) {
+            endParagraph();
+            continue;
+        }
+        lines.push(line);
+    }
+    endParagraph();
+    return new MarkdownValue('block', 'a Markdown fragment', paragraphs);
 }
 
 /**
@@ -179,9 +211,12 @@ export function listItem(...content: ListItemContent[]): MDListItem {
     return new MarkdownValue('listItem', 'a list item', [listItemNode(content)]);
 }
 
-/** A whole document from blocks. Arrays of blocks are flattened. */
-export function document(...content: BlockContent[]): MDDocument {
-    return new DocumentValue(blockNodes(content, 'document content'));
+/**
+ * A whole document. Arrays are flattened.
+ * Inline pieces in a row form a paragraph, and blocks follow, as in a list item.
+ */
+export function document(...content: AnyContent[]): MDDocument {
+    return new DocumentValue(groupedNodes(content, 'document content'));
 }
 
 /** A bulleted list, one item per entry. */

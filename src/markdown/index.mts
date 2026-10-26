@@ -1,4 +1,5 @@
 export {
+    blockText,
     br,
     codeBlock,
     comment,
@@ -6,6 +7,7 @@ export {
     emphasis,
     heading,
     inlineCode,
+    inlineText,
     isMarkdown,
     lineBreak,
     link,
@@ -20,7 +22,7 @@ export {
 } from './builders.js';
 export { detectStyle } from './style.js';
 export type { TemplateValue, TemplateValues } from './template.js';
-export { blockTemplate, inlineTemplate, parse, template } from './template.js';
+export { blockTemplate, inlineTemplate, parse, substitutePlaceholders, template } from './template.js';
 export type {
     AnyContent,
     BlockContent,
