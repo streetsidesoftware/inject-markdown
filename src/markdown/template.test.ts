@@ -251,11 +251,19 @@ describe('substitutePlaceholders', () => {
         );
     });
 
-    test('text stays text, so it takes only a string or text', () => {
+    test('text stays text when every value is a string or text', () => {
         const md = substitutePlaceholders(text('v{@ v @} {@ w @}'), { v: '1.0' });
+        if (!('text' in md)) throw new Error('expected text');
         expect(md.text).toBe('v1.0 {@ w @}');
-        expect(() => substitutePlaceholders(text('{@ x @}'), { x: link('a', 'u') })).toThrow(
-            new TypeError('{@ x @} is in text and takes only a string or text, got a link'),
+    });
+
+    test('text with another inline value becomes an inline fragment', () => {
+        const md = substitutePlaceholders(text('Version {@ v @}, *{@ w @}*'), { v: link('1.0', 'u') });
+        expect(md.kind).toBe('inline');
+        expect(md.description).toBe('an inline Markdown fragment');
+        expect(md.toString()).toBe('Version [1.0](u), \\*{@ w @}\\*');
+        expect(() => substitutePlaceholders(text('{@ x @}'), { x: list(['a']) })).toThrow(
+            new TypeError('{@ x @} must be inline, got a list'),
         );
     });
 

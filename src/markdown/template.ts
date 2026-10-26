@@ -100,31 +100,38 @@ export function parse(markdown: string): MDFragment | MDInlineFragment {
  * - Values go in as in {@link template}.
  * - A placeholder with no value is kept as written, so it can be substituted later.
  * - The result is the same kind of value, in the same style.
- * - In text, a placeholder takes only a string or text, because the result is still text.
+ * - Text stays text when every value is a string or text. Otherwise it becomes an inline fragment.
  * @throws if a value doesn't fit where its placeholder is.
  */
-export function substitutePlaceholders<T extends MDValue>(value: T, values: TemplateValues): T {
+export function substitutePlaceholders(value: MDText, values: TemplateValues): MDText | MDInlineFragment;
+export function substitutePlaceholders<T extends MDValue>(value: T, values: TemplateValues): T;
+export function substitutePlaceholders(value: MDValue, values: TemplateValues): MDValue {
     const rendering = renderingOf(value);
     if (!rendering) throw new TypeError(`expected a Markdown value, got ${describe(value)}`);
-    if (isText(value)) return inlineText(substituteInText(value.text, values)) as MDValue as T;
+    const substituted = isText(value) ? substituteInText(value.text, values) : undefined;
+    if (substituted !== undefined) return inlineText(substituted);
     const root: Root = { type: 'root', children: structuredClone(rendering.nodes) };
     fill(root, values, value.kind !== 'inline');
-    const result =
-        value.description === 'a document'
-            ? new DocumentValue(root.children, rendering.style)
-            : new MarkdownValue(value.kind, value.description, root.children, rendering.style);
-    return result as MDValue as T;
+    if (isText(value)) return new MarkdownValue('inline', 'an inline Markdown fragment', root.children);
+    if (value.description === 'a document') return new DocumentValue(root.children, rendering.style);
+    return new MarkdownValue(value.kind, value.description, root.children, rendering.style);
 }
 
-/** Text with its placeholders substituted. An escaped placeholder, or one with no value, is kept as written. */
-function substituteInText(text: string, values: TemplateValues): string {
-    return text.replace(placeholderRegExp, (whole, escape: string | undefined, name: string) => {
+/**
+ * Text with its placeholders substituted, or `undefined` if a value isn't a string or text.
+ * An escaped placeholder, or one with no value, is kept as written.
+ */
+function substituteInText(text: string, values: TemplateValues): string | undefined {
+    let onlyText = true;
+    const result = text.replace(placeholderRegExp, (whole, escape: string | undefined, name: string) => {
         const value = escape ? undefined : resolveValue(values, name);
         if (value === undefined) return whole;
         if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
         if (isText(value)) return value.text;
-        throw new TypeError(`{@ ${name} @} is in text and takes only a string or text, got ${describe(value)}`);
+        onlyText = false;
+        return whole;
     });
+    return onlyText ? result : undefined;
 }
 
 /** A parsed tree as a value. A single paragraph is inline, and anything else is blocks. */

@@ -277,7 +277,7 @@ In prose, the Markdown parser reads `\{` as an escape and drops the backslash, s
 - It takes any Markdown value and returns the same type. A document comes back as a document, in its style, and a fragment keeps its text's style.
 - Only the names that `values` has are substituted. The others stay as written, so content can be built in steps, and injection can fill what's left.
 - Values go in as in templates, and `values` resolves names the same way. A lone placeholder in a block value takes blocks. In an inline value, such as a heading or an inline fragment, a block throws a `TypeError`.
-- In text, a placeholder takes only a string or text, because the result is still text.
+- Text stays text when every value is a string or text. Any other inline value, such as a link, makes it an inline fragment, so the return type for text is `MDText | MDInlineFragment`.
 - The value given is left unchanged.
 
 ```ts
@@ -342,4 +342,5 @@ The user guide (`docs/guide/markdown-builders.md`, marked experimental) and a sh
 - `text()` deciding its kind by its content, as `parse()` does: its type would become `MDText | MDFragment`, and `heading(2, text(s))` would stop type-checking.
 - Splitting a string into paragraphs wherever blocks can go: the same string would mean something different in a list item than in a paragraph.
 - A newline in `blockText()` as a line break: text wrapped at a fixed width would break in the middle of sentences.
+- Text taking only strings and text, so its result stays `MDText`: a caller with a link value would have to wrap the text in a paragraph first.
 - `fill(value, values)` or `replacePlaceholders(value, values)`: the function puts a value in place of each placeholder that has one, which is substitution.
