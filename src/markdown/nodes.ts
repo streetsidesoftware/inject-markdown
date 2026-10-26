@@ -1,4 +1,4 @@
-import type { BlockContent as MdastBlockContent, ListItem, PhrasingContent, RootContent } from 'mdast';
+import type { BlockContent as MdastBlockContent, Html, ListItem, PhrasingContent, RootContent } from 'mdast';
 
 import { placeholderRegExp } from './placeholders.js';
 import { renderNodes, type StyleOptions } from './render.js';
@@ -54,6 +54,23 @@ export function renderingOf(value: unknown): Rendering | undefined {
 /** Whether a value is a Markdown value, and of one of the given kinds. */
 export function isKind(value: unknown, ...kinds: MDValue['kind'][]): value is MDValue {
     return renderingOf(value) !== undefined && kinds.includes((value as MDValue).kind);
+}
+
+declare module 'mdast' {
+    interface HtmlData {
+        /** The node is a placeholder that takes only inline content. */
+        inlinePlaceholder?: boolean | undefined;
+    }
+}
+
+/**
+ * The node for a placeholder kept as written, so rendering can't escape it.
+ * @param inlineOnly - it takes only inline content, wherever it is.
+ */
+export function placeholderNode(name: string, inlineOnly = false): Html {
+    const node: Html = { type: 'html', value: `{@ ${name} @}` };
+    if (inlineOnly) node.data = { inlinePlaceholder: true };
+    return node;
 }
 
 /**
@@ -127,14 +144,14 @@ export type Run = { readonly inline: InlineContent[] } | { readonly block: Block
  * Pieces in order, as runs of inline pieces and the blocks between them.
  * Arrays are flattened.
  */
-export function runs(content: AnyContent): Run[] {
+export function runs(content: AnyContent | readonly AnyContent[]): Run[] {
     const result: Run[] = [];
     let line: InlineContent[] = [];
     function endLine(): void {
         if (line.length) result.push({ inline: line });
         line = [];
     }
-    function add(piece: AnyContent): void {
+    function add(piece: AnyContent | readonly AnyContent[]): void {
         if (isArray(piece)) {
             piece.forEach(add);
             return;
@@ -151,13 +168,19 @@ export function runs(content: AnyContent): Run[] {
     return result;
 }
 
-/** A list item from its pieces: each run of inline pieces forms a paragraph, and blocks follow. */
-export function listItemNode(content: readonly ListItemContent[]): ListItem {
-    const where = 'list item content';
-    const children = runs(content).flatMap((run): MdastBlockContent[] =>
+/**
+ * The blocks for mixed content: each run of inline pieces forms a paragraph, and blocks follow.
+ * @param where - what the content is for, for error messages.
+ */
+export function groupedNodes(content: AnyContent | readonly AnyContent[], where: string): MdastBlockContent[] {
+    return runs(content).flatMap((run): MdastBlockContent[] =>
         'inline' in run
             ? [{ type: 'paragraph', children: inlineNodes(run.inline, where) }]
             : (blockNodes(run.block, where) as MdastBlockContent[]),
     );
-    return { type: 'listItem', spread: false, children };
+}
+
+/** A list item from its pieces, grouped as in {@link groupedNodes}. */
+export function listItemNode(content: readonly ListItemContent[]): ListItem {
+    return { type: 'listItem', spread: false, children: groupedNodes(content, 'list item content') };
 }

@@ -1,19 +1,21 @@
-import type { ListItem, RootContent } from 'mdast';
+import type { ListItem, Paragraph, RootContent } from 'mdast';
 
 import {
-    blockNodes,
     describe,
+    groupedNodes,
     inlineNodes,
     isArray,
     isBlockContent,
     isListItem,
     listItemNode,
     MarkdownValue,
+    placeholderNode,
     renderingOf,
     runs,
     textNodes,
 } from './nodes.js';
 import { isValidPlaceholderName } from './placeholders.js';
+import type { StyleOptions } from './render.js';
 import type {
     AnyContent,
     BlockContent,
@@ -22,11 +24,13 @@ import type {
     ListEntry,
     ListItemContent,
     MarkdownStyle,
+    MDBlockPlaceholder,
     MDBr,
     MDCodeBlock,
     MDComment,
     MDDocument,
     MDEmphasis,
+    MDFragment,
     MDHeading,
     MDInlineCode,
     MDLineBreak,
@@ -34,6 +38,7 @@ import type {
     MDList,
     MDListItem,
     MDParagraph,
+    MDPlaceholder,
     MDStrikethrough,
     MDStrong,
     MDText,
@@ -46,8 +51,20 @@ class TextValue extends MarkdownValue<'inline', 'text'> implements MDText {
     }
 }
 
-class DocumentValue extends MarkdownValue<'block', 'a document'> implements MDDocument {
-    constructor(nodes: RootContent[], style?: MarkdownStyle) {
+class PlaceholderValue extends MarkdownValue<'inline', 'a placeholder'> implements MDPlaceholder {
+    constructor(readonly name: string) {
+        super('inline', 'a placeholder', [placeholderNode(name, true)]);
+    }
+}
+
+class BlockPlaceholderValue extends MarkdownValue<'block', 'a block placeholder'> implements MDBlockPlaceholder {
+    constructor(readonly name: string) {
+        super('block', 'a block placeholder', [{ type: 'paragraph', children: [placeholderNode(name)] }]);
+    }
+}
+
+export class DocumentValue extends MarkdownValue<'block', 'a document'> implements MDDocument {
+    constructor(nodes: RootContent[], style?: StyleOptions) {
         super('block', 'a document', nodes, style);
     }
 
@@ -73,18 +90,61 @@ function commentSafe(text: string): string {
     return text.replace(/--(!?)>/g, '-- $1>');
 }
 
-/** Text. A string `{@ name @}` placeholder in it is kept as written. */
-export function text(value: string): MDText {
+/**
+ * Text, for use inside a line. A `{​@ name @​}` placeholder in it is kept as written.
+ * A newline stays in the text, and displays as a space.
+ */
+export function inlineText(value: string): MDText {
     return new TextValue(value);
 }
 
+/** The same as {@link inlineText}. */
+export const text = inlineText;
+
 /**
- * A `{@ name @}` placeholder, rendered exactly as written so it can be filled at injection time.
- * It is text, so it is also accepted inside code.
+ * Plain text as paragraphs.
+ * - A blank line, or a line of only spaces and tabs, ends a paragraph.
+ * - Other lines are escaped, as in {@link inlineText}, and a newline between them displays as a space.
+ * - Blank lines at the start and end are dropped.
  */
-export function placeholder(name: string): MDText {
+export function blockText(value: string): MDFragment {
+    const paragraphs: Paragraph[] = [];
+    let lines: string[] = [];
+    const endParagraph = (): void => {
+        if (lines.length) paragraphs.push({ type: 'paragraph', children: textNodes(lines.join('\n')) });
+        lines = [];
+    };
+    for (const line of value.split(/\r\n?|\n/)) {
+        if (/^[ \t]*$/.test(line)) {
+            endParagraph();
+            continue;
+        }
+        lines.push(line);
+    }
+    endParagraph();
+    return new MarkdownValue('block', 'a Markdown fragment', paragraphs);
+}
+
+/**
+ * A `{​@ name @​}` placeholder for use inside a line, rendered exactly as written so it can be filled later.
+ * It takes only inline content. It is also accepted inside code.
+ */
+export function placeholder(name: string): MDPlaceholder {
+    checkPlaceholderName(name);
+    return new PlaceholderValue(name);
+}
+
+/**
+ * A `{​@ name @​}` placeholder on its own lines, rendered exactly as written so it can be filled later.
+ * It takes blocks or inline content.
+ */
+export function blockPlaceholder(name: string): MDBlockPlaceholder {
+    checkPlaceholderName(name);
+    return new BlockPlaceholderValue(name);
+}
+
+function checkPlaceholderName(name: string): void {
     if (!isValidPlaceholderName(name)) throw new Error(`invalid placeholder name: "${name}"`);
-    return new TextValue(`{@ ${name} @}`);
 }
 
 /** A link, `[content](url)`. */
@@ -179,9 +239,12 @@ export function listItem(...content: ListItemContent[]): MDListItem {
     return new MarkdownValue('listItem', 'a list item', [listItemNode(content)]);
 }
 
-/** A whole document from blocks. Arrays of blocks are flattened. */
-export function document(...content: BlockContent[]): MDDocument {
-    return new DocumentValue(blockNodes(content, 'document content'));
+/**
+ * A whole document. Arrays are flattened.
+ * Inline pieces in a row form a paragraph, and blocks follow, as in a list item.
+ */
+export function document(...content: AnyContent[]): MDDocument {
+    return new DocumentValue(groupedNodes(content, 'document content'));
 }
 
 /** A bulleted list, one item per entry. */

@@ -1,6 +1,8 @@
 import { describe, expect, test, vi } from 'vitest';
 
 import {
+    blockPlaceholder,
+    blockText,
     br,
     codeBlock,
     comment,
@@ -9,6 +11,7 @@ import {
     emphasis,
     heading,
     inlineCode,
+    inlineText,
     isMarkdown,
     lineBreak,
     link,
@@ -179,6 +182,60 @@ describe('toBlock', () => {
     });
 });
 
+describe('text', () => {
+    test('text is inlineText', () => {
+        expect(text).toBe(inlineText);
+    });
+
+    test('a newline stays in the text', () => {
+        expect(paragraph(inlineText('a\n- b')).toString()).toBe('a\n\\- b');
+    });
+});
+
+describe('placeholders', () => {
+    test('placeholder() is inline, and blockPlaceholder() is a block', () => {
+        expect(placeholder('a.b')).toMatchObject({ kind: 'inline', description: 'a placeholder', name: 'a.b' });
+        expect(blockPlaceholder('a.b')).toMatchObject({ kind: 'block', description: 'a block placeholder' });
+        expect(heading(2, ['v', placeholder('v')]).toString()).toBe('## v{@ v @}');
+        expect(document('Intro', blockPlaceholder('x')).toString()).toBe('Intro\n\n{@ x @}\n');
+    });
+
+    test('a block placeholder cannot go inside a line', () => {
+        // @ts-expect-error a block placeholder is a block
+        expect(() => heading(2, blockPlaceholder('x'))).toThrow(
+            new TypeError('heading content must be inline, got a block placeholder'),
+        );
+    });
+
+    test('an invalid name throws', () => {
+        expect(() => blockPlaceholder('a..b')).toThrow(new Error('invalid placeholder name: "a..b"'));
+    });
+});
+
+describe('blockText', () => {
+    test.each`
+        value                   | expected
+        ${'a\nb\n\nc\n'}        | ${'a\nb\n\nc'}
+        ${'one line'}           | ${'one line'}
+        ${'a\n \t\nb'}          | ${'a\n\nb'}
+        ${'\n\na\n\n\n\nb\n\n'} | ${'a\n\nb'}
+        ${'a\r\n\r\nb\rc'}      | ${'a\n\nb\nc'}
+        ${'a\n- b\n# c\n1. d'}  | ${'a\n\\- b\n\\# c\n1\\. d'}
+        ${'a\n===\n\n    code'} | ${'a\n\\===\n\n&#x20;   code'}
+        ${'a  \nb'}             | ${'a &#x20;\nb'}
+        ${'see {@ x @}\n\n*b*'} | ${'see {@ x @}\n\n\\*b\\*'}
+        ${''}                   | ${''}
+    `('blockText($value)', ({ value, expected }: { value: string; expected: string }) => {
+        expect(blockText(value).toString()).toBe(expected);
+    });
+
+    test('a single paragraph is still blocks', () => {
+        const md = blockText('a\nb');
+        expect(md.kind).toBe('block');
+        expect(document(md, list(['x'])).toString()).toBe('a\nb\n\n- x\n');
+    });
+});
+
 describe('document', () => {
     test('blocks render as a file, ending with one newline', () => {
         const md = document(heading(3, 'Languages'), list(['en', 'de']));
@@ -226,9 +283,20 @@ describe('document', () => {
         ).toBe('* *x*\n');
     });
 
-    test('inline content is not a block', () => {
-        // @ts-expect-error a string is not a block
-        expect(() => document('text')).toThrow(new TypeError('document content must be blocks, got a string'));
+    test('inline pieces in a row form a paragraph, as in a list item', () => {
+        const md = document('See ', link('the docs', 'u'), '.', list(['a']), 'More');
+        expect(md.toString()).toBe('See [the docs](u).\n\n- a\n\nMore\n');
+    });
+
+    test('a string is inline text and never splits', () => {
+        expect(document('a\n\nb').toString()).toBe('a&#xA;&#xA;b\n');
+    });
+
+    test('a list item is not document content', () => {
+        // @ts-expect-error a list item goes only in a list
+        expect(() => document(listItem('a'))).toThrow(
+            new TypeError('document content must be inline, got a list item'),
+        );
     });
 });
 
