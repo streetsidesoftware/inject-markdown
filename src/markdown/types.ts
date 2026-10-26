@@ -25,7 +25,7 @@ export interface MDText extends MDValue {
     readonly text: string;
 }
 
-/** A `{​@ name @​}` placeholder inside a line. It takes only inline content. */
+/** A `{​@ name @​}` placeholder that goes where inline content does. Where it sits decides what it takes. */
 export interface MDPlaceholder extends MDValue {
     readonly kind: 'inline';
     readonly description: 'a placeholder';
@@ -91,6 +91,12 @@ export interface MDParagraph extends MDValue {
     readonly description: 'a paragraph';
 }
 
+/** A line between sections, `---` in the default style. */
+export interface MDHorizontalRule extends MDValue {
+    readonly kind: 'block';
+    readonly description: 'a horizontal rule';
+}
+
 export interface MDCodeBlock extends MDValue {
     readonly kind: 'block';
     readonly description: 'a code block';
@@ -147,7 +153,15 @@ export type MDInline =
 
 /** A value that goes on its own lines. */
 export type MDBlock =
-    MDHeading | MDParagraph | MDList | MDCodeBlock | MDComment | MDDocument | MDFragment | MDBlockPlaceholder;
+    | MDHeading
+    | MDParagraph
+    | MDList
+    | MDCodeBlock
+    | MDHorizontalRule
+    | MDComment
+    | MDDocument
+    | MDFragment
+    | MDBlockPlaceholder;
 
 /**
  * Content that goes inside a line:

@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
+import type { MDValue } from './index.mjs';
 import {
     blockPlaceholder,
     blockText,
@@ -10,6 +11,8 @@ import {
     document,
     emphasis,
     heading,
+    horizontalRule,
+    hr,
     inlineCode,
     inlineText,
     isMarkdown,
@@ -209,6 +212,38 @@ describe('placeholders', () => {
 
     test('an invalid name throws', () => {
         expect(() => blockPlaceholder('a..b')).toThrow(new Error('invalid placeholder name: "a..b"'));
+    });
+});
+
+describe('horizontalRule', () => {
+    test('a line between sections, in the document style', () => {
+        expect(hr).toBe(horizontalRule);
+        const md = document(paragraph('A'), horizontalRule(), 'B');
+        expect(md.toString()).toBe('A\n\n---\n\nB\n');
+        expect(md.withStyle({ rule: '*' }).toString()).toBe('A\n\n***\n\nB\n');
+    });
+
+    test('it cannot go inside a line', () => {
+        // @ts-expect-error a horizontal rule is a block
+        expect(() => paragraph(hr())).toThrow(new TypeError('paragraph content must be inline, got a horizontal rule'));
+    });
+});
+
+describe('line endings at the edges', () => {
+    test.each`
+        value                                                                  | expected
+        ${document('Fruit:\n', placeholder('fruit'), '\n')}                    | ${'Fruit:\n{@ fruit @}\n'}
+        ${document(document('Fruit:\n', placeholder('fruit'), '\n'), 'yummy')} | ${'Fruit:\n{@ fruit @}\n\nyummy\n'}
+        ${document('Fruit:\n', blockPlaceholder('fruit'))}                     | ${'Fruit:\n\n{@ fruit @}\n'}
+        ${document('Intro', '\n', list(['x']))}                                | ${'Intro\n\n- x\n'}
+        ${list([listItem('Langs\n', list(['en']))])}                           | ${'- Langs\n  - en'}
+        ${paragraph('\n\na\nb\nc  \n\n')}                                      | ${'a\nb\nc'}
+        ${heading(2, 'Title\n')}                                               | ${'## Title'}
+        ${paragraph('a', lineBreak())}                                         | ${'a'}
+        ${paragraph(lineBreak(), 'a', lineBreak(), 'b')}                       | ${'a\\\nb'}
+        ${document('Fruit:\n', placeholder('fruit'), '\n', 'yummy')}           | ${'Fruit:\n{@ fruit @}\nyummy\n'}
+    `('$expected', ({ value, expected }: { value: MDValue; expected: string }) => {
+        expect(value.toString()).toBe(expected);
     });
 });
 
