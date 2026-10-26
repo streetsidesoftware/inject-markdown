@@ -49,27 +49,32 @@ export function renderNodes(children: RootContent[], style: StyleOptions | undef
 function trimLines(children: PhrasingContent[]): void {
     while (children.length) {
         const first = children[0];
-        if (first.type === 'text') first.value = trimLineEndings(first.value, 'start');
+        if (first.type === 'text') first.value = trimLeadingLineEndings(first.value);
         if (first.type !== 'break' && (first.type !== 'text' || first.value)) break;
         children.shift();
     }
     while (children.length) {
         const last = children[children.length - 1];
-        if (last.type === 'text') last.value = trimLineEndings(last.value, 'end');
+        if (last.type === 'text') last.value = trimTrailingLineEndings(last.value);
         if (last.type !== 'break' && (last.type !== 'text' || last.value)) break;
         children.pop();
     }
 }
 
-/** The text without the spaces, tabs and line endings at one end, when they include a line ending. */
-function trimLineEndings(text: string, end: 'start' | 'end'): string {
-    const isBlank = (c: string | undefined): boolean => c === ' ' || c === '\t' || c === '\r' || c === '\n';
-    if (end === 'start') {
-        let i = 0;
-        while (isBlank(text[i])) ++i;
-        return /[\r\n]/.test(text.slice(0, i)) ? text.slice(i) : text;
-    }
+/** The text without its leading spaces, tabs and line endings, when they include a line ending. */
+function trimLeadingLineEndings(text: string): string {
+    let i = 0;
+    while (isBlank(text[i])) ++i;
+    return /[\r\n]/.test(text.slice(0, i)) ? text.slice(i) : text;
+}
+
+/** The text without its trailing spaces, tabs and line endings, when they include a line ending. */
+function trimTrailingLineEndings(text: string): string {
     let i = text.length;
     while (isBlank(text[i - 1])) --i;
     return /[\r\n]/.test(text.slice(i)) ? text.slice(0, i) : text;
+}
+
+function isBlank(c: string | undefined): boolean {
+    return c === ' ' || c === '\t' || c === '\r' || c === '\n';
 }
