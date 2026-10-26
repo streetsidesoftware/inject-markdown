@@ -1,4 +1,4 @@
-import type { Html, Paragraph, Parent, PhrasingContent, Root, RootContent } from 'mdast';
+import type { Paragraph, Parent, PhrasingContent, Root, RootContent } from 'mdast';
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
@@ -12,6 +12,7 @@ import {
     isBlockContent,
     isKind,
     MarkdownValue,
+    type Placeholder,
     renderingOf,
     textNodes,
 } from './nodes.js';
@@ -119,7 +120,7 @@ export type SubstitutedValue<T extends MDValue> = T extends MDText
       : T extends MDParagraph
         ? MDParagraph | MDFragment
         : T extends MDPlaceholder
-          ? MDPlaceholder | MDInlineFragment
+          ? MDPlaceholder | MDInlineFragment | MDFragment
           : T extends MDBlockPlaceholder
             ? MDBlockPlaceholder | MDFragment
             : T;
@@ -155,13 +156,14 @@ export function substitutePlaceholders(value: MDValue, values: TemplateValues): 
             return new MarkdownValue('block', 'a Markdown fragment', root.children, style);
         }
         case 'a placeholder':
-        case 'a block placeholder': {
             if (resolveValue(values, (value as MDPlaceholder).name) === undefined) return value;
-            const root = filled(nodes, values, value.kind === 'block');
-            return value.kind === 'block'
-                ? new MarkdownValue('block', 'a Markdown fragment', root.children, style)
-                : new MarkdownValue('inline', 'an inline Markdown fragment', root.children, style);
-        }
+            return fragmentOf(
+                filled([{ type: 'paragraph', children: nodes as PhrasingContent[] }], values, true),
+                style,
+            );
+        case 'a block placeholder':
+            if (resolveValue(values, (value as MDBlockPlaceholder).name) === undefined) return value;
+            return new MarkdownValue('block', 'a Markdown fragment', filled(nodes, values, true).children, style);
         case 'a document':
             return new DocumentValue(filled(nodes, values, true).children, style);
         default:
@@ -244,7 +246,7 @@ function placeholderPieces(text: string): PhrasingContent[] {
         const [whole, escape] = match;
         if (match.index > last) nodes.push({ type: 'text', value: text.slice(last, match.index) });
         last = match.index + whole.length;
-        nodes.push(escape ? { type: 'text', value: whole.slice(1) } : { type: 'html', value: whole });
+        nodes.push(escape ? { type: 'text', value: whole.slice(1) } : { type: 'placeholder', value: whole });
     }
     if (last < text.length) nodes.push({ type: 'text', value: text.slice(last) });
     return nodes;
@@ -334,10 +336,9 @@ const blockContainers = new Set(['blockquote', 'footnoteDefinition', 'list', 'li
 
 /**
  * Replace the placeholders that have values, in place.
- * - A placeholder is an HTML node of its own. In code and other HTML, it's part of the text.
+ * - A placeholder is a node of its own. In code and HTML, it's part of the text.
  * - Where blocks can go, a placeholder that is a whole line of a paragraph may take blocks.
  *   The paragraph splits around them.
- * - A placeholder made by `placeholder()` takes only inline content.
  * @param allowBlocks - the root's children may be blocks.
  * @returns the names that have no value.
  */
@@ -368,18 +369,16 @@ function fill(root: Root, values: TemplateValues, allowBlocks: boolean): Set<str
                     const pieces = fillNodes(node.children, blocks, false);
                     return splitParagraph(node, pieces);
                 }
-                case 'html': {
-                    const name = keptPlaceholder(node);
-                    if (!name) {
-                        node.value = fillCode(node.value);
-                        return [node];
-                    }
+                case 'placeholder': {
+                    const name = placeholderName(node);
                     const value = lookup(name);
                     if (value === undefined) return [node];
-                    const takesBlocks = lines && !node.data?.inlinePlaceholder && isWholeLine(nodes, i);
-                    if (takesBlocks && isBlockContent(value)) return [{ blocks: blockNodes(value, `{@ ${name} @}`) }];
+                    if (lines && isWholeLine(nodes, i) && isBlockContent(value)) {
+                        return [{ blocks: blockNodes(value, `{@ ${name} @}`) }];
+                    }
                     return valueAsInline(value, name);
                 }
+                case 'html':
                 case 'inlineCode':
                 case 'code':
                     node.value = fillCode(node.value);
@@ -446,11 +445,8 @@ function endsLine(node: RootContent | undefined, lineEnd: RegExp): boolean {
     return !node || node.type === 'break' || (node.type === 'text' && lineEnd.test(node.value));
 }
 
-/** The name of a placeholder kept as an HTML node of its own. */
-function keptPlaceholder(node: Html): string | undefined {
-    const matches = [...node.value.matchAll(placeholderRegExp)];
-    const [whole, escape, name] = matches[0] ?? [];
-    return matches.length === 1 && !escape && whole === node.value ? name : undefined;
+function placeholderName(node: Placeholder): string {
+    return [...node.value.matchAll(placeholderRegExp)][0][2];
 }
 
 function throwIfMissing(missing: Set<string>): void {

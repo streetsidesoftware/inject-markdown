@@ -268,17 +268,27 @@ describe('substitutePlaceholders', () => {
         );
     });
 
-    test('placeholder() takes only inline values, even on a line of its own', () => {
-        const items = list(['a']);
-        expect(() => substitutePlaceholders(placeholder('x'), { x: items })).toThrow(
-            new TypeError('{@ x @} must be inline, got a list'),
+    test('placeholder() follows its position', () => {
+        const fruit = list(['apple', 'orange']);
+        const url = 'https://x';
+        const md = document('Fruit:\n', placeholder('fruit'), '\n', link('images', url));
+        expect(md.toString()).toBe('Fruit:\n{@ fruit @}\n[images](https://x)\n');
+        expect(substitutePlaceholders(md, { fruit }).toString()).toBe(
+            'Fruit:\n\n- apple\n- orange\n\n[images](https://x)\n',
         );
-        expect(() => substitutePlaceholders(document('Fruit:', placeholder('x')), { x: items })).toThrow(
-            new TypeError('{@ x @} must be inline, got a list'),
+        expect(() => substitutePlaceholders(document('Fruit: ', placeholder('fruit')), { fruit })).toThrow(
+            new TypeError('{@ fruit @} must be inline, got a list'),
         );
-        const md = substitutePlaceholders(placeholder('x'), { x: link('a', 'u') });
-        expect(md.description).toBe('an inline Markdown fragment');
-        expect(md.toString()).toBe('[a](u)');
+        expect(substitutePlaceholders(placeholder('fruit'), { fruit }).description).toBe('a Markdown fragment');
+        const inline = substitutePlaceholders(placeholder('x'), { x: link('a', 'u') });
+        expect(inline.description).toBe('an inline Markdown fragment');
+        expect(inline.toString()).toBe('[a](u)');
+    });
+
+    test('a line ending before a kept placeholder stays a line ending', () => {
+        expect(parse('Fruit:\n{@ fruit @}\n[images](https://x)').toString()).toBe(
+            'Fruit:\n{@ fruit @}\n[images](https://x)',
+        );
     });
 
     test('blockPlaceholder() takes blocks or inline values', () => {

@@ -207,10 +207,11 @@ A placeholder renders exactly `{@ name @}`, unescaped, so a script can generate 
 - On a line of its own, where blocks can go, it also takes blocks.
 - Inside code, it takes only a string or text.
 
-In Markdown text the author shows that by where the placeholder is written. The builders have no lines, because inline pieces in a row join into one, so the script says which it means:
+Where a placeholder sits is the same whether it's written in Markdown text, in a string, or made with a builder:
 
-- `placeholder(name)` is inline (`MDPlaceholder`). It goes anywhere inline content does, and inside code, and takes only inline content, even on a line of its own.
-- `blockPlaceholder(name)` is a block (`MDBlockPlaceholder`). It always stands on its own lines, and takes blocks or inline content. Inside a line it's an error, as for any block.
+- `placeholder(name)` (`MDPlaceholder`) goes anywhere inline content does, and inside code. `document('Fruit:\n', placeholder('fruit'), '\n', link(…))` puts it on a line of its own, so it can take a list.
+- Inline pieces in a row join into one line, so `document('Fruit:', placeholder('fruit'))` puts it inside the line. `blockPlaceholder(name)` (`MDBlockPlaceholder`) is a block, so it always stands on its own lines and takes blocks or inline content. Inside a line it's an error, as for any block.
+- A placeholder is rendered as is. A line ending before it stays a line ending, so a placeholder written on its own line is still on its own line in the output.
 
 ```ts
 document('Fruit:', blockPlaceholder('fruit'));
@@ -299,7 +300,7 @@ In prose, the Markdown parser reads `\{` as an escape and drops the backslash, s
 - A value that can't hold what was substituted becomes a fragment of it. The return type, `SubstitutedValue<T>`, says which values can change:
   - Text stays text when every value is a string or text. A link makes it an inline fragment, and blocks on a line of their own make it an `MDFragment`.
   - An inline fragment or a paragraph that takes blocks becomes an `MDFragment`. That includes a value that is only a placeholder: `parse('{@ x @}')` given a list becomes the list, as in `template()`.
-  - A placeholder with a value becomes a fragment of it: inline for `placeholder()`, blocks for `blockPlaceholder()`.
+  - A placeholder with a value becomes a fragment of it. `blockPlaceholder()` always becomes blocks.
 - The value given is left unchanged.
 
 ```ts
@@ -365,7 +366,9 @@ The user guide (`docs/guide/markdown-builders.md`, marked experimental) and a sh
 - Splitting a string into paragraphs wherever blocks can go: the same string would mean something different in a list item than in a paragraph.
 - A newline in `blockText()` as a line break: text wrapped at a fixed width would break in the middle of sentences.
 - Always returning the same type, with values that don't fit throwing: text given a link, or a paragraph given a list, would throw, and the caller would have to rebuild the value to fit.
-- One `placeholder()` whose kind follows where it ends up: inline pieces in a row join into one line, so `document('Fruit:', placeholder('fruit'))` puts it inside the line, and it could never take a list.
+- Only one placeholder builder, whose kind follows where it ends up: inline pieces in a row join into one line, so `document('Fruit:', placeholder('fruit'))` puts it inside the line, and it could never take a list.
+- `placeholder()` taking only inline content, even on a line of its own: it would behave differently from the same placeholder written in a string, and a script would need `blockPlaceholder()` to write a placeholder it had already put on its own line.
+- A placeholder kept as an HTML node: the stringifier turns a line ending before HTML into a space, so a placeholder written on its own line would end up inside the line before it.
 - One `MDPlaceholder` type with a `kind` of `'inline' | 'block'`: the compiler couldn't keep a block placeholder out of a line.
 - Only a placeholder that is a whole paragraph taking blocks: `Fruit:\n{@ fruit @}` would throw, though a list written in its place starts right after `Fruit:`.
 - `fill(value, values)` or `replacePlaceholders(value, values)`: the function puts a value in place of each placeholder that has one, which is substitution.

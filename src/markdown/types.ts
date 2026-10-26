@@ -25,7 +25,7 @@ export interface MDText extends MDValue {
     readonly text: string;
 }
 
-/** A `{​@ name @​}` placeholder inside a line. It takes only inline content. */
+/** A `{​@ name @​}` placeholder that goes where inline content does. Where it sits decides what it takes. */
 export interface MDPlaceholder extends MDValue {
     readonly kind: 'inline';
     readonly description: 'a placeholder';

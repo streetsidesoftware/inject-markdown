@@ -1,4 +1,4 @@
-import type { BlockContent as MdastBlockContent, Html, ListItem, PhrasingContent, RootContent } from 'mdast';
+import type { BlockContent as MdastBlockContent, ListItem, Literal, PhrasingContent, RootContent } from 'mdast';
 
 import { placeholderRegExp } from './placeholders.js';
 import { renderNodes, type StyleOptions } from './render.js';
@@ -56,26 +56,31 @@ export function isKind(value: unknown, ...kinds: MDValue['kind'][]): value is MD
     return renderingOf(value) !== undefined && kinds.includes((value as MDValue).kind);
 }
 
+/**
+ * A placeholder kept as written. It has a node type of its own, so rendering writes it as is.
+ * As HTML, a line ending before it would render as a space.
+ */
+export interface Placeholder extends Literal {
+    type: 'placeholder';
+}
+
 declare module 'mdast' {
-    interface HtmlData {
-        /** The node is a placeholder that takes only inline content. */
-        inlinePlaceholder?: boolean | undefined;
+    interface PhrasingContentMap {
+        placeholder: Placeholder;
+    }
+    interface RootContentMap {
+        placeholder: Placeholder;
     }
 }
 
-/**
- * The node for a placeholder kept as written, so rendering can't escape it.
- * @param inlineOnly - it takes only inline content, wherever it is.
- */
-export function placeholderNode(name: string, inlineOnly = false): Html {
-    const node: Html = { type: 'html', value: `{@ ${name} @}` };
-    if (inlineOnly) node.data = { inlinePlaceholder: true };
-    return node;
+/** The node for a placeholder kept as written. */
+export function placeholderNode(name: string): Placeholder {
+    return { type: 'placeholder', value: `{@ ${name} @}` };
 }
 
 /**
  * Text nodes for a string.
- * A placeholder is emitted raw, so escaping never touches `{@ name @}`.
+ * A placeholder is kept as written, so escaping never touches `{@ name @}`.
  */
 export function textNodes(text: string): PhrasingContent[] {
     const nodes: PhrasingContent[] = [];
@@ -83,7 +88,7 @@ export function textNodes(text: string): PhrasingContent[] {
     for (const match of text.matchAll(placeholderRegExp)) {
         if (match[1]) continue;
         if (match.index > last) nodes.push({ type: 'text', value: text.slice(last, match.index) });
-        nodes.push({ type: 'html', value: match[0] });
+        nodes.push({ type: 'placeholder', value: match[0] });
         last = match.index + match[0].length;
     }
     if (last < text.length) nodes.push({ type: 'text', value: text.slice(last) });
