@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 
 import {
+    blockPlaceholder,
     blockText,
     br,
     codeBlock,
@@ -188,6 +189,26 @@ describe('text', () => {
 
     test('a newline stays in the text', () => {
         expect(paragraph(inlineText('a\n- b')).toString()).toBe('a\n\\- b');
+    });
+});
+
+describe('placeholders', () => {
+    test('placeholder() is inline, and blockPlaceholder() is a block', () => {
+        expect(placeholder('a.b')).toMatchObject({ kind: 'inline', description: 'a placeholder', name: 'a.b' });
+        expect(blockPlaceholder('a.b')).toMatchObject({ kind: 'block', description: 'a block placeholder' });
+        expect(heading(2, ['v', placeholder('v')]).toString()).toBe('## v{@ v @}');
+        expect(document('Intro', blockPlaceholder('x')).toString()).toBe('Intro\n\n{@ x @}\n');
+    });
+
+    test('a block placeholder cannot go inside a line', () => {
+        // @ts-expect-error a block placeholder is a block
+        expect(() => heading(2, blockPlaceholder('x'))).toThrow(
+            new TypeError('heading content must be inline, got a block placeholder'),
+        );
+    });
+
+    test('an invalid name throws', () => {
+        expect(() => blockPlaceholder('a..b')).toThrow(new Error('invalid placeholder name: "a..b"'));
     });
 });
 

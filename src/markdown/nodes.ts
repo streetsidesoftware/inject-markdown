@@ -1,4 +1,4 @@
-import type { BlockContent as MdastBlockContent, ListItem, PhrasingContent, RootContent } from 'mdast';
+import type { BlockContent as MdastBlockContent, Html, ListItem, PhrasingContent, RootContent } from 'mdast';
 
 import { placeholderRegExp } from './placeholders.js';
 import { renderNodes, type StyleOptions } from './render.js';
@@ -54,6 +54,23 @@ export function renderingOf(value: unknown): Rendering | undefined {
 /** Whether a value is a Markdown value, and of one of the given kinds. */
 export function isKind(value: unknown, ...kinds: MDValue['kind'][]): value is MDValue {
     return renderingOf(value) !== undefined && kinds.includes((value as MDValue).kind);
+}
+
+declare module 'mdast' {
+    interface HtmlData {
+        /** The node is a placeholder that takes only inline content. */
+        inlinePlaceholder?: boolean | undefined;
+    }
+}
+
+/**
+ * The node for a placeholder kept as written, so rendering can't escape it.
+ * @param inlineOnly - it takes only inline content, wherever it is.
+ */
+export function placeholderNode(name: string, inlineOnly = false): Html {
+    const node: Html = { type: 'html', value: `{@ ${name} @}` };
+    if (inlineOnly) node.data = { inlinePlaceholder: true };
+    return node;
 }
 
 /**

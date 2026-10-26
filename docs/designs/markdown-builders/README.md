@@ -177,7 +177,7 @@ Putting a block where only inline content can go, such as a list inside a headin
 - paragraph and list item, with arrays as sequences
 - line breaks: `lineBreak()` and `br()`
 - comment
-- a placeholder builder
+- placeholder builders: `placeholder` and `blockPlaceholder`
 - templates: `template`, `blockTemplate`, and `inlineTemplate`
 - `parse`, for Markdown made elsewhere
 - `inlineText` and `blockText`, for plain text
@@ -201,7 +201,26 @@ It renders as `<!-- … -->`. The renderer keeps the text from ending the commen
 
 ### Placeholders
 
-A placeholder builder renders exactly `{@ name @}`, unescaped, so a script can generate Markdown that inject-markdown fills in later.
+A placeholder renders exactly `{@ name @}`, unescaped, so a script can generate Markdown that a later step or inject-markdown fills in. A placeholder isn't inline or block by itself. It's a slot, and where it sits decides what it can take:
+
+- Inside a line, it takes only inline content.
+- On a line of its own, where blocks can go, it also takes blocks.
+- Inside code, it takes only a string or text.
+
+In Markdown text the author shows that by where the placeholder is written. The builders have no lines, because inline pieces in a row join into one, so the script says which it means:
+
+- `placeholder(name)` is inline (`MDPlaceholder`). It goes anywhere inline content does, and inside code, and takes only inline content, even on a line of its own.
+- `blockPlaceholder(name)` is a block (`MDBlockPlaceholder`). It always stands on its own lines, and takes blocks or inline content. Inside a line it's an error, as for any block.
+
+```ts
+document('Fruit:', blockPlaceholder('fruit'));
+```
+
+```markdown
+Fruit:
+
+{@ fruit @}
+```
 
 ### Templates
 
@@ -209,7 +228,7 @@ A template is Markdown with `{@ name @}` placeholders, in the same [placeholder]
 
 - A string is inserted as text and escaped.
 - A placeholder inside a line takes only inline values.
-- A placeholder that stands alone as its own paragraph also takes a block, such as a list.
+- A placeholder that is a whole line also takes blocks, such as a list. Its paragraph splits around them, as it would around a list written in place: `Fruit:\n{@ fruit @}` gives `Fruit:` and then the list.
 - A placeholder inside inline code or a code block takes only a string or text value. It's a direct replacement, with no Markdown escaping. The common case is a package name in an install command.
 - A value of the wrong kind is an error.
 
@@ -254,7 +273,7 @@ A values object resolves names the way injection resolves declarations:
 
 JavaScript moves integer-like keys, such as `'2'`, to the front of the key order. That only matters for a name whose first segment is all digits.
 
-`placeholder(…)` is a text value, so it's also accepted inside inline code and code blocks. That's the `requirements.md` case, where `` `{@ engines.cspell @}` `` is inline code.
+`placeholder(…)` is also accepted inside inline code and code blocks. That's the `requirements.md` case, where `` `{@ engines.cspell @}` `` is inline code.
 
 The concerns that apply at injection time, such as untrusted values and link rebasing, don't apply here. The same script owns the template and the values.
 
@@ -274,10 +293,13 @@ In prose, the Markdown parser reads `\{` as an escape and drops the backslash, s
 
 `substitutePlaceholders(value, values)` puts values in place of the placeholders of a value already made, such as one from `parse()`:
 
-- It takes any Markdown value and returns the same type. A document comes back as a document, in its style, and a fragment keeps its text's style.
+- It takes any Markdown value. The result is the same type, in the same style, when the value can hold what was substituted: a document stays a document, and a fragment keeps its text's style.
 - Only the names that `values` has are substituted. The others stay as written, so content can be built in steps, and injection can fill what's left.
-- Values go in as in templates, and `values` resolves names the same way. A lone placeholder in a block value takes blocks. In an inline value, such as a heading or an inline fragment, a block throws a `TypeError`.
-- Text stays text when every value is a string or text. Any other inline value, such as a link, makes it an inline fragment, so the return type for text is `MDText | MDInlineFragment`.
+- Values go in as in templates, and `values` resolves names the same way. A placeholder that is a whole line takes blocks wherever blocks can go. Inside a line, such as in a heading, a block throws a `TypeError`.
+- A value that can't hold what was substituted becomes a fragment of it. The return type, `SubstitutedValue<T>`, says which values can change:
+  - Text stays text when every value is a string or text. A link makes it an inline fragment, and blocks on a line of their own make it an `MDFragment`.
+  - An inline fragment or a paragraph that takes blocks becomes an `MDFragment`. That includes a value that is only a placeholder: `parse('{@ x @}')` given a list becomes the list, as in `template()`.
+  - A placeholder with a value becomes a fragment of it: inline for `placeholder()`, blocks for `blockPlaceholder()`.
 - The value given is left unchanged.
 
 ```ts
@@ -342,5 +364,8 @@ The user guide (`docs/guide/markdown-builders.md`, marked experimental) and a sh
 - `text()` deciding its kind by its content, as `parse()` does: its type would become `MDText | MDFragment`, and `heading(2, text(s))` would stop type-checking.
 - Splitting a string into paragraphs wherever blocks can go: the same string would mean something different in a list item than in a paragraph.
 - A newline in `blockText()` as a line break: text wrapped at a fixed width would break in the middle of sentences.
-- Text taking only strings and text, so its result stays `MDText`: a caller with a link value would have to wrap the text in a paragraph first.
+- Always returning the same type, with values that don't fit throwing: text given a link, or a paragraph given a list, would throw, and the caller would have to rebuild the value to fit.
+- One `placeholder()` whose kind follows where it ends up: inline pieces in a row join into one line, so `document('Fruit:', placeholder('fruit'))` puts it inside the line, and it could never take a list.
+- One `MDPlaceholder` type with a `kind` of `'inline' | 'block'`: the compiler couldn't keep a block placeholder out of a line.
+- Only a placeholder that is a whole paragraph taking blocks: `Fruit:\n{@ fruit @}` would throw, though a list written in its place starts right after `Fruit:`.
 - `fill(value, values)` or `replacePlaceholders(value, values)`: the function puts a value in place of each placeholder that has one, which is substitution.

@@ -25,6 +25,20 @@ export interface MDText extends MDValue {
     readonly text: string;
 }
 
+/** A `{​@ name @​}` placeholder inside a line. It takes only inline content. */
+export interface MDPlaceholder extends MDValue {
+    readonly kind: 'inline';
+    readonly description: 'a placeholder';
+    readonly name: string;
+}
+
+/** A `{​@ name @​}` placeholder on its own lines. It takes blocks or inline content. */
+export interface MDBlockPlaceholder extends MDValue {
+    readonly kind: 'block';
+    readonly description: 'a block placeholder';
+    readonly name: string;
+}
+
 export interface MDLink extends MDValue {
     readonly kind: 'inline';
     readonly description: 'a link';
@@ -120,6 +134,7 @@ export type HeadingDepth = 1 | 2 | 3 | 4 | 5 | 6;
 /** A value that goes inside a line. A comment goes either inside a line or on its own. */
 export type MDInline =
     | MDText
+    | MDPlaceholder
     | MDLink
     | MDStrong
     | MDEmphasis
@@ -131,7 +146,8 @@ export type MDInline =
     | MDInlineFragment;
 
 /** A value that goes on its own lines. */
-export type MDBlock = MDHeading | MDParagraph | MDList | MDCodeBlock | MDComment | MDDocument | MDFragment;
+export type MDBlock =
+    MDHeading | MDParagraph | MDList | MDCodeBlock | MDComment | MDDocument | MDFragment | MDBlockPlaceholder;
 
 /**
  * Content that goes inside a line:

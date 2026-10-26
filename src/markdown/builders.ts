@@ -9,6 +9,7 @@ import {
     isListItem,
     listItemNode,
     MarkdownValue,
+    placeholderNode,
     renderingOf,
     runs,
     textNodes,
@@ -23,6 +24,7 @@ import type {
     ListEntry,
     ListItemContent,
     MarkdownStyle,
+    MDBlockPlaceholder,
     MDBr,
     MDCodeBlock,
     MDComment,
@@ -36,15 +38,28 @@ import type {
     MDList,
     MDListItem,
     MDParagraph,
+    MDPlaceholder,
     MDStrikethrough,
     MDStrong,
     MDText,
     MDValue,
 } from './types.js';
 
-export class TextValue extends MarkdownValue<'inline', 'text'> implements MDText {
+class TextValue extends MarkdownValue<'inline', 'text'> implements MDText {
     constructor(readonly text: string) {
         super('inline', 'text', textNodes(text));
+    }
+}
+
+class PlaceholderValue extends MarkdownValue<'inline', 'a placeholder'> implements MDPlaceholder {
+    constructor(readonly name: string) {
+        super('inline', 'a placeholder', [placeholderNode(name, true)]);
+    }
+}
+
+class BlockPlaceholderValue extends MarkdownValue<'block', 'a block placeholder'> implements MDBlockPlaceholder {
+    constructor(readonly name: string) {
+        super('block', 'a block placeholder', [{ type: 'paragraph', children: [placeholderNode(name)] }]);
     }
 }
 
@@ -111,12 +126,25 @@ export function blockText(value: string): MDFragment {
 }
 
 /**
- * A `{@ name @}` placeholder, rendered exactly as written so it can be filled at injection time.
- * It is text, so it is also accepted inside code.
+ * A `{​@ name @​}` placeholder for use inside a line, rendered exactly as written so it can be filled later.
+ * It takes only inline content. It is also accepted inside code.
  */
-export function placeholder(name: string): MDText {
+export function placeholder(name: string): MDPlaceholder {
+    checkPlaceholderName(name);
+    return new PlaceholderValue(name);
+}
+
+/**
+ * A `{​@ name @​}` placeholder on its own lines, rendered exactly as written so it can be filled later.
+ * It takes blocks or inline content.
+ */
+export function blockPlaceholder(name: string): MDBlockPlaceholder {
+    checkPlaceholderName(name);
+    return new BlockPlaceholderValue(name);
+}
+
+function checkPlaceholderName(name: string): void {
     if (!isValidPlaceholderName(name)) throw new Error(`invalid placeholder name: "${name}"`);
-    return new TextValue(`{@ ${name} @}`);
 }
 
 /** A link, `[content](url)`. */

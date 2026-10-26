@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import {
+    blockPlaceholder,
     blockTemplate,
     codeBlock,
     document,
@@ -227,20 +228,67 @@ describe('substitutePlaceholders', () => {
         expect(substitutePlaceholders(md, { b: 'B' }).toString()).toBe('* a\n* B');
     });
 
-    test('a placeholder alone in its paragraph takes blocks, in a block value', () => {
-        const md = parse('Intro\n\n{@ items @}\n');
-        expect(substitutePlaceholders(md, { items: list(['a', 'b']) }).toString()).toBe('Intro\n\n- a\n- b');
-        const item = listItem(placeholder('items'));
-        expect(substitutePlaceholders(list([item]), { items: list(['a']) }).toString()).toBe('- - a');
+    test('a placeholder that is a whole line takes blocks, and its paragraph splits', () => {
+        const fruit = list(['apple', 'orange']);
+        const expected = 'Fruit:\n\n- apple\n- orange\n\nMore';
+        expect(substitutePlaceholders(parse('Fruit:\n{@ fruit @}\nMore\n'), { fruit }).toString()).toBe(expected);
+        expect(substitutePlaceholders(parse('Fruit:\n\n{@ fruit @}\n\nMore\n'), { fruit }).toString()).toBe(expected);
+        expect(template('Fruit:\n{@ fruit @}\nMore\n', { fruit }).toString()).toBe(expected);
     });
 
-    test('a block in an inline value throws', () => {
-        expect(() => substitutePlaceholders(parse('{@ items @}'), { items: list(['a']) })).toThrow(
+    test('with an inline value, a whole-line placeholder stays in its line', () => {
+        const md = substitutePlaceholders(parse('Fruit:\n{@ fruit @}\n'), { fruit: 'apple' });
+        expect(md.kind).toBe('inline');
+        expect(md.toString()).toBe('Fruit:\napple');
+    });
+
+    test('a value that is only a placeholder becomes the blocks', () => {
+        const items = list(['a']);
+        expect(substitutePlaceholders(parse('{@ items @}'), { items }).kind).toBe('block');
+        expect(substitutePlaceholders(text('{@ items @}'), { items }).toString()).toBe('- a');
+    });
+
+    test('a paragraph that takes blocks becomes a fragment', () => {
+        const fragment = parse('Fruit:\n{@ fruit @}');
+        if (fragment.kind !== 'inline') throw new Error('expected inline');
+        const md = substitutePlaceholders(paragraph(fragment), { fruit: list(['apple']) });
+        expect(md.description).toBe('a Markdown fragment');
+        expect(md.toString()).toBe('Fruit:\n\n- apple');
+        const kept = substitutePlaceholders(paragraph(placeholder('a')), { a: 'x' });
+        expect(kept.description).toBe('a paragraph');
+    });
+
+    test('a placeholder inside a line takes only inline values', () => {
+        const items = list(['a']);
+        expect(() => substitutePlaceholders(parse('See {@ items @}'), { items })).toThrow(
             new TypeError('{@ items @} must be inline, got a list'),
         );
-        expect(() => substitutePlaceholders(heading(2, placeholder('x')), { x: list(['a']) })).toThrow(
+        expect(() => substitutePlaceholders(heading(2, placeholder('x')), { x: items })).toThrow(
             new TypeError('{@ x @} must be inline, got a list'),
         );
+    });
+
+    test('placeholder() takes only inline values, even on a line of its own', () => {
+        const items = list(['a']);
+        expect(() => substitutePlaceholders(placeholder('x'), { x: items })).toThrow(
+            new TypeError('{@ x @} must be inline, got a list'),
+        );
+        expect(() => substitutePlaceholders(document('Fruit:', placeholder('x')), { x: items })).toThrow(
+            new TypeError('{@ x @} must be inline, got a list'),
+        );
+        const md = substitutePlaceholders(placeholder('x'), { x: link('a', 'u') });
+        expect(md.description).toBe('an inline Markdown fragment');
+        expect(md.toString()).toBe('[a](u)');
+    });
+
+    test('blockPlaceholder() takes blocks or inline values', () => {
+        const md = document('Fruit:', blockPlaceholder('fruit'));
+        expect(md.toString()).toBe('Fruit:\n\n{@ fruit @}\n');
+        expect(substitutePlaceholders(md, { fruit: list(['apple']) }).toString()).toBe('Fruit:\n\n- apple\n');
+        expect(substitutePlaceholders(md, { fruit: 'apple' }).toString()).toBe('Fruit:\n\napple\n');
+        const alone = substitutePlaceholders(blockPlaceholder('fruit'), { fruit: list(['apple']) });
+        expect(alone.description).toBe('a Markdown fragment');
+        expect(substitutePlaceholders(blockPlaceholder('fruit'), {}).description).toBe('a block placeholder');
     });
 
     test('in code, a placeholder takes a string or text, inserted as is', () => {
@@ -262,9 +310,10 @@ describe('substitutePlaceholders', () => {
         expect(md.kind).toBe('inline');
         expect(md.description).toBe('an inline Markdown fragment');
         expect(md.toString()).toBe('Version [1.0](u), \\*{@ w @}\\*');
-        expect(() => substitutePlaceholders(text('{@ x @}'), { x: list(['a']) })).toThrow(
-            new TypeError('{@ x @} must be inline, got a list'),
-        );
+    });
+
+    test('a placeholder is accepted inside code', () => {
+        expect(template('`{@ x @}`', { x: placeholder('y') }).toString()).toBe('`{@ y @}`');
     });
 
     test('names resolve as in template', () => {
