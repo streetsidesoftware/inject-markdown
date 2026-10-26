@@ -32,6 +32,7 @@ import type {
     MDEmphasis,
     MDFragment,
     MDHeading,
+    MDHorizontalRule,
     MDInlineCode,
     MDLineBreak,
     MDLink,
@@ -230,6 +231,14 @@ export function toBlock(content: AnyContent): BlockContent {
     const blocks = runs(content).map((run) => ('inline' in run ? paragraphOf(run.inline, 'block content') : run.block));
     return blocks.length === 1 ? blocks[0] : blocks;
 }
+
+/** A horizontal rule, a line between sections: `---` in the default style. */
+export function horizontalRule(): MDHorizontalRule {
+    return new MarkdownValue('block', 'a horizontal rule', [{ type: 'thematicBreak' }]);
+}
+
+/** The same as {@link horizontalRule}. */
+export const hr = horizontalRule;
 
 /** A fenced code block. The code is inserted as is. */
 export function codeBlock(code: string, lang?: string): MDCodeBlock {

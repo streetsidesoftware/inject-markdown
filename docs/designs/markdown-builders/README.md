@@ -176,6 +176,7 @@ Putting a block where only inline content can go, such as a list inside a headin
 - text, link, inline code
 - strong, emphasis, and strikethrough: `strong(content)`, `emphasis(content)`, `strikethrough(content)`
 - heading, list, code block
+- horizontal rule: `horizontalRule()`, or `hr()` for short
 - paragraph and list item, with arrays as sequences
 - line breaks: `lineBreak()` and `br()`
 - comment

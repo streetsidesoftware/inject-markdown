@@ -11,6 +11,8 @@ import {
     document,
     emphasis,
     heading,
+    horizontalRule,
+    hr,
     inlineCode,
     inlineText,
     isMarkdown,
@@ -210,6 +212,20 @@ describe('placeholders', () => {
 
     test('an invalid name throws', () => {
         expect(() => blockPlaceholder('a..b')).toThrow(new Error('invalid placeholder name: "a..b"'));
+    });
+});
+
+describe('horizontalRule', () => {
+    test('a line between sections, in the document style', () => {
+        expect(hr).toBe(horizontalRule);
+        const md = document(paragraph('A'), horizontalRule(), 'B');
+        expect(md.toString()).toBe('A\n\n---\n\nB\n');
+        expect(md.withStyle({ rule: '*' }).toString()).toBe('A\n\n***\n\nB\n');
+    });
+
+    test('it cannot go inside a line', () => {
+        // @ts-expect-error a horizontal rule is a block
+        expect(() => paragraph(hr())).toThrow(new TypeError('paragraph content must be inline, got a horizontal rule'));
     });
 });
 
