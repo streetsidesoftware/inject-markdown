@@ -103,16 +103,16 @@ export interface MDDocument extends MDValue {
     withStyle(style: MarkdownStyle): MDDocument;
 }
 
-/** A filled block template: Markdown blocks, rendered in the template's own style. */
-export interface MDBlockTemplate extends MDValue {
+/** Markdown blocks from Markdown text, rendered in the text's own style. */
+export interface MDFragment extends MDValue {
     readonly kind: 'block';
-    readonly description: 'a block template';
+    readonly description: 'a Markdown fragment';
 }
 
-/** A filled inline template. */
-export interface MDInlineTemplate extends MDValue {
+/** Inline Markdown from Markdown text. */
+export interface MDInlineFragment extends MDValue {
     readonly kind: 'inline';
-    readonly description: 'an inline template';
+    readonly description: 'an inline Markdown fragment';
 }
 
 export type HeadingDepth = 1 | 2 | 3 | 4 | 5 | 6;
@@ -128,10 +128,10 @@ export type MDInline =
     | MDLineBreak
     | MDBr
     | MDComment
-    | MDInlineTemplate;
+    | MDInlineFragment;
 
 /** A value that goes on its own lines. */
-export type MDBlock = MDHeading | MDParagraph | MDList | MDCodeBlock | MDComment | MDDocument | MDBlockTemplate;
+export type MDBlock = MDHeading | MDParagraph | MDList | MDCodeBlock | MDComment | MDDocument | MDFragment;
 
 /**
  * Content that goes inside a line:

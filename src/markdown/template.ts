@@ -15,7 +15,7 @@ import {
     textNodes,
 } from './nodes.js';
 import { placeholderRegExp } from './placeholders.js';
-import type { InlineContent, MDBlockTemplate, MDInlineTemplate, MDText, MDValue } from './types.js';
+import type { InlineContent, MDFragment, MDInlineFragment, MDText, MDValue } from './types.js';
 
 /** A value a template placeholder can take. */
 export type TemplateValue = string | number | boolean | MDValue | readonly TemplateValue[];
@@ -42,25 +42,20 @@ export interface TemplateValues {
  * - Anything else is blocks, rendered in the template's own style.
  * @throws if a placeholder has no value, or a value doesn't fit where its placeholder is.
  */
-export function template(markdown: string, values: TemplateValues): MDBlockTemplate | MDInlineTemplate {
-    const root = parse(markdown, false);
+export function template(markdown: string, values: TemplateValues): MDFragment | MDInlineFragment {
+    const root = parseTree(markdown, false);
     fill(root, values, true);
-    const style = detectMarkdownStyle(root, markdown);
-    const [only, ...rest] = root.children;
-    if (only?.type === 'paragraph' && !rest.length) {
-        return new MarkdownValue('inline', 'an inline template', only.children, style);
-    }
-    return new MarkdownValue('block', 'a block template', root.children, style);
+    return fragment(root, markdown);
 }
 
 /**
  * Fill a Markdown template as blocks, the same way as {@link template}.
  * A single paragraph stays a paragraph.
  */
-export function blockTemplate(markdown: string, values: TemplateValues): MDBlockTemplate {
-    const root = parse(markdown, false);
+export function blockTemplate(markdown: string, values: TemplateValues): MDFragment {
+    const root = parseTree(markdown, false);
     fill(root, values, true);
-    return new MarkdownValue('block', 'a block template', root.children, detectMarkdownStyle(root, markdown));
+    return new MarkdownValue('block', 'a Markdown fragment', root.children, detectMarkdownStyle(root, markdown));
 }
 
 /**
@@ -68,18 +63,54 @@ export function blockTemplate(markdown: string, values: TemplateValues): MDBlock
  * The text must be one paragraph. Block syntax, such as a leading `-`, is read as text.
  * @throws if the text isn't one paragraph, a placeholder has no value, or a value isn't inline.
  */
-export function inlineTemplate(markdown: string, values: TemplateValues): MDInlineTemplate {
+export function inlineTemplate(markdown: string, values: TemplateValues): MDInlineFragment {
     const start = markdown.trimStart();
     const lead = markdown.slice(0, markdown.length - start.length);
     const body = start.trimEnd();
     const tail = start.slice(body.length);
-    const root = parse(body, true);
+    const root = parseTree(body, true);
     if (root.children.length > 1 || (root.children[0] && root.children[0].type !== 'paragraph')) {
         throw new Error('inline template text must be one paragraph');
     }
     fill(root, values, false);
     const children = root.children[0]?.type === 'paragraph' ? root.children[0].children : [];
-    return new MarkdownValue('inline', 'an inline template', [...textNodes(lead), ...children, ...textNodes(tail)]);
+    return new MarkdownValue('inline', 'an inline Markdown fragment', [
+        ...textNodes(lead),
+        ...children,
+        ...textNodes(tail),
+    ]);
+}
+
+/**
+ * Markdown text as a value, for Markdown made elsewhere.
+ * - A single paragraph is inline, without the whitespace around it.
+ * - Anything else is blocks, rendered in the text's own style.
+ *
+ * A `{​@ name @​}` placeholder is kept as written, the same as in `text()`.
+ */
+export function parse(markdown: string): MDFragment | MDInlineFragment {
+    const root = parseTree(markdown, false);
+    keepPlaceholders(root);
+    return fragment(root, markdown);
+}
+
+/** A parsed tree as a value. A single paragraph is inline, and anything else is blocks. */
+function fragment(root: Root, markdown: string): MDFragment | MDInlineFragment {
+    const style = detectMarkdownStyle(root, markdown);
+    const [only, ...rest] = root.children;
+    if (only?.type === 'paragraph' && !rest.length) {
+        return new MarkdownValue('inline', 'an inline Markdown fragment', only.children, style);
+    }
+    return new MarkdownValue('block', 'a Markdown fragment', root.children, style);
+}
+
+/** Make the placeholders in text raw, in place, so rendering can't escape them. */
+function keepPlaceholders(parent: Parent): void {
+    parent.children = parent.children.flatMap((child): RootContent[] => {
+        if (child.type === 'text') return textNodes(child.value);
+        if ('children' in child) keepPlaceholders(child);
+        return [child];
+    });
 }
 
 /**
@@ -100,7 +131,7 @@ const blockConstructs = [
     'thematicBreak',
 ];
 
-function parse(markdown: string, inline: boolean): Root {
+function parseTree(markdown: string, inline: boolean): Root {
     const processor = unified().use(remarkParse).use(remarkGfm);
     if (inline) {
         processor.use(function disableBlocks() {

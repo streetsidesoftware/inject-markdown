@@ -10,9 +10,11 @@ import {
     link,
     list,
     listItem,
+    parse,
     placeholder,
     template,
     text,
+    toBlock,
 } from './index.mjs';
 import { resolveValue } from './template.js';
 
@@ -159,4 +161,40 @@ describe('inlineTemplate', () => {
     test('inline values fit', () => {
         expect(inlineTemplate('use {@ x @}', { x: inlineCode('cspell') }).toString()).toBe('use `cspell`');
     });
+});
+
+describe('parse', () => {
+    test('a single paragraph is inline', () => {
+        const md = parse('  Hello *you*\n');
+        if (md.kind !== 'inline') throw new Error('expected inline');
+        expect(md.toString()).toBe('Hello *you*');
+        expect(link(md, 'https://example.com').toString()).toBe('[Hello _you_](https://example.com)');
+    });
+
+    test('anything else is blocks', () => {
+        const md = parse('# Title\n\nSome text.\n');
+        if (md.kind !== 'block') throw new Error('expected blocks');
+        expect(document(md).toString()).toBe('# Title\n\nSome text.\n');
+    });
+
+    test('the text keeps its own style', () => {
+        expect(parse('* a\n* b\n').toString()).toBe('* a\n* b');
+    });
+
+    test('inside a document, the document style wins', () => {
+        expect(document(toBlock(parse('* a\n* b\n'))).toString()).toBe('- a\n- b\n');
+    });
+
+    test.each`
+        markdown             | expected
+        ${'See {@ pkg @}'}   | ${'See {@ pkg @}'}
+        ${'{@ _x_ @}'}       | ${'{@ _x_ @}'}
+        ${'`{@ x @}`'}       | ${'`{@ x @}`'}
+        ${'a \\\\{@ x @} b'} | ${'a \\\\{@ x @} b'}
+    `(
+        'placeholders are kept as written: $markdown',
+        ({ markdown, expected }: { markdown: string; expected: string }) => {
+            expect(parse(markdown).toString()).toBe(expected);
+        },
+    );
 });
