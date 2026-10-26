@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
+import type { MDValue } from './index.mjs';
 import {
     blockPlaceholder,
     blockText,
@@ -209,6 +210,24 @@ describe('placeholders', () => {
 
     test('an invalid name throws', () => {
         expect(() => blockPlaceholder('a..b')).toThrow(new Error('invalid placeholder name: "a..b"'));
+    });
+});
+
+describe('line endings at the edges', () => {
+    test.each`
+        value                                                                  | expected
+        ${document('Fruit:\n', placeholder('fruit'), '\n')}                    | ${'Fruit:\n{@ fruit @}\n'}
+        ${document(document('Fruit:\n', placeholder('fruit'), '\n'), 'yummy')} | ${'Fruit:\n{@ fruit @}\n\nyummy\n'}
+        ${document('Fruit:\n', blockPlaceholder('fruit'))}                     | ${'Fruit:\n\n{@ fruit @}\n'}
+        ${document('Intro', '\n', list(['x']))}                                | ${'Intro\n\n- x\n'}
+        ${list([listItem('Langs\n', list(['en']))])}                           | ${'- Langs\n  - en'}
+        ${paragraph('\n\na\nb\nc  \n\n')}                                      | ${'a\nb\nc'}
+        ${heading(2, 'Title\n')}                                               | ${'## Title'}
+        ${paragraph('a', lineBreak())}                                         | ${'a'}
+        ${paragraph(lineBreak(), 'a', lineBreak(), 'b')}                       | ${'a\\\nb'}
+        ${document('Fruit:\n', placeholder('fruit'), '\n', 'yummy')}           | ${'Fruit:\n{@ fruit @}\nyummy\n'}
+    `('$expected', ({ value, expected }: { value: MDValue; expected: string }) => {
+        expect(value.toString()).toBe(expected);
     });
 });
 

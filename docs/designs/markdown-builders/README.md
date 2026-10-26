@@ -153,6 +153,8 @@ list([listItem('Languages'), ['Ref: ', link('German', '../g.md')], 'Other']);
 
 `toString()` takes no options, so a value renders in a fixed default style. The exceptions are a document given a style with `withStyle`, and a fragment from `template()` or `parse()`, which renders in the style detected from its own text (`detectMarkdownStyle`, moved into the builders for this). When builder output is injected, inject-markdown already re-renders it in the target document's style, so the default only shows when a script writes a file directly.
 
+A line ending or `lineBreak()` at the start or end of a paragraph, heading, or table cell is dropped. Nothing is on its other side, so it can't display, and kept it would render as `&#xA;` or a literal `\`.
+
 Converting a value to a string too early loses its kind. `text(`see ${link(…)}`)` makes the link plain text and escapes its brackets. Scripts compose values, not strings.
 
 ### Inline and block
