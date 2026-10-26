@@ -70,9 +70,10 @@ function trimLeadingLineEndings(text: string): string {
 
 /** The text without its trailing spaces, tabs and line endings, when they include a line ending. */
 function trimTrailingLineEndings(text: string): string {
-    let i = text.length;
-    while (isBlank(text[i - 1])) --i;
-    return /[\r\n]/.test(text.slice(i)) ? text.slice(0, i) : text;
+    let i = text.length - 1;
+    while (isBlank(text[i])) --i;
+    const end = i + 1;
+    return /[\r\n]/.test(text.slice(end)) ? text.slice(0, end) : text;
 }
 
 function isBlank(c: string | undefined): boolean {
