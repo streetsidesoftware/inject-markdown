@@ -1,4 +1,4 @@
-import { isValidPlaceholderSegment } from '@streetsidesoftware/markdown-toolkit/placeholders';
+import { isValidPlaceholderName } from '@streetsidesoftware/placeholders';
 
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 
@@ -172,6 +172,11 @@ export function parseValuesFileEntry(raw: string): ValuesFileEntry | undefined {
         }
     }
     return withDerivedPrefix(unquote(entry));
+}
+
+/** A placeholder name without dots, such as `package` or `build-info`. */
+export function isValidPlaceholderSegment(name: string): boolean {
+    return isValidPlaceholderName(name) && !name.includes('.');
 }
 
 /**

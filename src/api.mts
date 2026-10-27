@@ -1,4 +1,4 @@
-import { isValidPlaceholderName } from '@streetsidesoftware/markdown-toolkit/placeholders';
+import { isValidPlaceholderName } from '@streetsidesoftware/placeholders';
 
 import { FileInjector, type InjectOptions, type ProcessFileResult } from './FileInjector/FileInjector.js';
 import { nodeFsa } from './FileSystemAdapter/fsa.js';
