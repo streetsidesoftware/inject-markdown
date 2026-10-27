@@ -15,7 +15,7 @@ A directive only replaces placeholders if it has at least one of `values=`, `val
 
 Placeholders are replaced after a `#L` line range and `heading=` have cut the content. A placeholder in the part that was cut is neither replaced nor reported.
 
-To show the syntax literally in an opted-in directive, write `\{@ name @}`. This works in code spans, code blocks and non-Markdown files. In Markdown prose it doesn't yet: the Markdown parser drops the backslash first, so the placeholder is still replaced ([#887](https://github.com/streetsidesoftware/inject-markdown/issues/887)).
+There's no escape for a placeholder. To show the syntax literally, inject the file without opting the directive in.
 
 ## Inline values: `values=`
 

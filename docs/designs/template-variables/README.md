@@ -34,7 +34,7 @@ Out of scope:
 - The delimiters are `{@` and `@}`. Whitespace just inside them is optional, so `{@version@}` and `{@ version @}` are the same placeholder.
 - A name is a dotted path of segments. A segment starts with a letter, digit, or underscore, followed by any of those or a hyphen. Each dot walks one level into a nested JSON object.
 - Text that doesn't fit the grammar, such as `{@ -foo @}`, isn't a placeholder. It stays as written.
-- A backslash right before a placeholder (`\{@ name @}`) keeps it as literal text and drops the backslash. It escapes only that one placeholder.
+- There's no escape. A file that shows the syntax literally is injected without opting in.
 - Every directive type uses the same syntax. Only how the result is spliced in differs.
 
 ### Opting a directive in
@@ -130,7 +130,7 @@ Every declaration that supplies values is a _layer_. Layers are never merged int
 - A layer that lacks the name, or holds an object, array, or `null` there, doesn't stop the search.
 - A scalar is a string, number, or boolean, substituted as `String(v)`. JSON `1.0` becomes `1`, so a version that must keep `1.0` is written as a string.
 - `null` counts as absent.
-- Lookup reads only a layer's own keys, so `{@ toString @}` never reaches an inherited member. A pair whose name has a `__proto__`, `constructor`, or `prototype` segment is dropped.
+- Lookup reads only a layer's own keys, so `{@ toString @}` never reaches an inherited member. Layers have no prototype, so a pair named `__proto__.x` is an ordinary own key.
 
 So `--value package.engines.node=26.0` overrides one leaf, and `package.version` still comes from `package.json`. `--value a=1 --value a.b=2` keeps both names.
 
@@ -176,7 +176,6 @@ Substituting raw table text would let a value containing the delimiter add colum
 
 ## Open questions
 
-- In Markdown prose, the parser reads `\{` as an escape and drops the backslash, so `\{@ name @}` is replaced there ([#887](https://github.com/streetsidesoftware/inject-markdown/issues/887)).
 - Alias names and targets aren't checked against the name grammar yet ([#884](https://github.com/streetsidesoftware/inject-markdown/issues/884)).
 - `--value` doesn't trim its value, unlike `value=` ([#885](https://github.com/streetsidesoftware/inject-markdown/issues/885)).
 - The message for an unresolved `env.` name doesn't hint at `--allow-env` ([#886](https://github.com/streetsidesoftware/inject-markdown/issues/886)).
@@ -195,3 +194,4 @@ Substituting raw table text would let a value containing the delimiter add colum
 - `null` as an empty string: a likely typo would become silently empty output.
 - Plural `values-alias=`: each entry maps one name to one name.
 - `--strict-vars` aborting the run: every other injection error is collected per document.
+- A backslash escape, `\{@ name @}`: nobody used it, and in Markdown prose the parser drops the backslash before substitution sees it ([#887](https://github.com/streetsidesoftware/inject-markdown/issues/887)).

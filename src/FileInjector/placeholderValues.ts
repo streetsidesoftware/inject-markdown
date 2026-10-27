@@ -1,7 +1,7 @@
+import type { PlaceholderResolver } from '@streetsidesoftware/markdown-toolkit/placeholders';
 import type { Html } from 'mdast';
 
 import type { FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
-import type { PlaceholderResolver } from '../markdown/placeholders.js';
 import { OptionError } from '../util/errors.js';
 import type { InjectInfo } from '../util/hash.js';
 import { parseRelativeUrl } from '../util/url_helper.js';

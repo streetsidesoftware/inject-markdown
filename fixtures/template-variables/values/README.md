@@ -24,10 +24,6 @@
 
 <!--- @@inject-code: snippet-bare.txt#values-file=:data.json&value=version:9.9.9 --->
 
-## Escaped placeholder stays literal
-
-<!--- @@inject-code: escaped.txt#vars --->
-
 ## Not opted in: placeholder text passes through untouched
 
 <!--- @@inject-code: snippet-bare.txt --->

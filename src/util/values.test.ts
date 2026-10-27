@@ -1,7 +1,7 @@
+import { isValidPlaceholderName, isValidPlaceholderSegment } from '@streetsidesoftware/markdown-toolkit/placeholders';
 import { describe, expect, test, vi } from 'vitest';
 
 import type { FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
-import { isValidPlaceholderName, isValidPlaceholderSegment } from '../markdown/placeholders.js';
 import {
     deriveAutoPrefixFromPath,
     getPath,
@@ -259,9 +259,9 @@ describe('prototype safety', () => {
         ${'__proto__.polluted'}
         ${'a.__proto__.polluted'}
         ${'constructor.prototype.polluted'}
-    `('setPath drops the prototype-reaching name $name', ({ name }: { name: string }) => {
+    `('setPath writes $name as own keys, not to Object.prototype', ({ name }: { name: string }) => {
         const layers = layersFromPairs([[name, 'pwned']]);
-        expect(resolveInLayers(layers, name)).toEqual({ unresolved: 'undefined' });
+        expect(resolveInLayers(layers, name)).toEqual({ value: 'pwned' });
         expect(({} as Record<string, unknown>).polluted).toBe(undefined);
         expect(Object.prototype).not.toHaveProperty('polluted');
     });
@@ -393,8 +393,8 @@ describe('prefix grammar', () => {
         ${'a.'}          | ${false}
         ${'a..b'}        | ${false}
         ${'pkg.-x'}      | ${false}
-        ${'__proto__'}   | ${false}
-        ${'a.__proto__'} | ${false}
+        ${'__proto__'}   | ${true}
+        ${'a.__proto__'} | ${true}
     `('isValidValuesFilePrefix($name) === $valid', ({ name, valid }: { name: string; valid: boolean }) => {
         expect(isValidValuesFilePrefix(name)).toBe(valid);
     });
