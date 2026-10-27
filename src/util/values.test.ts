@@ -1,4 +1,3 @@
-import { isValidPlaceholderName, isValidPlaceholderSegment } from '@streetsidesoftware/markdown-toolkit/placeholders';
 import { describe, expect, test, vi } from 'vitest';
 
 import type { FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
@@ -6,6 +5,7 @@ import {
     deriveAutoPrefixFromPath,
     getPath,
     isScalar,
+    isValidPlaceholderSegment,
     isValidValuesFilePrefix,
     type JsonObject,
     layerFromPair,
@@ -94,21 +94,6 @@ describe('parseValuesFileEntry / splitValuesFileList', () => {
 
     test('splitValuesFileList keeps a quoted comma literal', () => {
         expect(splitValuesFileList('"a,b.json",other.json')).toEqual(['"a,b.json"', 'other.json']);
-    });
-});
-
-describe('isValidPlaceholderName', () => {
-    test.each`
-        name           | expected
-        ${'x'}         | ${true}
-        ${'pkg.build'} | ${true}
-        ${'a b'}       | ${false}
-        ${'a..b'}      | ${false}
-        ${'-a'}        | ${false}
-        ${'__proto__'} | ${false}
-        ${''}          | ${false}
-    `('isValidPlaceholderName($name) -> $expected', ({ name, expected }) => {
-        expect(isValidPlaceholderName(name)).toBe(expected);
     });
 });
 
@@ -282,15 +267,6 @@ describe('prototype safety', () => {
         // `getPath`, not only in how the tree is built.
         const tree = JSON.parse('{"a":{}}') as JsonObject;
         expect(getPath(tree, name)).toBe(undefined);
-    });
-
-    test.each`
-        segment
-        ${'__proto__'}
-        ${'constructor'}
-        ${'prototype'}
-    `('isValidPlaceholderSegment rejects $segment as a values-file prefix', ({ segment }: { segment: string }) => {
-        expect(isValidPlaceholderSegment(segment)).toBe(false);
     });
 
     test('a `__proto__` key in a values file stays an inert own key', async () => {

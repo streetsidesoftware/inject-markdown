@@ -1,4 +1,4 @@
-import type { PlaceholderResolver } from '@streetsidesoftware/markdown-toolkit/placeholders';
+import type { PlaceholderResolver } from '@streetsidesoftware/placeholders';
 import type { Html } from 'mdast';
 
 import type { FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
@@ -225,7 +225,7 @@ export async function applySubstitution(
     info: InjectInfo,
     directiveNode: Html,
     deps: ApplySubstitutionDeps,
-    apply: (resolve: PlaceholderResolver, onUnresolved: (name: string) => void) => void,
+    apply: (resolve: PlaceholderResolver) => void,
 ): Promise<void> {
     const optedIn = info.valueDecls !== undefined || info.valueErrors !== undefined || info.vars === true;
     if (!optedIn) return;
@@ -239,13 +239,12 @@ export async function applySubstitution(
         deps.runWide,
     );
     const unresolved = new Set<string>();
-    apply(
-        (name) => {
-            const r = resolveValueName(entries, name, deps.runWide.allowEnvSet);
-            return 'value' in r ? r.value : undefined;
-        },
-        (name) => unresolved.add(name),
-    );
+    apply((name) => {
+        const r = resolveValueName(entries, name, deps.runWide.allowEnvSet);
+        if ('value' in r) return r.value;
+        unresolved.add(name);
+        return undefined;
+    });
     for (const name of unresolved) {
         // Re-resolve only the names that failed, to say why each one failed.
         const r = resolveValueName(entries, name, deps.runWide.allowEnvSet);

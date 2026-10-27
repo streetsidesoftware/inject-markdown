@@ -1,10 +1,7 @@
 import * as path from 'node:path';
 
-import {
-    detectMarkdownStyle,
-    substituteInString,
-    substituteInTree,
-} from '@streetsidesoftware/markdown-toolkit/placeholders';
+import { detectStyle } from '@streetsidesoftware/markdown-toolkit';
+import { replacePlaceholders } from '@streetsidesoftware/placeholders';
 import assert from 'assert';
 import chalk, { supportsColor } from 'chalk';
 import type { Html, Parent, Root } from 'mdast';
@@ -54,7 +51,10 @@ const directiveStartCode = directivePrefix + '-code:';
 const directiveStartTable = directivePrefix + '-table:';
 const directiveEnd = directivePrefix + '-end:';
 
-/** Fallback style for constructs `detectMarkdownStyle` finds no evidence for. */
+/** The nodes whose own text placeholders are filled in. */
+const textBearingTypes = ['text', 'inlineCode', 'code', 'html'] as const;
+
+/** Fallback style for constructs `detectStyle` finds no evidence for. */
 const defaultOutputOptions: StringifyOptions = {
     bullet: '-',
     emphasis: '_',
@@ -404,7 +404,7 @@ async function processFileInjections(
             assert(isVFileEx(file));
             const nodes = collectInjectionNodes(root);
             file.data.hasInjections = nodes.length > 0;
-            Object.assign(outputOptions, detectMarkdownStyle(root, extractContent(file)));
+            Object.assign(outputOptions, detectStyle(extractContent(file)));
             return root;
         };
     }
@@ -555,8 +555,8 @@ async function processFileInjections(
             const { rows, tableOptions } = isJson
                 ? jsonTableRows(content, window, headerRows)
                 : delimitedTableRows(content, fileName, window, headerRows);
-            await applySubstitution(info, directive.node, substitutionDeps, (resolve, onUnresolved) => {
-                const sub = (text: string) => substituteInString(text, resolve, onUnresolved);
+            await applySubstitution(info, directive.node, substitutionDeps, (resolve) => {
+                const sub = (text: string) => replacePlaceholders(text, resolve);
                 for (const row of rows) {
                     for (let i = 0; i < row.length; ++i) {
                         const cell = row[i];
@@ -620,8 +620,8 @@ async function processFileInjections(
         try {
             const vFile = await resolveAndReadFile(fileName);
             let content = extractLines(extractContent(vFile), lines);
-            await applySubstitution(info, directive.node, substitutionDeps, (resolve, onUnresolved) => {
-                content = substituteInString(content, resolve, onUnresolved);
+            await applySubstitution(info, directive.node, substitutionDeps, (resolve) => {
+                content = replacePlaceholders(content, resolve);
             });
             const code = toCode(lang || fileType(fileName.pathname), content.trim());
             return {
@@ -647,8 +647,11 @@ async function processFileInjections(
             const fileRoot = parseMarkdownFile(vFile);
             sanitizeImport(fileRoot);
             const markdown = extractHeader(fileRoot, heading);
-            await applySubstitution(info, directive.node, substitutionDeps, (resolve, onUnresolved) => {
-                substituteInTree(markdown, resolve, onUnresolved);
+            await applySubstitution(info, directive.node, substitutionDeps, (resolve) => {
+                // Each node's own text is filled in place, so the tree is never re-parsed.
+                visit(markdown, [...textBearingTypes], (node) => {
+                    node.value = replacePlaceholders(node.value, resolve);
+                });
             });
             // A code block shows the source verbatim, so its links are left as written.
             const root =
