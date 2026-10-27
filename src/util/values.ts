@@ -1,4 +1,4 @@
-import { isUnsafeSegment, isValidPlaceholderSegment } from '@streetsidesoftware/markdown-toolkit/placeholders';
+import { isValidPlaceholderSegment } from '@streetsidesoftware/markdown-toolkit/placeholders';
 
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
 
@@ -96,7 +96,7 @@ const driveLetterPrefix = /^[A-Za-z]:/;
  * So `C:`, `..`, `.env` and `-foo` are read as paths, not prefixes.
  */
 export function isValidValuesFilePrefix(name: string): boolean {
-    return validValuesFilePrefix.test(name) && !name.split('.').some((seg) => isUnsafeSegment(seg));
+    return validValuesFilePrefix.test(name);
 }
 
 /** A value tree, with no prototype: a `__proto__` key can never reach `Object.prototype`. */
@@ -251,12 +251,10 @@ export function getPath(tree: JsonObject | undefined, name: string): JsonValue |
 
 /**
  * Set a dotted placeholder name into a value tree, creating intermediate objects as needed.
- * A name with a prototype-reaching segment is dropped.
- * Directive text is untrusted, and a name like `__proto__.x` must not write to `Object.prototype`.
+ * The intermediate objects have no prototype, so a name like `__proto__.x` writes an own key.
  */
 export function setPath(tree: JsonObject, name: string, value: JsonValue): void {
     const segments = name.split('.');
-    if (segments.some((seg) => isUnsafeSegment(seg))) return;
     let cur = tree;
     for (let i = 0; i < segments.length - 1; ++i) {
         const seg = segments[i];

@@ -130,7 +130,7 @@ Every declaration that supplies values is a _layer_. Layers are never merged int
 - A layer that lacks the name, or holds an object, array, or `null` there, doesn't stop the search.
 - A scalar is a string, number, or boolean, substituted as `String(v)`. JSON `1.0` becomes `1`, so a version that must keep `1.0` is written as a string.
 - `null` counts as absent.
-- Lookup reads only a layer's own keys, so `{@ toString @}` never reaches an inherited member. A pair whose name has a `__proto__`, `constructor`, or `prototype` segment is dropped.
+- Lookup reads only a layer's own keys, so `{@ toString @}` never reaches an inherited member. Layers have no prototype, so a pair named `__proto__.x` is an ordinary own key.
 
 So `--value package.engines.node=26.0` overrides one leaf, and `package.version` still comes from `package.json`. `--value a=1 --value a.b=2` keeps both names.
 
