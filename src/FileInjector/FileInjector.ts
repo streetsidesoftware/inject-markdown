@@ -1,5 +1,10 @@
 import * as path from 'node:path';
 
+import {
+    detectMarkdownStyle,
+    substituteInString,
+    substituteInTree,
+} from '@streetsidesoftware/markdown-toolkit/placeholders';
 import assert from 'assert';
 import chalk, { supportsColor } from 'chalk';
 import type { Html, Parent, Root } from 'mdast';
@@ -10,8 +15,6 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import type { VFile } from 'vfile';
 
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
-import { detectMarkdownStyle } from '../markdown/detectStyle.js';
-import { substituteInString, substituteInTree } from '../markdown/placeholders.js';
 import { delimiterForExtension, parseDelimitedText } from '../util/csv.js';
 import { fileType } from '../util/fileType.mjs';
 import { type InjectInfo, parseHash } from '../util/hash.js';

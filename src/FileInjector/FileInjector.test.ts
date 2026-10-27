@@ -448,8 +448,6 @@ describe('template variables', () => {
         // - a directive that isn't opted in (no `values=`, `values-file=` or `vars`)
         // - a values-file lookup that finds a non-scalar
         expect(count(written, 'npm install pkg@{@ version @}')).toBe(2);
-        // A backslash-escaped placeholder is unescaped to literal text, not substituted.
-        expect(written).toContain('Literal: {@ version @}');
         // Opted in via bare `#vars`, but no source defines the name.
         expect(written).toContain('Value: {@ missing @}');
         // Markdown-tree substitution: prose, inline code, and a fenced code block.

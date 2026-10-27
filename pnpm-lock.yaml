@@ -166,6 +166,9 @@ importers:
 
   .:
     dependencies:
+      '@streetsidesoftware/markdown-toolkit':
+        specifier: ^1.0.0
+        version: 1.0.0(supports-color@9.4.0)
       chalk:
         specifier: ^6.0.1
         version: 6.0.1
@@ -753,6 +756,10 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
+  '@streetsidesoftware/markdown-toolkit@1.0.0':
+    resolution: {integrity: sha512-3DHNnIxCvJQ3z8XtL0u8a1G/FGC05OtMCIH00Uw8ipKJ+tdIAWxgDp6Q006ZHSwQoAN0VnRXqoGHGPRG1Kpw8g==}
+    engines: {node: '>=22.18.0'}
 
   '@tsconfig/node22@22.0.6':
     resolution: {integrity: sha512-/5thavHAnWDZwH2H6eEn/T8pBEBhtuKaWGMslsj82kJfvzQgOgEMK7X4goBbIUjgVtAzPTtM9Ml64LA0uxO6Iw==}
@@ -2336,6 +2343,16 @@ snapshots:
   '@rolldown/pluginutils@1.0.1': {}
 
   '@standard-schema/spec@1.1.0': {}
+
+  '@streetsidesoftware/markdown-toolkit@1.0.0(supports-color@9.4.0)':
+    dependencies:
+      remark-gfm: 4.0.1(supports-color@9.4.0)
+      remark-parse: 11.0.0(supports-color@9.4.0)
+      remark-stringify: 11.0.0
+      unified: 11.0.5
+      unist-util-visit: 5.1.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@tsconfig/node22@22.0.6': {}
 

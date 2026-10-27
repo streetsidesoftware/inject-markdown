@@ -1,5 +1,6 @@
+import { isUnsafeSegment, isValidPlaceholderSegment } from '@streetsidesoftware/markdown-toolkit/placeholders';
+
 import type { BufferEncoding, FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
-import { isUnsafeSegment, isValidPlaceholderSegment } from '../markdown/placeholders.js';
 
 export type JsonScalar = string | number | boolean | null;
 export type JsonValue = JsonScalar | JsonValue[] | JsonObject;

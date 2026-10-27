@@ -1,7 +1,7 @@
+import { isValidPlaceholderName, isValidPlaceholderSegment } from '@streetsidesoftware/markdown-toolkit/placeholders';
 import { describe, expect, test, vi } from 'vitest';
 
 import type { FileSystemAdapter, PathLike } from '../FileSystemAdapter/FileSystemAdapter.js';
-import { isValidPlaceholderName, isValidPlaceholderSegment } from '../markdown/placeholders.js';
 import {
     deriveAutoPrefixFromPath,
     getPath,

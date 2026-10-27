@@ -3,6 +3,8 @@ packages:
   - .
 
 minimumReleaseAge: 2880 # two days
+minimumReleaseAgeExclude:
+  - '@streetsidesoftware/*' # published by our own release pipeline
 blockExoticSubdeps: true
 trustPolicy: no-downgrade
 trustPolicyExclude:
