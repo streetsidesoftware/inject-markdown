@@ -167,11 +167,11 @@ importers:
   .:
     dependencies:
       '@streetsidesoftware/markdown-toolkit':
-        specifier: ^1.0.0
-        version: 1.0.0(supports-color@9.4.0)
+        specifier: ^1.1.1
+        version: 1.1.1(supports-color@9.4.0)
       '@streetsidesoftware/placeholders':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.1.0
+        version: 1.1.0
       chalk:
         specifier: ^6.0.1
         version: 6.0.1
@@ -760,12 +760,12 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  '@streetsidesoftware/markdown-toolkit@1.0.0':
-    resolution: {integrity: sha512-3DHNnIxCvJQ3z8XtL0u8a1G/FGC05OtMCIH00Uw8ipKJ+tdIAWxgDp6Q006ZHSwQoAN0VnRXqoGHGPRG1Kpw8g==}
+  '@streetsidesoftware/markdown-toolkit@1.1.1':
+    resolution: {integrity: sha512-9dKj0dtGDDsWKm7bwHVW0/o6oPm4Ge/keEjNcz9c7obDXypoJBHgZWY+vGz4/baE2QjC98/I67+yAD3NSybtTQ==}
     engines: {node: '>=22.18.0'}
 
-  '@streetsidesoftware/placeholders@1.0.0':
-    resolution: {integrity: sha512-V0Mv0y+CwSB48BDNFaoOFHjdFaJv/N5fPTD91NsJuQA/5GyvLmsO0Yl5eCcUNZY7ev4y3D1EJH/SlQCh7jo24A==}
+  '@streetsidesoftware/placeholders@1.1.0':
+    resolution: {integrity: sha512-C0UJ3sqLxpoVawoyOUoh1TJQEm3tCNh1pnuCQmatU3updVvt0o+aJ6jTTp0UVZCVsqldaW9B0DyC/oATtp8AdA==}
     engines: {node: '>=22.18.0'}
 
   '@tsconfig/node22@22.0.6':
@@ -2351,8 +2351,9 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@streetsidesoftware/markdown-toolkit@1.0.0(supports-color@9.4.0)':
+  '@streetsidesoftware/markdown-toolkit@1.1.1(supports-color@9.4.0)':
     dependencies:
+      '@streetsidesoftware/placeholders': 1.1.0
       remark-gfm: 4.0.1(supports-color@9.4.0)
       remark-parse: 11.0.0(supports-color@9.4.0)
       remark-stringify: 11.0.0
@@ -2361,7 +2362,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@streetsidesoftware/placeholders@1.0.0': {}
+  '@streetsidesoftware/placeholders@1.1.0': {}
 
   '@tsconfig/node22@22.0.6': {}
 
