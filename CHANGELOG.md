@@ -1,5 +1,14 @@
 # Changelog
 
+## [6.3.1](https://github.com/streetsidesoftware/inject-markdown/compare/v6.3.0...v6.3.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* add substitutePlaceholders(), blockText() and blockPlaceholder() to the Markdown builders ([#924](https://github.com/streetsidesoftware/inject-markdown/issues/924)) ([c68fe20](https://github.com/streetsidesoftware/inject-markdown/commit/c68fe20fb25f688f9112b3184a87274badf0e280))
+* add the missing parse() to the Markdown builders ([#921](https://github.com/streetsidesoftware/inject-markdown/issues/921)) ([d1faa74](https://github.com/streetsidesoftware/inject-markdown/commit/d1faa7416411bf1f86ea2ad07585860cec056787))
+* keep a placeholder on its own line, and add horizontalRule(), in the Markdown builders ([#925](https://github.com/streetsidesoftware/inject-markdown/issues/925)) ([1072b93](https://github.com/streetsidesoftware/inject-markdown/commit/1072b93478d4c23ba4d83c6ea65e0b7d258442d7))
+
 ## [6.3.0](https://github.com/streetsidesoftware/inject-markdown/compare/v6.2.1...v6.3.0) (2026-10-25)
 
 
