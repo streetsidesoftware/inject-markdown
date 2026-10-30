@@ -65,7 +65,7 @@
     "globals": "^17.13.0",
     "prettier": "^3.9.10",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.72.0",
+    "typescript-eslint": "^8.72.1",
     "vite": "^8.3.5",
     "vitest": "^4.1.12"
   },
@@ -83,7 +83,7 @@
     "unified": "^11.0.5",
     "unist-util-is": "^6.0.1",
     "unist-util-remove": "^4.0.0",
-    "unist-util-visit": "^5.1.0",
+    "unist-util-visit": "^5.2.0",
     "vfile": "^6.0.3",
     "vfile-reporter": "^8.1.1"
   },
