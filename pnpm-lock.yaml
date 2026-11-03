@@ -167,8 +167,8 @@ importers:
   .:
     dependencies:
       '@streetsidesoftware/markdown-toolkit':
-        specifier: ^1.1.1
-        version: 1.1.1(supports-color@9.4.0)
+        specifier: ^2.0.0
+        version: 2.0.0(supports-color@9.4.0)
       '@streetsidesoftware/placeholders':
         specifier: ^1.1.0
         version: 1.1.0
@@ -760,8 +760,8 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  '@streetsidesoftware/markdown-toolkit@1.1.1':
-    resolution: {integrity: sha512-9dKj0dtGDDsWKm7bwHVW0/o6oPm4Ge/keEjNcz9c7obDXypoJBHgZWY+vGz4/baE2QjC98/I67+yAD3NSybtTQ==}
+  '@streetsidesoftware/markdown-toolkit@2.0.0':
+    resolution: {integrity: sha512-JOUSMYICp2Zdm4IN9cIwRyrHs1UvYeFlB0fKxAhitZ2DcOQbSGvW6wT0p0GtbTfVU+3t6kRNIdhqrj3Y4QqHBg==}
     engines: {node: '>=22.18.0'}
 
   '@streetsidesoftware/placeholders@1.1.0':
@@ -2351,9 +2351,10 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@streetsidesoftware/markdown-toolkit@1.1.1(supports-color@9.4.0)':
+  '@streetsidesoftware/markdown-toolkit@2.0.0(supports-color@9.4.0)':
     dependencies:
       '@streetsidesoftware/placeholders': 1.1.0
+      character-entities: 2.0.2
       remark-gfm: 4.0.1(supports-color@9.4.0)
       remark-parse: 11.0.0(supports-color@9.4.0)
       remark-stringify: 11.0.0
