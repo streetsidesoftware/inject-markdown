@@ -62,7 +62,7 @@
     "cspell": "^10.4.0",
     "eslint": "^10.14.0",
     "eslint-plugin-simple-import-sort": "^14.0.0",
-    "globals": "^17.13.0",
+    "globals": "^17.14.0",
     "prettier": "^3.9.10",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.1",
