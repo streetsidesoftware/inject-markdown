@@ -146,10 +146,10 @@ Table cells:
 
 <!--- @@inject: docs/links.csv --->
 
-| Name  | Link                     |
-| ----- | ------------------------ |
-| Guide | \[guide]\(guide.md)      |
-| Image | !\[flow]\(img/flow\.png) |
+| Name  | Link                    |
+| ----- | ----------------------- |
+| Guide | \[guide]\(guide.md)     |
+| Image | !\[flow]\(img/flow.png) |
 
 <!--- @@inject-end: docs/links.csv --->
 
